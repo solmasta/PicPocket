@@ -1,0 +1,125 @@
+:root {
+  --horse-bay: #7a4b2f;
+  --horse-chestnut: #9a5b34;
+  --horse-palomo: #d0b17a;
+  --horse-gray: #9ca1a6;
+  --horse-black: #2c2725;
+  --hay-cream: #f3e4c0;
+  --barn-red: #8b2f24;
+  --barn-shadow: #5e1f18;
+  --fence-wash: #d6c3a5;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: var(--horse-black);
+  background-color: var(--hay-cream);
+  background-image:
+    linear-gradient(90deg, rgba(44, 39, 37, 0.06) 0, rgba(44, 39, 37, 0.06) 4px, transparent 4px, transparent 100%),
+    linear-gradient(0deg, rgba(44, 39, 37, 0.04) 0, rgba(44, 39, 37, 0.04) 4px, transparent 4px, transparent 100%);
+  background-size: 56px 56px;
+}
+
+.stable-panel {
+  background:
+    linear-gradient(180deg, rgba(139, 47, 36, 0.86), rgba(94, 31, 24, 0.92)),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.08) 0 8px,
+      rgba(255, 255, 255, 0.02) 8px 16px,
+      rgba(0, 0, 0, 0.08) 16px 20px
+    );
+  border: 2px solid var(--barn-shadow);
+  border-radius: 12px;
+  color: #fff;
+  padding: 1.25rem;
+}
+
+.barn-wood {
+  background-color: var(--horse-bay);
+  background-image:
+    linear-gradient(130deg, rgba(255, 255, 255, 0.08) 0 18%, transparent 18% 100%),
+    linear-gradient(-25deg, rgba(0, 0, 0, 0.15) 0 24%, transparent 24% 100%),
+    repeating-linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.1) 0 2px,
+      rgba(255, 255, 255, 0.04) 2px 5px,
+      transparent 5px 11px
+    );
+}
+
+.btn-horseshoe {
+  background: linear-gradient(180deg, var(--horse-chestnut), var(--horse-bay));
+  color: #fff;
+  border: 1px solid var(--barn-shadow);
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-horseshoe::before {
+  content: "\1F40E";
+  margin-right: 0.45rem;
+}
+
+.btn-horseshoe:hover {
+  filter: brightness(1.05);
+}
+
+.fence-divider {
+  position: relative;
+  height: 18px;
+  margin: 1.25rem 0;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--fence-wash) 0 18px,
+    rgba(122, 75, 47, 0.4) 18px 22px,
+    var(--fence-wash) 22px 38px
+  );
+  border-top: 3px solid var(--horse-bay);
+  border-bottom: 3px solid var(--horse-bay);
+}
+
+.fence-divider::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 34px,
+    rgba(44, 39, 37, 0.2) 34px 38px
+  );
+}
+
+.palette-swatch {
+  display: inline-block;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-right: 0.35rem;
+  border: 1px solid rgba(44, 39, 37, 0.3);
+  border-radius: 50%;
+}
+
+@media (max-width: 640px) {
+  body {
+    background-size: 34px 34px;
+  }
+
+  .stable-panel {
+    padding: 1rem;
+    border-radius: 10px;
+  }
+
+  .btn-horseshoe {
+    width: 100%;
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+
+  .fence-divider {
+    height: 14px;
+    margin: 1rem 0;
+  }
+}
