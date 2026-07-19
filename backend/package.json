@@ -1,0 +1,17 @@
+{
+  "name": "picpals-horses-backend",
+  "version": "1.0.0",
+  "description": "Backend for the PicPals Horses photo app.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node -e \"console.log('No backend tests configured')\""
+  },
+  "keywords": [
+    "node",
+    "api"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs"
+}

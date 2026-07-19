@@ -1,0 +1,23 @@
+{
+  "name": "picpals-horses-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for the PicPals Horses photo app.",
+  "scripts": {
+    "start": "parcel public/index.html",
+    "build": "parcel build public/index.html --dist-dir dist",
+    "test": "node -e \"console.log('No frontend tests configured')\""
+  },
+  "keywords": [
+    "react",
+    "photos"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
+  },
+  "devDependencies": {
+    "parcel": "2.16.4"
+  }
+}
