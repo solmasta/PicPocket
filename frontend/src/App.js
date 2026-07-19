@@ -1,52 +1,110 @@
-import React, { useState } from 'react';
-import './App.css';
-import CollageMaker from './Components/CollageMaker';
-import PhotoFilters from './Components/PhotoFilters';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import './styles/App.css';
+import Header from './components/Layout/Header';
+import Sidebar from './components/Layout/Sidebar';
+import Footer from './components/Layout/Footer';
+import GoogleSignIn from './components/Auth/GoogleSignIn';
+import PhotoGallery from './components/Gallery/PhotoGallery';
+import PhotoUpload from './components/Upload/PhotoUpload';
+import TagSearch from './components/Tags/TagSearch';
+import PhotoFilters from './components/Filters/PhotoFilters';
+import CollageMaker from './components/Collage/CollageMaker';
+import PhotoStories from './components/Stories/PhotoStories';
+import PhotoSlideshow from './components/Slideshow/PhotoSlideshow';
+import MemoryLane from './components/MemoryLane/MemoryLane';
+import AlbumSharing from './components/Sharing/AlbumSharing';
 import HorseProfile from './Components/HorseProfile';
-import PhotoStories from './Components/PhotoStories';
-
-const TABS = [
-  { id: 'collage',  label: '🖼 Collage' },
-  { id: 'filters',  label: '✨ Filters' },
-  { id: 'horse',    label: '🐴 Horse Profile' },
-  { id: 'stories',  label: '📖 Stories' },
-];
+import { useAuth } from './hooks/useAuth';
+import { usePhotos } from './hooks/usePhotos';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('collage');
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { photos, addPhoto, deletePhoto, updatePhoto, loading: photosLoading } = usePhotos(user);
+  const [activeView, setActiveView] = useState('gallery');
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  if (authLoading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-spinner" />
+        <p>Loading PicPals...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <GoogleSignIn />;
+  }
+
+  const renderView = () => {
+    switch (activeView) {
+      case 'gallery':
+        return (
+          <PhotoGallery
+            photos={photos}
+            loading={photosLoading}
+            onDelete={deletePhoto}
+            onSelect={setSelectedPhoto}
+            onViewChange={setActiveView}
+          />
+        );
+      case 'upload':
+        return <PhotoUpload onUpload={addPhoto} user={user} />;
+      case 'search':
+        return <TagSearch photos={photos} onSelect={setSelectedPhoto} />;
+      case 'filters':
+        return <PhotoFilters photo={selectedPhoto} onSave={updatePhoto} />;
+      case 'collage':
+        return <CollageMaker photos={photos} />;
+      case 'stories':
+        return <PhotoStories photos={photos} />;
+      case 'slideshow':
+        return <PhotoSlideshow photos={photos} />;
+      case 'memory-lane':
+        return <MemoryLane photos={photos} />;
+      case 'sharing':
+        return <AlbumSharing photos={photos} user={user} />;
+      case 'horse-profile':
+        return <HorseProfile />;
+      default:
+        return (
+          <PhotoGallery
+            photos={photos}
+            loading={photosLoading}
+            onDelete={deletePhoto}
+            onSelect={setSelectedPhoto}
+            onViewChange={setActiveView}
+          />
+        );
+    }
+  };
 
   return (
-    <div className="App" style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f9fafb' }}>
-      <header style={{ background: '#6366f1', color: '#fff', padding: '16px 24px', textAlign: 'center' }}>
-        <h1 style={{ margin: 0, fontSize: 22 }}>📸 PicPocket</h1>
-      </header>
-
-      <nav style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '12px 16px', background: '#fff', borderBottom: '1px solid #e5e7eb' }}>
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              padding: '7px 14px', borderRadius: 20,
-              border: '1px solid',
-              borderColor: activeTab === tab.id ? '#6366f1' : '#e5e7eb',
-              background: activeTab === tab.id ? '#6366f1' : '#fff',
-              color: activeTab === tab.id ? '#fff' : '#374151',
-              cursor: 'pointer', fontSize: 13, fontWeight: 600,
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
-
-      <main style={{ padding: '24px 0' }}>
-        {activeTab === 'collage'  && <CollageMaker />}
-        {activeTab === 'filters'  && <PhotoFilters />}
-        {activeTab === 'horse'    && <HorseProfile />}
-        {activeTab === 'stories'  && <PhotoStories />}
-      </main>
-    </div>
+    <Router>
+      <div className="app-container">
+        <Header
+          user={user}
+          onSignOut={signOut}
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        />
+        <div className="app-body">
+          <Sidebar
+            activeView={activeView}
+            onViewChange={setActiveView}
+            isOpen={sidebarOpen}
+          />
+          <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+            <Routes>
+              <Route path="/" element={renderView()} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+        </div>
+        <Footer />
+      </div>
+    </Router>
   );
 }
 

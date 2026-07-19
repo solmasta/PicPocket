@@ -1,0 +1,101 @@
+.memory-lane {
+  padding: 1.5rem;
+}
+
+.memory-header {
+  margin-bottom: 2rem;
+}
+
+.memory-header h2 {
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem;
+  color: #333;
+}
+
+.memory-subtitle {
+  color: #888;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.no-memories {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 350px;
+  gap: 1rem;
+  text-align: center;
+  color: #888;
+}
+
+.memory-icon {
+  font-size: 4rem;
+}
+
+.no-memories h3 {
+  font-size: 1.3rem;
+  color: #555;
+  margin: 0;
+}
+
+.no-memories p {
+  color: #aaa;
+  max-width: 350px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.memories-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.memory-year-group {
+  /* Each year group */
+}
+
+.year-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.year-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #6c63ff;
+  color: #fff;
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.year-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.years-ago {
+  font-size: 0.7rem;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.year-line {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(to right, #c4c0ff, transparent);
+  border-radius: 1px;
+}
+
+.memory-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.875rem;
+}

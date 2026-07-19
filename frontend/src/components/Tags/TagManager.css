@@ -1,0 +1,58 @@
+.tag-manager {
+  margin-bottom: 0.25rem;
+}
+
+.tag-input-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  min-height: 42px;
+  background: #fff;
+  cursor: text;
+}
+
+.tag-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #ebe9ff;
+  color: #6c63ff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.tag-remove {
+  background: none;
+  border: none;
+  color: #6c63ff;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  margin-left: 2px;
+}
+
+.tag-remove:hover {
+  color: #ef4444;
+}
+
+.tag-input {
+  border: none;
+  outline: none;
+  font-size: 0.875rem;
+  flex: 1;
+  min-width: 100px;
+  color: #333;
+  background: transparent;
+}
+
+.tag-hint {
+  font-size: 0.72rem;
+  color: #bbb;
+  margin: 0.3rem 0 0;
+}
