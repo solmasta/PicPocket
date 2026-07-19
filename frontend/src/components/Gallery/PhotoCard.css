@@ -1,0 +1,278 @@
+.photo-card.grid-card {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  cursor: pointer;
+}
+
+.photo-card.grid-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.card-image-wrap {
+  position: relative;
+  padding-top: 75%;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.card-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.photo-card.grid-card:hover .card-image {
+  transform: scale(1.05);
+}
+
+.filter-badge,
+.public-badge,
+.cloud-badge {
+  position: absolute;
+  top: 6px;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.filter-badge {
+  left: 6px;
+  background: rgba(108, 99, 255, 0.85);
+  color: #fff;
+}
+
+.public-badge {
+  right: 6px;
+  background: rgba(34, 197, 94, 0.85);
+  color: #fff;
+}
+
+.cloud-badge {
+  bottom: 6px;
+  right: 6px;
+  background: none;
+  font-size: 1rem;
+}
+
+.card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px 12px 0 0;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.card-action-btn {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: transform 0.15s;
+}
+
+.card-action-btn:hover {
+  transform: scale(1.1);
+}
+
+.card-action-btn.delete {
+  background: rgba(239, 68, 68, 0.9);
+}
+
+.delete-confirm {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.delete-confirm p {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.confirm-btns {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-danger-sm,
+.btn-secondary-sm {
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-weight: 500;
+  border: none;
+  flex: 1;
+}
+
+.btn-danger-sm {
+  background: #ef4444;
+  color: #fff;
+}
+
+.btn-secondary-sm {
+  background: #e5e7eb;
+  color: #555;
+}
+
+.card-meta {
+  padding: 0.75rem;
+}
+
+.meta-filename {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #333;
+  margin: 0 0 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta-date,
+.meta-size,
+.meta-location {
+  font-size: 0.72rem;
+  color: #888;
+  margin: 0.1rem 0;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+}
+
+.tag-badge {
+  background: #ebe9ff;
+  color: #6c63ff;
+  font-size: 0.68rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.tag-more {
+  font-size: 0.68rem;
+  color: #888;
+}
+
+/* List view */
+.photo-card.list-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.75rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+}
+
+.list-thumbnail {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.list-info {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.list-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+  min-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-date,
+.list-size,
+.list-location {
+  font-size: 0.78rem;
+  color: #888;
+}
+
+.list-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.list-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.action-btn {
+  background: none;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 0.15s;
+}
+
+.action-btn:hover {
+  background: #f0f0f0;
+}
+
+.confirm-delete-btn {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+  font-size: 0.75rem;
+}
+
+.cancel-btn {
+  font-size: 0.75rem;
+}
