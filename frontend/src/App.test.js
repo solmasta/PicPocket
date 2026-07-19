@@ -1,15 +1,58 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
+import { useAuth } from './hooks/useAuth';
+import { usePhotos } from './hooks/usePhotos';
 
-test('renders PicPocket header', () => {
-  render(<App />);
-  expect(screen.getByText(/PicPocket/i)).toBeInTheDocument();
+jest.mock('./hooks/useAuth');
+jest.mock('./hooks/usePhotos');
+
+const signedInUser = {
+  id: 'user-1',
+  name: 'Test User',
+  email: 'test@example.com',
+  picture: 'https://example.com/avatar.png',
+};
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  usePhotos.mockReturnValue({
+    photos: [],
+    addPhoto: jest.fn(),
+    deletePhoto: jest.fn(),
+    updatePhoto: jest.fn(),
+    loading: false,
+  });
 });
 
-test('renders navigation tabs', () => {
+test('renders Google sign-in screen when signed out', () => {
+  useAuth.mockReturnValue({
+    user: null,
+    loading: false,
+    error: null,
+    signIn: jest.fn(),
+    signOut: jest.fn(),
+  });
+
   render(<App />);
-  expect(screen.getAllByText(/Collage/i).length).toBeGreaterThan(0);
-  expect(screen.getAllByText(/Filters/i).length).toBeGreaterThan(0);
-  expect(screen.getAllByText(/Horse Profile/i).length).toBeGreaterThan(0);
-  expect(screen.getAllByText(/Stories/i).length).toBeGreaterThan(0);
+
+  expect(screen.getByRole('heading', { name: /picpals/i })).not.toBeNull();
+  expect(screen.getByRole('button', { name: /sign in with google/i })).not.toBeNull();
+});
+
+test('renders navigation tabs when signed in', () => {
+  useAuth.mockReturnValue({
+    user: signedInUser,
+    loading: false,
+    error: null,
+    signIn: jest.fn(),
+    signOut: jest.fn(),
+  });
+
+  render(<App />);
+
+  expect(screen.getByText(/gallery/i)).not.toBeNull();
+  expect(screen.getByText(/collage maker/i)).not.toBeNull();
+  expect(screen.getByText(/filters/i)).not.toBeNull();
+  expect(screen.getByText(/horse profile/i)).not.toBeNull();
+  expect(screen.getByText(/photo stories/i)).not.toBeNull();
 });
