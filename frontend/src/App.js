@@ -14,7 +14,7 @@ import PhotoStories from './components/Stories/PhotoStories';
 import PhotoSlideshow from './components/Slideshow/PhotoSlideshow';
 import MemoryLane from './components/MemoryLane/MemoryLane';
 import AlbumSharing from './components/Sharing/AlbumSharing';
-import HorseProfile from './Components/HorseProfile';
+import HorseProfile from './components/HorseProfile';
 import Settings from './components/Settings/Settings';
 import { useAuth } from './hooks/useAuth';
 import { usePhotos } from './hooks/usePhotos';
