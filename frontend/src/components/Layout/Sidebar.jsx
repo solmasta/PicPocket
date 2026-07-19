@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { id: 'stories', icon: '📖', label: 'Photo Stories' },
   { id: 'slideshow', icon: '▶️', label: 'Slideshow' },
   { id: 'sharing', icon: '🔗', label: 'Albums & Sharing' },
+  { id: 'horse-profile', icon: '🐴', label: 'Horse Profile' },
 ];
 
 function Sidebar({ activeView, onViewChange, isOpen }) {

@@ -14,6 +14,7 @@ import PhotoStories from './components/Stories/PhotoStories';
 import PhotoSlideshow from './components/Slideshow/PhotoSlideshow';
 import MemoryLane from './components/MemoryLane/MemoryLane';
 import AlbumSharing from './components/Sharing/AlbumSharing';
+import HorseProfile from './Components/HorseProfile';
 import { useAuth } from './hooks/useAuth';
 import { usePhotos } from './hooks/usePhotos';
 
@@ -65,6 +66,8 @@ function App() {
         return <MemoryLane photos={photos} />;
       case 'sharing':
         return <AlbumSharing photos={photos} user={user} />;
+      case 'horse-profile':
+        return <HorseProfile />;
       default:
         return (
           <PhotoGallery
