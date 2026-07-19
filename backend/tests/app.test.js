@@ -9,6 +9,16 @@ process.env.GOOGLE_REDIRECT_URI = 'http://localhost:3001/auth/google/callback';
 const request = require('supertest');
 const app = require('../src/app');
 
+/**
+ * Helper: fetches a CSRF token from the app, returning both the token value
+ * and the Set-Cookie header so subsequent requests can send the CSRF cookie.
+ */
+async function fetchCsrfToken(agent) {
+  const res = await agent.get('/csrf-token');
+  expect(res.status).toBe(200);
+  return res.body.csrfToken;
+}
+
 describe('GET /health', () => {
   test('returns 200 with status ok', async () => {
     const res = await request(app).get('/health');
@@ -47,10 +57,29 @@ describe('GET /auth/google/callback', () => {
   });
 });
 
+describe('GET /csrf-token', () => {
+  test('returns a CSRF token', async () => {
+    const res = await request(app).get('/csrf-token');
+    expect(res.status).toBe(200);
+    expect(typeof res.body.csrfToken).toBe('string');
+    expect(res.body.csrfToken.length).toBeGreaterThan(0);
+  });
+});
+
 describe('POST /auth/logout', () => {
-  test('responds 200 and clears the session', async () => {
+  test('returns 403 without a CSRF token', async () => {
     const res = await request(app).post('/auth/logout');
+    expect(res.status).toBe(403);
+  });
+
+  test('responds 200 with a valid CSRF token', async () => {
+    const agent = request.agent(app);
+    const csrfToken = await fetchCsrfToken(agent);
+    const res = await agent
+      .post('/auth/logout')
+      .set('x-csrf-token', csrfToken);
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Logged out');
   });
 });
+

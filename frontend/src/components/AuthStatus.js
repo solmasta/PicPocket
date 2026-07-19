@@ -19,9 +19,14 @@ async function fetchCurrentUser() {
  * No tokens are ever stored or cleared on the frontend.
  */
 async function logout() {
+  // Fetch a CSRF token before the mutating request.
+  const tokenRes = await fetch(`${API_URL}/csrf-token`, { credentials: 'include' });
+  const { csrfToken } = await tokenRes.json();
+
   await fetch(`${API_URL}/auth/logout`, {
     method: 'POST',
     credentials: 'include',
+    headers: { 'x-csrf-token': csrfToken },
   });
 }
 

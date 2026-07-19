@@ -45,11 +45,18 @@ test('login button redirects to backend auth endpoint', async () => {
 test('logout button calls backend and clears user', async () => {
   global.fetch = jest
     .fn()
+    // Initial /auth/me — authenticated
     .mockResolvedValueOnce({
       status: 200,
       ok: true,
       json: async () => ({ userId: '123', email: 'test@example.com' }),
     })
+    // /csrf-token fetch inside logout()
+    .mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ csrfToken: 'mock-token' }),
+    })
+    // /auth/logout POST
     .mockResolvedValueOnce({ ok: true });
 
   render(<AuthStatus />);

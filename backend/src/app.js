@@ -4,10 +4,13 @@ require('dotenv').config();
 
 const express = require('express');
 const session = require('express-session');
+const cookieParser = require('cookie-parser');
+const { doubleCsrf } = require('csrf-csrf');
 const { getAuthUrl, exchangeCodeForTokens, revokeTokens } = require('./auth');
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
 app.use(
   session({
@@ -22,6 +25,39 @@ app.use(
     },
   })
 );
+
+// ─── CSRF protection (Double Submit Cookie pattern) ───────────────────────────
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+const { generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
+  getSecret: () =>
+    process.env.SESSION_SECRET ||
+    (() => { throw new Error('SESSION_SECRET env variable is required'); })(),
+  // Use the session ID as the per-request identifier (requires express-session).
+  getSessionIdentifier: (req) => req.sessionID,
+  // Use __Host- prefix in production (requires HTTPS); plain name in dev/test.
+  cookieName: isProduction ? '__Host-x-csrf-token' : 'x-csrf-token',
+  cookieOptions: {
+    httpOnly: false, // must be readable by the browser for the double-submit pattern
+    secure: isProduction,
+    sameSite: 'lax',
+  },
+});
+
+/** Exposes a CSRF token that the frontend must send as the x-csrf-token header on mutating requests */
+app.get('/csrf-token', (req, res) => {
+  // Persist the session so the session cookie is sent with this response and
+  // reused on subsequent requests. Without this, each stateless request gets a
+  // new sessionID, which would invalidate the CSRF token on the next call.
+  req.session.csrfInit = true;
+  req.session.save((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Session error' });
+    }
+    res.json({ csrfToken: generateCsrfToken(req, res) });
+  });
+});
 
 // ─── Auth routes ─────────────────────────────────────────────────────────────
 
@@ -60,8 +96,8 @@ app.get('/auth/me', (req, res) => {
   res.json({ userId: req.session.userId, email: req.session.email });
 });
 
-/** Logout: revoke tokens and destroy the session */
-app.post('/auth/logout', async (req, res) => {
+/** Logout: revoke tokens and destroy the session (CSRF-protected) */
+app.post('/auth/logout', doubleCsrfProtection, async (req, res) => {
   const { userId } = req.session;
   if (userId) {
     await revokeTokens(userId);
