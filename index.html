@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PicPocket – Horse Profile</title>
+  <style>
+    /* ── Horse-themed palette ── */
+    :root {
+      --brown-dark:     #4a2c0a;
+      --brown-mid:      #7b4a1e;
+      --brown-light:    #c4874a;
+      --cream:          #f5ecd7;
+      --cream-dark:     #e8d5b0;
+      --burgundy:       #6b1a2b;
+      --burgundy-light: #8b2639;
+      --text-dark:      #2d1a0a;
+      --text-muted:     #8a6a4a;
+      --border:         #c9a87a;
+      --shadow:         rgba(74, 44, 10, 0.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--cream-dark);
+      font-family: "Georgia", serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    /* ── Card ── */
+    .horse-profile-card {
+      background: var(--cream);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px var(--shadow);
+      width: 100%;
+      max-width: 560px;
+      color: var(--text-dark);
+    }
+
+    /* ── Header ── */
+    .horse-profile-header {
+      background: linear-gradient(135deg, var(--brown-dark) 0%, var(--brown-mid) 100%);
+      color: var(--cream);
+      padding: 1.25rem 1.5rem;
+      border-radius: 16px 16px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .horse-profile-header h2 { margin: 0; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.02em; }
+    .horse-icon { font-size: 1.8rem; line-height: 1; }
+
+    /* ── Body ── */
+    .horse-profile-body {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ── Photo ── */
+    .photo-upload-section { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+
+    .photo-preview {
+      width: 130px; height: 130px;
+      border-radius: 50%;
+      border: 4px solid var(--brown-light);
+      background: var(--cream-dark);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+    .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+    .photo-placeholder { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; color: var(--text-muted); font-size: 0.85rem; text-align: center; }
+    .photo-placeholder-icon { font-size: 2.5rem; }
+
+    .photo-upload-btn {
+      background: var(--brown-light); color: #fff;
+      border: none; border-radius: 20px; padding: 0.45rem 1.2rem;
+      font-size: 0.875rem; cursor: pointer; font-family: inherit;
+      transition: background 0.2s;
+    }
+    .photo-upload-btn:hover { background: var(--brown-mid); }
+    #photoInput { display: none; }
+
+    /* ── Divider ── */
+    .section-divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+    /* ── Form ── */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .form-group.full-width { grid-column: 1 / -1; }
+
+    .form-group label {
+      font-size: 0.8rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--brown-mid);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      background: #fff; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 0.55rem 0.75rem; font-size: 0.95rem; font-family: inherit;
+      color: var(--text-dark); transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--brown-light);
+      box-shadow: 0 0 0 3px rgba(196,135,74,0.2);
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+
+    /* ── Vaccinations ── */
+    .vaccination-section { display: flex; flex-direction: column; gap: 0.75rem; }
+    .vaccination-section h3 {
+      margin: 0; font-size: 0.95rem; font-weight: 700;
+      color: var(--burgundy); display: flex; align-items: center; gap: 0.4rem;
+    }
+    .vaccination-list { display: flex; flex-direction: column; gap: 0.6rem; }
+    .vaccination-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.6rem; align-items: center; }
+
+    .vaccination-row input {
+      background: #fff; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 0.5rem 0.65rem; font-size: 0.875rem; font-family: inherit;
+      color: var(--text-dark); transition: border-color 0.2s, box-shadow 0.2s; width: 100%;
+    }
+    .vaccination-row input:focus {
+      outline: none; border-color: var(--brown-light);
+      box-shadow: 0 0 0 3px rgba(196,135,74,0.2);
+    }
+
+    .remove-vacc-btn {
+      background: none; border: 1.5px solid var(--burgundy-light); color: var(--burgundy-light);
+      border-radius: 6px; width: 30px; height: 30px; cursor: pointer; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, color 0.2s; flex-shrink: 0;
+    }
+    .remove-vacc-btn:hover { background: var(--burgundy-light); color: #fff; }
+
+    .add-vacc-btn {
+      background: none; border: 1.5px dashed var(--brown-light); color: var(--brown-mid);
+      border-radius: 8px; padding: 0.45rem 1rem; font-size: 0.85rem; font-family: inherit;
+      cursor: pointer; transition: background 0.2s, border-color 0.2s; align-self: flex-start;
+    }
+    .add-vacc-btn:hover { background: var(--cream-dark); border-color: var(--brown-mid); }
+
+    /* ── Footer ── */
+    .horse-profile-footer {
+      display: flex; justify-content: flex-end; gap: 0.75rem;
+      padding: 1rem 1.5rem 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-cancel {
+      background: #fff; border: 1.5px solid var(--border); color: var(--text-muted);
+      border-radius: 8px; padding: 0.6rem 1.4rem; font-size: 0.95rem; font-family: inherit;
+      cursor: pointer; transition: background 0.2s, color 0.2s;
+    }
+    .btn-cancel:hover { background: var(--cream-dark); color: var(--text-dark); }
+
+    .btn-save {
+      background: linear-gradient(135deg, var(--burgundy) 0%, var(--burgundy-light) 100%);
+      border: none; color: #fff; border-radius: 8px; padding: 0.6rem 1.6rem;
+      font-size: 0.95rem; font-family: inherit; font-weight: 700;
+      cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+      box-shadow: 0 2px 8px rgba(107,26,43,0.35);
+    }
+    .btn-save:hover { opacity: 0.9; }
+    .btn-save:active { transform: scale(0.97); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%;
+      transform: translateX(-50%);
+      background: var(--brown-dark); color: var(--cream);
+      padding: 0.7rem 1.5rem; border-radius: 24px; font-size: 0.9rem;
+      box-shadow: 0 4px 16px var(--shadow); z-index: 2000;
+      animation: fadeInUp 0.3s ease; display: none;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .form-row { grid-template-columns: 1fr; }
+      .vaccination-row { grid-template-columns: 1fr auto; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="horse-profile-card">
+  <!-- Header -->
+  <header class="horse-profile-header">
+    <span class="horse-icon" aria-hidden="true">🐴</span>
+    <h2>Horse Profile</h2>
+  </header>
+
+  <form id="horseForm" novalidate>
+    <div class="horse-profile-body">
+
+      <!-- Photo upload -->
+      <div class="photo-upload-section">
+        <div class="photo-preview" id="photoPreview">
+          <div class="photo-placeholder">
+            <span class="photo-placeholder-icon" aria-hidden="true">🐎</span>
+            <span>No photo</span>
+          </div>
+        </div>
+        <button type="button" class="photo-upload-btn" id="photoBtn">Upload Photo</button>
+        <input type="file" id="photoInput" accept="image/*" aria-label="Upload horse photo" />
+      </div>
+
+      <hr class="section-divider" />
+
+      <!-- Basic info -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="horseName">Horse Name</label>
+          <input id="horseName" type="text" placeholder="e.g. Shadowfax" required />
+        </div>
+
+        <div class="form-group">
+          <label for="horseAge">Age (years)</label>
+          <input id="horseAge" type="number" min="0" max="50" placeholder="e.g. 6" />
+        </div>
+
+        <div class="form-group">
+          <label for="horseBreed">Breed</label>
+          <select id="horseBreed">
+            <option value="">Select a breed…</option>
+            <option>Arabian</option>
+            <option>Thoroughbred</option>
+            <option>Quarter Horse</option>
+            <option>Appaloosa</option>
+            <option>Paint Horse</option>
+            <option>Morgan</option>
+            <option>Tennessee Walking Horse</option>
+            <option>Andalusian</option>
+            <option>Friesian</option>
+            <option>Clydesdale</option>
+            <option>Mustang</option>
+            <option>Warmblood</option>
+            <option>Shetland Pony</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="horseColor">Coat Color</label>
+          <input id="horseColor" type="text" placeholder="e.g. Bay, Chestnut" />
+        </div>
+
+        <div class="form-group full-width">
+          <label for="horseNotes">Notes</label>
+          <textarea id="horseNotes" placeholder="Temperament, special care, diet…"></textarea>
+        </div>
+      </div>
+
+      <hr class="section-divider" />
+
+      <!-- Vaccinations -->
+      <div class="vaccination-section">
+        <h3><span aria-hidden="true">💉</span> Vaccination Records</h3>
+        <div class="vaccination-list" id="vaccList">
+          <!-- rows injected by JS -->
+        </div>
+        <button type="button" class="add-vacc-btn" id="addVaccBtn">+ Add Vaccination</button>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="horse-profile-footer">
+      <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+      <button type="submit" class="btn-save">Save Profile</button>
+    </footer>
+  </form>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status">✓ Horse profile saved!</div>
+
+<script>
+  /* ── Photo upload ── */
+  const photoBtn     = document.getElementById("photoBtn");
+  const photoInput   = document.getElementById("photoInput");
+  const photoPreview = document.getElementById("photoPreview");
+
+  photoBtn.addEventListener("click", () => photoInput.click());
+  photoInput.addEventListener("change", () => {
+    const file = photoInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      photoPreview.innerHTML = `<img src="${e.target.result}" alt="Horse photo preview" />`;
+      photoBtn.textContent = "Change Photo";
+    };
+    reader.readAsDataURL(file);
+  });
+
+  /* ── Vaccinations ── */
+  const vaccList = document.getElementById("vaccList");
+  let vaccCount  = 0;
+
+  function addVaccinationRow(name = "", date = "") {
+    const idx = vaccCount++;
+    const row = document.createElement("div");
+    row.className = "vaccination-row";
+    row.dataset.idx = idx;
+    row.innerHTML = `
+      <input type="text"  placeholder="Vaccine name" aria-label="Vaccine name" value="${name}" />
+      <input type="date"  aria-label="Vaccine date"  value="${date}" />
+      <button type="button" class="remove-vacc-btn" aria-label="Remove vaccination" title="Remove">×</button>
+    `;
+    row.querySelector(".remove-vacc-btn").addEventListener("click", () => {
+      if (vaccList.children.length > 1) row.remove();
+    });
+    vaccList.appendChild(row);
+  }
+
+  document.getElementById("addVaccBtn").addEventListener("click", () => addVaccinationRow());
+
+  /* seed one empty row */
+  addVaccinationRow();
+
+  /* ── Cancel ── */
+  document.getElementById("cancelBtn").addEventListener("click", () => {
+    if (confirm("Discard changes?")) {
+      document.getElementById("horseForm").reset();
+      photoPreview.innerHTML = `
+        <div class="photo-placeholder">
+          <span class="photo-placeholder-icon">🐎</span>
+          <span>No photo</span>
+        </div>`;
+      photoBtn.textContent = "Upload Photo";
+    }
+  });
+
+  /* ── Save ── */
+  document.getElementById("horseForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const vaccinations = Array.from(vaccList.querySelectorAll(".vaccination-row")).map((row) => {
+      const inputs = row.querySelectorAll("input");
+      return { name: inputs[0].value, date: inputs[1].value };
+    });
+
+    const profile = {
+      name:         document.getElementById("horseName").value,
+      age:          document.getElementById("horseAge").value,
+      breed:        document.getElementById("horseBreed").value,
+      color:        document.getElementById("horseColor").value,
+      notes:        document.getElementById("horseNotes").value,
+      vaccinations,
+      savedAt:      new Date().toISOString(),
+    };
+
+    console.log("Saved profile:", profile);
+
+    /* Show toast */
+    const toast = document.getElementById("toast");
+    toast.style.display = "block";
+    toast.style.animation = "none";
+    void toast.offsetWidth; /* reflow to restart animation */
+    toast.style.animation = "";
+    setTimeout(() => { toast.style.display = "none"; }, 2500);
+  });
+</script>
+</body>
+</html>

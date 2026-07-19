@@ -1,0 +1,361 @@
+/* Horse Profile Component — horse-themed palette */
+:root {
+  --brown-dark: #4a2c0a;
+  --brown-mid: #7b4a1e;
+  --brown-light: #c4874a;
+  --cream: #f5ecd7;
+  --cream-dark: #e8d5b0;
+  --burgundy: #6b1a2b;
+  --burgundy-light: #8b2639;
+  --text-dark: #2d1a0a;
+  --text-muted: #8a6a4a;
+  --border: #c9a87a;
+  --shadow: rgba(74, 44, 10, 0.15);
+}
+
+.horse-profile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(74, 44, 10, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.horse-profile-card {
+  background: var(--cream);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px var(--shadow);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  font-family: "Georgia", serif;
+  color: var(--text-dark);
+}
+
+/* Header */
+.horse-profile-header {
+  background: linear-gradient(135deg, var(--brown-dark) 0%, var(--brown-mid) 100%);
+  color: var(--cream);
+  padding: 1.25rem 1.5rem;
+  border-radius: 16px 16px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.horse-profile-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.horse-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+/* Body */
+.horse-profile-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Photo upload */
+.photo-upload-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.photo-preview {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 4px solid var(--brown-light);
+  object-fit: cover;
+  background: var(--cream-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.photo-placeholder-icon {
+  font-size: 2.5rem;
+}
+
+.photo-upload-btn {
+  background: var(--brown-light);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 0.45rem 1.2rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+
+.photo-upload-btn:hover {
+  background: var(--brown-mid);
+}
+
+.photo-upload-input {
+  display: none;
+}
+
+/* Divider */
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+/* Form fields */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--brown-mid);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text-dark);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--brown-light);
+  box-shadow: 0 0 0 3px rgba(196, 135, 74, 0.2);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Vaccination section */
+.vaccination-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.vaccination-section h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--burgundy);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.vaccination-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.vaccination-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.vaccination-row input {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--text-dark);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.vaccination-row input:focus {
+  outline: none;
+  border-color: var(--brown-light);
+  box-shadow: 0 0 0 3px rgba(196, 135, 74, 0.2);
+}
+
+.remove-vacc-btn {
+  background: none;
+  border: 1.5px solid var(--burgundy-light);
+  color: var(--burgundy-light);
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+
+.remove-vacc-btn:hover {
+  background: var(--burgundy-light);
+  color: #fff;
+}
+
+.add-vacc-btn {
+  background: none;
+  border: 1.5px dashed var(--brown-light);
+  color: var(--brown-mid);
+  border-radius: 8px;
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  align-self: flex-start;
+}
+
+.add-vacc-btn:hover {
+  background: var(--cream-dark);
+  border-color: var(--brown-mid);
+}
+
+/* Footer / Action buttons */
+.horse-profile-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.btn-cancel {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 8px;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-cancel:hover {
+  background: var(--cream-dark);
+  color: var(--text-dark);
+}
+
+.btn-save {
+  background: linear-gradient(135deg, var(--burgundy) 0%, var(--burgundy-light) 100%);
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.6rem 1.6rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  box-shadow: 0 2px 8px rgba(107, 26, 43, 0.35);
+}
+
+.btn-save:hover {
+  opacity: 0.9;
+}
+
+.btn-save:active {
+  transform: scale(0.97);
+}
+
+/* Success toast */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--brown-dark);
+  color: var(--cream);
+  padding: 0.7rem 1.5rem;
+  border-radius: 24px;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 16px var(--shadow);
+  z-index: 2000;
+  animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .vaccination-row {
+    grid-template-columns: 1fr auto;
+  }
+  .vaccination-row input:last-of-type {
+    grid-column: 1 / -1;
+  }
+}
