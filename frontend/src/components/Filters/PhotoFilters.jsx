@@ -22,7 +22,7 @@ function PhotoFilters({ photo, onSave }) {
       setTags(photo.tags || []);
       setSaved(false);
     }
-  }, [photo?.id]);
+  }, [photo]);
 
   if (!photo) {
     return (

@@ -4,12 +4,11 @@ import './MemoryLane.css';
 
 function MemoryLane({ photos }) {
   const today = new Date();
+  const todayMonth = today.getMonth();
+  const todayDay = today.getDate();
+  const currentYear = today.getFullYear();
 
   const memoriesData = useMemo(() => {
-    const todayMonth = today.getMonth();
-    const todayDay = today.getDate();
-    const currentYear = today.getFullYear();
-
     const memories = photos.filter((photo) => {
       const date = new Date(photo.uploadDate);
       return (
@@ -30,7 +29,7 @@ function MemoryLane({ photos }) {
     return Object.entries(byYear)
       .sort(([a], [b]) => Number(b) - Number(a))
       .map(([year, yearPhotos]) => ({ year: Number(year), photos: yearPhotos }));
-  }, [photos, today.toDateString()]);
+  }, [photos, todayMonth, todayDay, currentYear]);
 
   const formattedDate = today.toLocaleDateString('en-US', {
     month: 'long',
