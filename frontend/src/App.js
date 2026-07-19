@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './styles/App.css';
 import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
@@ -85,7 +85,7 @@ function App() {
   };
 
   return (
-    <Router basename={process.env.PUBLIC_URL}>
+    <Router>
       <div className="app-container">
         <Header
           user={user}
