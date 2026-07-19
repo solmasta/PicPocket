@@ -1,0 +1,91 @@
+.location-tag {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+
+.location-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.location-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #e0e0e0;
+  border-radius: 24px;
+  transition: background 0.2s;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: #6c63ff;
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+.location-status {
+  font-size: 0.8rem;
+  color: #888;
+  margin: 0.5rem 0 0;
+}
+
+.location-error {
+  font-size: 0.8rem;
+  color: #dc2626;
+  margin: 0.5rem 0 0;
+}
+
+.location-preview {
+  margin-top: 0.5rem;
+  background: #f0eeff;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.location-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #555;
+  margin: 0 0 0.2rem;
+}
+
+.location-coords {
+  font-size: 0.75rem;
+  color: #888;
+  margin: 0;
+}

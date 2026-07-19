@@ -1,0 +1,339 @@
+.album-sharing {
+  padding: 1.5rem;
+}
+
+.album-sharing h2 {
+  font-size: 1.5rem;
+  margin: 0 0 1.5rem;
+  color: #333;
+}
+
+.sharing-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.create-album-panel,
+.albums-list-panel {
+  background: #fff;
+  border: 1px solid #e8e8f0;
+  border-radius: 14px;
+  padding: 1.25rem;
+}
+
+.create-album-panel h3,
+.albums-list-panel h3 {
+  font-size: 1.05rem;
+  margin: 0 0 1.25rem;
+  color: #333;
+}
+
+.form-field {
+  margin-bottom: 1rem;
+}
+
+.form-field label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+
+.text-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.privacy-options {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.privacy-btn {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #666;
+  transition: all 0.15s;
+}
+
+.privacy-btn.active {
+  background: #ebe9ff;
+  border-color: #6c63ff;
+  color: #6c63ff;
+  font-weight: 600;
+}
+
+.photo-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.picker-thumb {
+  position: relative;
+  cursor: pointer;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  transition: border-color 0.15s;
+  aspect-ratio: 1;
+}
+
+.picker-thumb.selected {
+  border-color: #6c63ff;
+}
+
+.picker-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.check-mark {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  background: #6c63ff;
+  color: #fff;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-hint {
+  grid-column: 1 / -1;
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.create-album-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: #6c63ff;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 0.5rem;
+}
+
+.create-album-btn:hover:not(:disabled) {
+  background: #5a52d5;
+}
+
+.create-album-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Albums list */
+.no-albums {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: #aaa;
+  text-align: center;
+}
+
+.no-albums span {
+  font-size: 2.5rem;
+}
+
+.albums-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.album-card {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  border: 1px solid #e8e8f0;
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+.album-cover {
+  width: 72px;
+  height: 54px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f0f0f0;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.album-placeholder {
+  font-size: 1.5rem;
+}
+
+.album-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.album-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.album-meta {
+  font-size: 0.78rem;
+  color: #888;
+  margin: 0 0 0.15rem;
+}
+
+.album-date {
+  font-size: 0.75rem;
+  color: #aaa;
+  margin: 0;
+}
+
+.privacy-badge {
+  font-weight: 500;
+}
+
+.privacy-badge.public {
+  color: #22c55e;
+}
+
+.privacy-badge.private {
+  color: #888;
+}
+
+.album-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.album-action-btn {
+  background: none;
+  border: 1px solid #e8e8f0;
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.15s;
+}
+
+.album-action-btn:hover {
+  background: #f0f0f7;
+}
+
+.album-action-btn.delete:hover {
+  background: #fee2e2;
+}
+
+/* Share popup */
+.share-popup {
+  margin-top: 1.25rem;
+  background: #f7f7fc;
+  border: 1px solid #e8e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.share-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.share-popup-header h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.share-popup-header button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 1rem;
+}
+
+.share-link-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.share-link-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #666;
+  background: #fff;
+}
+
+.copy-btn {
+  background: #6c63ff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.share-note {
+  font-size: 0.75rem;
+  color: #888;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .sharing-layout {
+    grid-template-columns: 1fr;
+  }
+}
