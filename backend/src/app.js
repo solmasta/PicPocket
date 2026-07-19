@@ -27,6 +27,7 @@ app.use(
 );
 
 // ─── CSRF protection (Double Submit Cookie pattern) ───────────────────────────
+// Applied globally — doubleCsrfProtection is a no-op for safe methods (GET/HEAD/OPTIONS).
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -44,6 +45,8 @@ const { generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
     sameSite: 'lax',
   },
 });
+
+app.use(doubleCsrfProtection);
 
 /** Exposes a CSRF token that the frontend must send as the x-csrf-token header on mutating requests */
 app.get('/csrf-token', (req, res) => {
@@ -97,7 +100,7 @@ app.get('/auth/me', (req, res) => {
 });
 
 /** Logout: revoke tokens and destroy the session (CSRF-protected) */
-app.post('/auth/logout', doubleCsrfProtection, async (req, res) => {
+app.post('/auth/logout', async (req, res) => {
   const { userId } = req.session;
   if (userId) {
     await revokeTokens(userId);
