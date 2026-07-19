@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.css": "/PicPocket/static/css/main.cb3f9bd3.css",
-    "main.js": "/PicPocket/static/js/main.13d4daa9.js",
-    "index.html": "/PicPocket/index.html",
-    "main.cb3f9bd3.css.map": "/PicPocket/static/css/main.cb3f9bd3.css.map",
-    "main.13d4daa9.js.map": "/PicPocket/static/js/main.13d4daa9.js.map"
+    "main.css": "./static/css/main.cb3f9bd3.css",
+    "main.js": "./static/js/main.13d4daa9.js",
+    "index.html": "./index.html",
+    "main.cb3f9bd3.css.map": "./static/css/main.cb3f9bd3.css.map",
+    "main.13d4daa9.js.map": "./static/js/main.13d4daa9.js.map"
   },
   "entrypoints": [
     "static/css/main.cb3f9bd3.css",
