@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PicPocket Ranch Gallery</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="gallery-shell">
+    <h1>PicPocket Ranch Gallery</h1>
+    <section class="stable-door-grid" aria-label="Horse photo gallery">
+      <article class="photo-card">
+        <div class="barn-window">
+          <div class="hoof-loader" aria-hidden="true">
+            <span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span>
+          </div>
+          <img src="https://images.unsplash.com/photo-1574781330855-d0db8cc6a79c?auto=format&fit=crop&w=900&q=80" alt="Willow in the meadow" loading="lazy" />
+          <div class="overlay">
+            <h2>Willow</h2>
+            <p>#gentle #meadow</p>
+          </div>
+        </div>
+      </article>
+      <article class="photo-card">
+        <div class="barn-window">
+          <div class="hoof-loader" aria-hidden="true">
+            <span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span>
+          </div>
+          <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=900&q=80" alt="Comet by the fence line" loading="lazy" />
+          <div class="overlay">
+            <h2>Comet</h2>
+            <p>#spirited #sunset</p>
+          </div>
+        </div>
+      </article>
+      <article class="photo-card">
+        <div class="barn-window">
+          <div class="hoof-loader" aria-hidden="true">
+            <span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span>
+          </div>
+          <img src="https://images.unsplash.com/photo-1465406325903-9d93ee82f613?auto=format&fit=crop&w=900&q=80" alt="Rusty near the stable" loading="lazy" />
+          <div class="overlay">
+            <h2>Rusty</h2>
+            <p>#barnlife #trail</p>
+          </div>
+        </div>
+      </article>
+      <article class="photo-card">
+        <div class="barn-window">
+          <div class="hoof-loader" aria-hidden="true">
+            <span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span>
+          </div>
+          <img src="https://images.unsplash.com/photo-1526095179574-86e545346ae6?auto=format&fit=crop&w=900&q=80" alt="Maple in the paddock" loading="lazy" />
+          <div class="overlay">
+            <h2>Maple</h2>
+            <p>#paddock #playful</p>
+          </div>
+        </div>
+      </article>
+      <article class="photo-card">
+        <div class="barn-window">
+          <div class="hoof-loader" aria-hidden="true">
+            <span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span>
+          </div>
+          <img src="https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=900&q=80" alt="Sable at morning light" loading="lazy" />
+          <div class="overlay">
+            <h2>Sable</h2>
+            <p>#morning #calm</p>
+          </div>
+        </div>
+      </article>
+      <article class="photo-card">
+        <div class="barn-window">
+          <div class="hoof-loader" aria-hidden="true">
+            <span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span>
+          </div>
+          <img src="https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=900&q=80" alt="Bramble on the ridge" loading="lazy" />
+          <div class="overlay">
+            <h2>Bramble</h2>
+            <p>#ridge #adventure</p>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const images = document.querySelectorAll(".barn-window img");
+    for (const image of images) {
+      const windowFrame = image.closest(".barn-window");
+      const markLoaded = () => windowFrame.classList.add("loaded");
+      if (image.complete) {
+        markLoaded();
+      } else {
+        image.addEventListener("load", markLoaded, { once: true });
+      }
+    }
+  </script>
+</body>
+</html>
