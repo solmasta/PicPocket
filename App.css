@@ -1,0 +1,63 @@
+:root {
+  --horse-brown: #8B4513;
+  --cream: #F5DEB3;
+  --burgundy: #800020;
+  --tan: #D2B48C;
+  --white: #FFFFFF;
+}
+
+.App {
+  text-align: center;
+  background: linear-gradient(135deg, var(--tan) 0%, var(--cream) 100%);
+  min-height: 100vh;
+  font-family: 'Arial', sans-serif;
+}
+
+.App-header {
+  background-color: var(--horse-brown);
+  padding: 20px;
+  color: var(--white);
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255,255,255,0.1) 10px,
+    rgba(255,255,255,0.1) 20px
+  );
+}
+
+.horse-button {
+  background-color: var(--burgundy);
+  color: var(--white);
+  border: none;
+  padding: 15px 30px;
+  font-size: 18px;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.horse-button:hover {
+  background-color: #660018;
+  transform: scale(1.05);
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.photo-placeholder {
+  background: var(--horse-brown);
+  color: var(--white);
+  padding: 40px;
+  border-radius: 15px;
+  font-size: 24px;
+}
+
+.auth-section {
+  padding: 50px 20px;
+}
