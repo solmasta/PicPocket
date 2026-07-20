@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createMoodPlayer } from '../../utils/storyMusic';
 import './PhotoStories.css';
 
 const MUSIC_OPTIONS = [
@@ -16,6 +17,19 @@ function PhotoStories({ photos }) {
   const [music, setMusic] = useState('none');
   const [playing, setPlaying] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const playerRef = useRef(null);
+
+  useEffect(() => {
+    if (playing && music !== 'none') {
+      playerRef.current = createMoodPlayer(music);
+    }
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.stop();
+        playerRef.current = null;
+      }
+    };
+  }, [playing, music]);
 
   const togglePhotoSelection = (photo) => {
     setSelectedPhotos((prev) => {
