@@ -35,7 +35,7 @@ test('renders Google sign-in screen when signed out', () => {
 
   render(<App />);
 
-  expect(screen.getByRole('heading', { name: /picpals/i })).not.toBeNull();
+  expect(screen.getByRole('heading', { name: /pickpocket hints pictures photos/i })).not.toBeNull();
   expect(screen.getByRole('button', { name: /sign in with google/i })).not.toBeNull();
 });
 

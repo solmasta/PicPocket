@@ -14,7 +14,7 @@ function Header({ user, onSignOut, onToggleSidebar }) {
         </button>
         <div className="app-logo">
           <span className="logo-icon">📸</span>
-          <span className="logo-text">PicPals</span>
+          <span className="logo-text">PickPocket Hints Pictures Photos</span>
         </div>
       </div>
 

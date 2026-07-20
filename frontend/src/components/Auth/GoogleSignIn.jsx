@@ -8,7 +8,7 @@ function GoogleSignIn({ signIn, loading, error }) {
       <div className="signin-card">
         <div className="signin-logo">
           <span className="signin-logo-icon">📸</span>
-          <h1 className="signin-app-name">PicPals</h1>
+          <h1 className="signin-app-name">PickPocket Hints Pictures Photos</h1>
           <p className="signin-tagline">Your smart photo storage companion</p>
         </div>
 
@@ -64,7 +64,7 @@ function GoogleSignIn({ signIn, loading, error }) {
         </button>
 
         <p className="signin-privacy">
-          By signing in, you agree to grant PicPals access to your Google Photos and
+          By signing in, you agree to grant PickPocket Hints Pictures Photos access to your Google Photos and
           Drive for backup purposes. Your photos remain private and secure.
         </p>
       </div>

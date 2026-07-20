@@ -87,3 +87,10 @@
     width: 220px;
   }
 }
+
+@media (max-width: 600px) {
+  .sidebar {
+    top: 56px;
+    height: calc(100vh - 56px);
+  }
+}

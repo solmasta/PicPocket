@@ -112,3 +112,44 @@
   color: #aaa;
   line-height: 1.5;
 }
+
+@media (max-width: 600px) {
+  .signin-container {
+    align-items: flex-start;
+    padding: 0.75rem;
+  }
+
+  .signin-card {
+    border-radius: 14px;
+    padding: 1.25rem 1rem;
+    margin-top: 0.75rem;
+  }
+
+  .signin-logo {
+    margin-bottom: 1.2rem;
+  }
+
+  .signin-logo-icon {
+    font-size: 2.6rem;
+  }
+
+  .signin-app-name {
+    font-size: 1.3rem;
+    line-height: 1.2;
+  }
+
+  .signin-tagline {
+    font-size: 0.85rem;
+  }
+
+  .feature-item {
+    font-size: 0.8rem;
+    gap: 0.55rem;
+    padding: 0.45rem;
+  }
+
+  .google-signin-btn {
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+  }
+}
