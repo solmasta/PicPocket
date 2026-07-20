@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './Header.css';
 
 function Header({ user, onSignOut, onToggleSidebar }) {
+  const [avatarFailed, setAvatarFailed] = useState(false);
+
   return (
     <header className="app-header">
       <div className="header-left">
@@ -14,19 +16,26 @@ function Header({ user, onSignOut, onToggleSidebar }) {
         </button>
         <div className="app-logo">
           <span className="logo-icon">📸</span>
-          <span className="logo-text">PickPocket Hints Pictures Photos</span>
+          <span className="logo-text">Pic-Pocket</span>
         </div>
       </div>
 
       <div className="header-right">
         {user && (
           <div className="user-menu">
-            <img
-              src={user.picture}
-              alt={user.name}
-              className="user-avatar"
-              referrerPolicy="no-referrer"
-            />
+            {user.picture && !avatarFailed ? (
+              <img
+                src={user.picture}
+                alt={user.name}
+                className="user-avatar"
+                referrerPolicy="no-referrer"
+                onError={() => setAvatarFailed(true)}
+              />
+            ) : (
+              <div className="user-avatar user-avatar-fallback" aria-label={user.name}>
+                {user.name ? user.name.charAt(0).toUpperCase() : '?'}
+              </div>
+            )}
             <div className="user-info">
               <span className="user-name">{user.name}</span>
               <span className="user-email">{user.email}</span>

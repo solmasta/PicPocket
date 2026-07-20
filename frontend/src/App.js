@@ -25,7 +25,21 @@ function App() {
   const { photos, addPhoto, deletePhoto, updatePhoto, loading: photosLoading } = usePhotos(user);
   const [activeView, setActiveView] = useState('gallery');
   const [selectedPhoto, setSelectedPhoto] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768);
+
+  const isMobile = () => window.innerWidth <= 768;
+
+  const handleViewChange = (view) => {
+    setActiveView(view);
+    if (isMobile()) {
+      setSidebarOpen(false);
+    }
+  };
+
+  const handleSelectPhotoForEdit = (photo) => {
+    setSelectedPhoto(photo);
+    setActiveView('filters');
+  };
 
   // GoogleAuthBridge isolates useGoogleLogin so it's only called when inside
   // a GoogleOAuthProvider (i.e. when a Client ID is configured). It renders
@@ -44,7 +58,7 @@ function App() {
         {googleBridge}
         <div className="loading-screen">
           <div className="loading-spinner" />
-          <p>Loading PickPocket Hints Pictures Photos...</p>
+          <p>Loading Pic-Pocket...</p>
         </div>
       </>
     );
@@ -74,9 +88,9 @@ function App() {
       case 'upload':
         return <PhotoUpload onUpload={addPhoto} user={user} />;
       case 'search':
-        return <TagSearch photos={photos} onSelect={setSelectedPhoto} />;
+        return <TagSearch photos={photos} onSelect={handleSelectPhotoForEdit} />;
       case 'filters':
-        return <PhotoFilters photo={selectedPhoto} onSave={updatePhoto} />;
+        return <PhotoFilters photo={selectedPhoto} onSave={updatePhoto} onViewChange={setActiveView} />;
       case 'collage':
         return <CollageMaker photos={photos} />;
       case 'stories':
@@ -116,9 +130,16 @@ function App() {
         <div className="app-body">
           <Sidebar
             activeView={activeView}
-            onViewChange={setActiveView}
+            onViewChange={handleViewChange}
             isOpen={sidebarOpen}
           />
+          {sidebarOpen && (
+            <div
+              className="sidebar-backdrop"
+              onClick={() => setSidebarOpen(false)}
+              aria-hidden="true"
+            />
+          )}
           <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
             {renderView()}
           </main>
