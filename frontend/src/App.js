@@ -37,23 +37,6 @@ function MainApp() {
   const [activeView, setActiveView] = useState('gallery');
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768);
-<<<<<<< HEAD
-
-  const isMobile = () => window.innerWidth <= 768;
-
-  const handleViewChange = (view) => {
-    setActiveView(view);
-    if (isMobile()) {
-      setSidebarOpen(false);
-    }
-  };
-
-  const handleSelectPhotoForEdit = (photo) => {
-    setSelectedPhoto(photo);
-    setActiveView('filters');
-  };
-=======
->>>>>>> origin/main
 
   const isMobile = () => window.innerWidth <= 768;
 
@@ -71,20 +54,10 @@ function MainApp() {
 
   if (authLoading) {
     return (
-<<<<<<< HEAD
-      <>
-        {googleBridge}
-        <div className="loading-screen">
-          <div className="loading-spinner" />
-          <p>Loading Pic-Pocket...</p>
-        </div>
-      </>
-=======
       <div className="loading-screen">
         <div className="loading-spinner" />
         <p>Loading Pic-Pocket...</p>
       </div>
->>>>>>> origin/main
     );
   }
 
@@ -150,26 +123,6 @@ function MainApp() {
           onViewChange={handleViewChange}
           isOpen={sidebarOpen}
         />
-<<<<<<< HEAD
-        <div className="app-body">
-          <Sidebar
-            activeView={activeView}
-            onViewChange={handleViewChange}
-            isOpen={sidebarOpen}
-          />
-          {sidebarOpen && (
-            <div
-              className="sidebar-backdrop"
-              onClick={() => setSidebarOpen(false)}
-              aria-hidden="true"
-            />
-          )}
-          <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-            {renderView()}
-          </main>
-        </div>
-        <Footer />
-=======
         {sidebarOpen && (
           <div
             className="sidebar-backdrop"
@@ -180,7 +133,6 @@ function MainApp() {
         <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
           {renderView()}
         </main>
->>>>>>> origin/main
       </div>
       <Footer />
     </div>
