@@ -1,7 +1,7 @@
 {
-  "name": "picpals-backend",
+  "name": "pic-pocket-backend",
   "version": "1.0.0",
-  "description": "PicPals backend API server",
+  "description": "Pic-Pocket backend API server",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
