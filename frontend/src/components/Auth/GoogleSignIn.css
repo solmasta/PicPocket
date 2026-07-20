@@ -27,6 +27,14 @@
   margin-bottom: 0.5rem;
 }
 
+.signin-logo-img {
+  width: 96px;
+  height: 96px;
+  border-radius: 22px;
+  margin: 0 auto 0.5rem;
+  display: block;
+}
+
 .signin-app-name {
   font-size: 2rem;
   font-weight: 700;

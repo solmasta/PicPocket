@@ -1,5 +1,6 @@
 import React from 'react';
 import './GoogleSignIn.css';
+import logo from '../../logo.svg';
 
 function GoogleSignIn({ signIn, loading, error }) {
 
@@ -7,7 +8,7 @@ function GoogleSignIn({ signIn, loading, error }) {
     <div className="signin-container">
       <div className="signin-card">
         <div className="signin-logo">
-          <span className="signin-logo-icon">📸</span>
+          <img src={logo} alt="Pic-Pocket mascot logo" className="signin-logo-img" />
           <h1 className="signin-app-name">Pic-Pocket</h1>
           <p className="signin-tagline">Your smart photo storage companion</p>
         </div>

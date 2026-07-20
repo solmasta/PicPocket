@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Header.css';
+import logo from '../../logo.svg';
 
 function Header({ user, onSignOut, onToggleSidebar }) {
   const [avatarFailed, setAvatarFailed] = useState(false);
@@ -15,7 +16,7 @@ function Header({ user, onSignOut, onToggleSidebar }) {
           <span className="hamburger-icon">☰</span>
         </button>
         <div className="app-logo">
-          <span className="logo-icon">📸</span>
+          <img src={logo} alt="Pic-Pocket mascot logo" className="logo-icon-img" />
           <span className="logo-text">Pic-Pocket</span>
         </div>
       </div>
