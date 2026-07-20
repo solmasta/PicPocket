@@ -1,0 +1,113 @@
+.shared-album-page {
+  min-height: 100vh;
+  background: #f7f7fc;
+  padding: 2rem 1.5rem;
+  box-sizing: border-box;
+}
+
+.shared-album-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 6rem;
+  color: #888;
+}
+
+.shared-album-header {
+  max-width: 960px;
+  margin: 0 auto 2rem;
+  text-align: center;
+}
+
+.shared-album-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #222;
+  margin: 0 0 0.5rem;
+}
+
+.shared-album-meta {
+  font-size: 0.9rem;
+  color: #888;
+  margin: 0;
+}
+
+.shared-album-grid {
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.shared-album-thumb {
+  border-radius: 10px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  background: #e8e8f0;
+}
+
+.shared-album-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s;
+}
+
+.shared-album-thumb:hover img {
+  transform: scale(1.04);
+}
+
+.shared-album-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 5rem;
+  text-align: center;
+  color: #888;
+}
+
+.shared-album-icon {
+  font-size: 3rem;
+}
+
+.shared-album-message h2 {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 0;
+}
+
+.shared-album-message p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.shared-album-home-link {
+  margin-top: 0.5rem;
+  display: inline-block;
+  padding: 0.6rem 1.5rem;
+  background: #6c63ff;
+  color: #fff;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.shared-album-home-link:hover {
+  background: #5a52d5;
+}
+
+@media (max-width: 600px) {
+  .shared-album-title {
+    font-size: 1.5rem;
+  }
+
+  .shared-album-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+}
