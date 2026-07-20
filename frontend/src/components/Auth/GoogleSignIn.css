@@ -34,6 +34,20 @@
   margin: 0;
 }
 
+.signin-brand {
+  display: inline;
+}
+
+.signin-words {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #999;
+  margin-top: 0.2rem;
+}
+
 .signin-tagline {
   color: #777;
   margin: 0.5rem 0 0;

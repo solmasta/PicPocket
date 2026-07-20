@@ -34,6 +34,11 @@ function App() {
     }
   };
 
+  const handleSelectPhotoForEdit = (photo) => {
+    setSelectedPhoto(photo);
+    setActiveView('filters');
+  };
+
   if (authLoading) {
     return (
       <div className="loading-screen">
@@ -55,7 +60,7 @@ function App() {
             photos={photos}
             loading={photosLoading}
             onDelete={deletePhoto}
-            onSelect={setSelectedPhoto}
+            onSelect={handleSelectPhotoForEdit}
             onViewChange={setActiveView}
           />
         );
@@ -85,7 +90,7 @@ function App() {
             photos={photos}
             loading={photosLoading}
             onDelete={deletePhoto}
-            onSelect={setSelectedPhoto}
+            onSelect={handleSelectPhotoForEdit}
             onViewChange={setActiveView}
           />
         );
