@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './styles/App.css';
 import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
@@ -13,12 +14,24 @@ import PhotoStories from './components/Stories/PhotoStories';
 import PhotoSlideshow from './components/Slideshow/PhotoSlideshow';
 import MemoryLane from './components/MemoryLane/MemoryLane';
 import AlbumSharing from './components/Sharing/AlbumSharing';
+import SharedAlbumView from './components/Sharing/SharedAlbumView';
 import HorseProfile from './components/HorseProfile';
 import Settings from './components/Settings/Settings';
 import { useAuth } from './hooks/useAuth';
 import { usePhotos } from './hooks/usePhotos';
 
 function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/album/:token" element={<SharedAlbumView />} />
+        <Route path="*" element={<MainApp />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+function MainApp() {
   const { user, loading: authLoading, signOut, signIn, error } = useAuth();
   const { photos, addPhoto, deletePhoto, updatePhoto, loading: photosLoading } = usePhotos(user);
   const [activeView, setActiveView] = useState('gallery');
