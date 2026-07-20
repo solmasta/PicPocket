@@ -1,7 +1,7 @@
 {
-  "name": "picpals",
+  "name": "pic-pocket",
   "version": "1.0.0",
-  "description": "PicPals photo storage app - monorepo root",
+  "description": "Pic-Pocket photo storage app - monorepo root",
   "private": true,
   "scripts": {
     "build": "cd frontend && npm install && npm run build",

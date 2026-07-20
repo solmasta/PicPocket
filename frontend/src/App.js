@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './styles/App.css';
 import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
 import Footer from './components/Layout/Footer';
 import GoogleSignIn from './components/Auth/GoogleSignIn';
-import GoogleAuthBridge from './components/Auth/GoogleAuthBridge';
 import PhotoGallery from './components/Gallery/PhotoGallery';
 import PhotoUpload from './components/Upload/PhotoUpload';
 import TagSearch from './components/Tags/TagSearch';
@@ -14,18 +14,46 @@ import PhotoStories from './components/Stories/PhotoStories';
 import PhotoSlideshow from './components/Slideshow/PhotoSlideshow';
 import MemoryLane from './components/MemoryLane/MemoryLane';
 import AlbumSharing from './components/Sharing/AlbumSharing';
+import SharedAlbumView from './components/Sharing/SharedAlbumView';
 import HorseProfile from './components/HorseProfile';
 import Settings from './components/Settings/Settings';
 import { useAuth } from './hooks/useAuth';
 import { usePhotos } from './hooks/usePhotos';
-import { isGoogleAuthConfigured } from './config/googleAuth';
 
 function App() {
-  const { user, loading: authLoading, signOut, signIn, error, registerGoogleLogin, handleLoginSuccess, handleLoginError } = useAuth();
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/album/:token" element={<SharedAlbumView />} />
+        <Route path="*" element={<MainApp />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+function MainApp() {
+  const { user, loading: authLoading, signOut, signIn, error } = useAuth();
   const { photos, addPhoto, deletePhoto, updatePhoto, loading: photosLoading } = usePhotos(user);
   const [activeView, setActiveView] = useState('gallery');
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768);
+<<<<<<< HEAD
+
+  const isMobile = () => window.innerWidth <= 768;
+
+  const handleViewChange = (view) => {
+    setActiveView(view);
+    if (isMobile()) {
+      setSidebarOpen(false);
+    }
+  };
+
+  const handleSelectPhotoForEdit = (photo) => {
+    setSelectedPhoto(photo);
+    setActiveView('filters');
+  };
+=======
+>>>>>>> origin/main
 
   const isMobile = () => window.innerWidth <= 768;
 
@@ -41,19 +69,9 @@ function App() {
     setActiveView('filters');
   };
 
-  // GoogleAuthBridge isolates useGoogleLogin so it's only called when inside
-  // a GoogleOAuthProvider (i.e. when a Client ID is configured). It renders
-  // nothing but wires up the login trigger via registerGoogleLogin.
-  const googleBridge = isGoogleAuthConfigured() ? (
-    <GoogleAuthBridge
-      onSuccess={handleLoginSuccess}
-      onError={handleLoginError}
-      onReady={registerGoogleLogin}
-    />
-  ) : null;
-
   if (authLoading) {
     return (
+<<<<<<< HEAD
       <>
         {googleBridge}
         <div className="loading-screen">
@@ -61,16 +79,17 @@ function App() {
           <p>Loading Pic-Pocket...</p>
         </div>
       </>
+=======
+      <div className="loading-screen">
+        <div className="loading-spinner" />
+        <p>Loading Pic-Pocket...</p>
+      </div>
+>>>>>>> origin/main
     );
   }
 
   if (!user) {
-    return (
-      <>
-        {googleBridge}
-        <GoogleSignIn signIn={signIn} loading={authLoading} error={error} />
-      </>
-    );
+    return <GoogleSignIn signIn={signIn} loading={authLoading} error={error} />;
   }
 
   const renderView = () => {
@@ -81,7 +100,7 @@ function App() {
             photos={photos}
             loading={photosLoading}
             onDelete={deletePhoto}
-            onSelect={setSelectedPhoto}
+            onSelect={handleSelectPhotoForEdit}
             onViewChange={setActiveView}
           />
         );
@@ -111,7 +130,7 @@ function App() {
             photos={photos}
             loading={photosLoading}
             onDelete={deletePhoto}
-            onSelect={setSelectedPhoto}
+            onSelect={handleSelectPhotoForEdit}
             onViewChange={setActiveView}
           />
         );
@@ -119,14 +138,19 @@ function App() {
   };
 
   return (
-    <>
-      {googleBridge}
-      <div className="app-container">
-        <Header
-          user={user}
-          onSignOut={signOut}
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+    <div className="app-container">
+      <Header
+        user={user}
+        onSignOut={signOut}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+      />
+      <div className="app-body">
+        <Sidebar
+          activeView={activeView}
+          onViewChange={handleViewChange}
+          isOpen={sidebarOpen}
         />
+<<<<<<< HEAD
         <div className="app-body">
           <Sidebar
             activeView={activeView}
@@ -145,8 +169,21 @@ function App() {
           </main>
         </div>
         <Footer />
+=======
+        {sidebarOpen && (
+          <div
+            className="sidebar-backdrop"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+        <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+          {renderView()}
+        </main>
+>>>>>>> origin/main
       </div>
-    </>
+      <Footer />
+    </div>
   );
 }
 
