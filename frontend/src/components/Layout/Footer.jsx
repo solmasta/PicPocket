@@ -5,7 +5,7 @@ function Footer() {
   return (
     <footer className="app-footer">
       <p>
-        © {new Date().getFullYear()} PickPocket Hints Pictures Photos — Your memories, beautifully kept.
+        © {new Date().getFullYear()} Pic-Pocket — Your memories, beautifully kept.
       </p>
     </footer>
   );
