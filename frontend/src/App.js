@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './styles/App.css';
 import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
@@ -85,29 +84,24 @@ function App() {
   };
 
   return (
-    <Router>
-      <div className="app-container">
-        <Header
-          user={user}
-          onSignOut={signOut}
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+    <div className="app-container">
+      <Header
+        user={user}
+        onSignOut={signOut}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+      />
+      <div className="app-body">
+        <Sidebar
+          activeView={activeView}
+          onViewChange={setActiveView}
+          isOpen={sidebarOpen}
         />
-        <div className="app-body">
-          <Sidebar
-            activeView={activeView}
-            onViewChange={setActiveView}
-            isOpen={sidebarOpen}
-          />
-          <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-            <Routes>
-              <Route path="/" element={renderView()} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-        </div>
-        <Footer />
+        <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+          {renderView()}
+        </main>
       </div>
-    </Router>
+      <Footer />
+    </div>
   );
 }
 
