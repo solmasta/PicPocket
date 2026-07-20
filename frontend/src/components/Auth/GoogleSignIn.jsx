@@ -1,9 +1,7 @@
 import React from 'react';
-import { useAuth } from '../../hooks/useAuth';
 import './GoogleSignIn.css';
 
-function GoogleSignIn() {
-  const { signIn, loading, error } = useAuth();
+function GoogleSignIn({ signIn, loading, error }) {
 
   return (
     <div className="signin-container">
