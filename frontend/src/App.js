@@ -20,7 +20,7 @@ import { useAuth } from './hooks/useAuth';
 import { usePhotos } from './hooks/usePhotos';
 
 function App() {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading, signOut, signIn, error } = useAuth();
   const { photos, addPhoto, deletePhoto, updatePhoto, loading: photosLoading } = usePhotos(user);
   const [activeView, setActiveView] = useState('gallery');
   const [selectedPhoto, setSelectedPhoto] = useState(null);
@@ -36,7 +36,7 @@ function App() {
   }
 
   if (!user) {
-    return <GoogleSignIn />;
+    return <GoogleSignIn signIn={signIn} loading={authLoading} error={error} />;
   }
 
   const renderView = () => {
