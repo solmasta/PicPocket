@@ -8,11 +8,7 @@ function GoogleSignIn({ signIn, loading, error }) {
       <div className="signin-card">
         <div className="signin-logo">
           <span className="signin-logo-icon">📸</span>
-          <h1 className="signin-app-name">
-            <span className="signin-brand">PicPocket</span>
-            {' '}
-            <span className="signin-words">hints pictures photos</span>
-          </h1>
+          <h1 className="signin-app-name">Pic-Pocket</h1>
           <p className="signin-tagline">Your smart photo storage companion</p>
         </div>
 

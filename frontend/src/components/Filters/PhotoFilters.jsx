@@ -8,7 +8,7 @@ import {
 import TagManager from '../Tags/TagManager';
 import './PhotoFilters.css';
 
-function PhotoFilters({ photo, onSave }) {
+function PhotoFilters({ photo, onSave, onViewChange }) {
   const [selectedFilter, setSelectedFilter] = useState(photo?.filter || FILTERS.NONE);
   const [intensity, setIntensity] = useState(1);
   const [tags, setTags] = useState(photo?.tags || []);
@@ -29,6 +29,9 @@ function PhotoFilters({ photo, onSave }) {
       <div className="filters-empty">
         <span>✨</span>
         <p>Select a photo from the gallery to apply filters.</p>
+        <button className="btn-primary" onClick={() => onViewChange('gallery')}>
+          Go to Gallery
+        </button>
       </div>
     );
   }

@@ -80,9 +80,9 @@ function MainApp() {
       case 'upload':
         return <PhotoUpload onUpload={addPhoto} user={user} />;
       case 'search':
-        return <TagSearch photos={photos} onSelect={setSelectedPhoto} />;
+        return <TagSearch photos={photos} onSelect={handleSelectPhotoForEdit} />;
       case 'filters':
-        return <PhotoFilters photo={selectedPhoto} onSave={updatePhoto} />;
+        return <PhotoFilters photo={selectedPhoto} onSave={updatePhoto} onViewChange={setActiveView} />;
       case 'collage':
         return <CollageMaker photos={photos} />;
       case 'stories':
