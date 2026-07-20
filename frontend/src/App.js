@@ -44,7 +44,7 @@ function App() {
         {googleBridge}
         <div className="loading-screen">
           <div className="loading-spinner" />
-          <p>Loading PicPals...</p>
+          <p>Loading PickPocket Hints Pictures Photos...</p>
         </div>
       </>
     );

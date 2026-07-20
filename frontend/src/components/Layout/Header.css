@@ -47,6 +47,7 @@
   font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: -0.5px;
+  line-height: 1.1;
 }
 
 .header-right {
@@ -101,7 +102,48 @@
 }
 
 @media (max-width: 600px) {
+  .app-header {
+    padding: 0 0.75rem;
+    height: 56px;
+  }
+
+  .header-left {
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .app-logo {
+    min-width: 0;
+  }
+
+  .logo-icon {
+    font-size: 1.2rem;
+  }
+
+  .logo-text {
+    font-size: 0.8rem;
+    letter-spacing: 0;
+    max-width: 160px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-menu {
+    gap: 0.4rem;
+  }
+
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
   .user-info {
     display: none;
+  }
+
+  .sign-out-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.72rem;
   }
 }
