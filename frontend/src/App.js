@@ -96,7 +96,7 @@ function MainApp() {
       case 'horse-profile':
         return <HorseProfile />;
       case 'settings':
-        return <Settings />;
+        return <Settings user={user} />;
       default:
         return (
           <PhotoGallery

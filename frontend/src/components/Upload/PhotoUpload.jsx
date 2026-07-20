@@ -3,6 +3,7 @@ import TagManager from '../Tags/TagManager';
 import LocationTag from '../Location/LocationTag';
 import { uploadToDrive } from '../../services/googleDriveService';
 import { uploadToGooglePhotos } from '../../services/googlePhotosService';
+import { getAutoBackupPref } from '../../utils/preferences';
 import './PhotoUpload.css';
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic'];
@@ -12,8 +13,8 @@ function PhotoUpload({ onUpload, user }) {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [tags, setTags] = useState([]);
   const [locationEnabled, setLocationEnabled] = useState(false);
-  const [backupToDrive, setBackupToDrive] = useState(false);
-  const [backupToPhotos, setBackupToPhotos] = useState(false);
+  const [backupToDrive, setBackupToDrive] = useState(() => getAutoBackupPref());
+  const [backupToPhotos, setBackupToPhotos] = useState(() => getAutoBackupPref());
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
   const [errors, setErrors] = useState([]);
