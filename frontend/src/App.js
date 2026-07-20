@@ -4,6 +4,7 @@ import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
 import Footer from './components/Layout/Footer';
 import GoogleSignIn from './components/Auth/GoogleSignIn';
+import GoogleAuthBridge from './components/Auth/GoogleAuthBridge';
 import PhotoGallery from './components/Gallery/PhotoGallery';
 import PhotoUpload from './components/Upload/PhotoUpload';
 import TagSearch from './components/Tags/TagSearch';
@@ -17,25 +18,45 @@ import HorseProfile from './components/HorseProfile';
 import Settings from './components/Settings/Settings';
 import { useAuth } from './hooks/useAuth';
 import { usePhotos } from './hooks/usePhotos';
+import { isGoogleAuthConfigured } from './config/googleAuth';
 
 function App() {
-  const { user, loading: authLoading, signOut, signIn, error } = useAuth();
+  const { user, loading: authLoading, signOut, signIn, error, registerGoogleLogin, handleLoginSuccess, handleLoginError } = useAuth();
   const { photos, addPhoto, deletePhoto, updatePhoto, loading: photosLoading } = usePhotos(user);
   const [activeView, setActiveView] = useState('gallery');
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // GoogleAuthBridge isolates useGoogleLogin so it's only called when inside
+  // a GoogleOAuthProvider (i.e. when a Client ID is configured). It renders
+  // nothing but wires up the login trigger via registerGoogleLogin.
+  const googleBridge = isGoogleAuthConfigured() ? (
+    <GoogleAuthBridge
+      onSuccess={handleLoginSuccess}
+      onError={handleLoginError}
+      onReady={registerGoogleLogin}
+    />
+  ) : null;
+
   if (authLoading) {
     return (
-      <div className="loading-screen">
-        <div className="loading-spinner" />
-        <p>Loading PicPals...</p>
-      </div>
+      <>
+        {googleBridge}
+        <div className="loading-screen">
+          <div className="loading-spinner" />
+          <p>Loading PicPals...</p>
+        </div>
+      </>
     );
   }
 
   if (!user) {
-    return <GoogleSignIn signIn={signIn} loading={authLoading} error={error} />;
+    return (
+      <>
+        {googleBridge}
+        <GoogleSignIn signIn={signIn} loading={authLoading} error={error} />
+      </>
+    );
   }
 
   const renderView = () => {
@@ -84,24 +105,27 @@ function App() {
   };
 
   return (
-    <div className="app-container">
-      <Header
-        user={user}
-        onSignOut={signOut}
-        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-      />
-      <div className="app-body">
-        <Sidebar
-          activeView={activeView}
-          onViewChange={setActiveView}
-          isOpen={sidebarOpen}
+    <>
+      {googleBridge}
+      <div className="app-container">
+        <Header
+          user={user}
+          onSignOut={signOut}
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         />
-        <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-          {renderView()}
-        </main>
+        <div className="app-body">
+          <Sidebar
+            activeView={activeView}
+            onViewChange={setActiveView}
+            isOpen={sidebarOpen}
+          />
+          <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+            {renderView()}
+          </main>
+        </div>
+        <Footer />
       </div>
-      <Footer />
-    </div>
+    </>
   );
 }
 

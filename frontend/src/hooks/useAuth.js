@@ -1,24 +1,37 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useGoogleLogin } from '@react-oauth/google';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { saveAuthUser, getAuthUser, clearAuthUser } from '../utils/indexedDB';
+import { isGoogleAuthConfigured } from '../config/googleAuth';
 
-const GOOGLE_SCOPES = [
-  'openid',
-  'profile',
-  'email',
-  'https://www.googleapis.com/auth/photoslibrary',
-  'https://www.googleapis.com/auth/drive.file',
-].join(' ');
+// Anonymous, device-local identity used when the person hasn't signed in
+// with Google (or Google sign-in isn't configured at all). Photo storage,
+// gallery, filters, etc. all key off `user.id`, so this just needs to be
+// stable for the lifetime of this browser's IndexedDB.
+const LOCAL_USER = {
+  id: 'local-user',
+  isLocal: true,
+  name: 'You',
+  email: null,
+  picture: null,
+};
 
 export function useAuth() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Holds the trigger function returned by @react-oauth/google's
+  // useGoogleLogin, supplied by <GoogleAuthBridge> via registerGoogleLogin.
+  const googleLoginRef = useRef(null);
 
   // Restore session from IndexedDB on mount
   useEffect(() => {
     async function restoreSession() {
       try {
+        if (!isGoogleAuthConfigured()) {
+          // No Google Client ID — use a stable local identity so the rest
+          // of the app (gallery, upload, filters…) works without sign-in.
+          setUser(LOCAL_USER);
+          return;
+        }
         const savedUser = await getAuthUser();
         if (savedUser) {
           // Check if access token is still valid (rough check)
@@ -36,6 +49,12 @@ export function useAuth() {
     }
 
     restoreSession();
+  }, []);
+
+  // Called by <GoogleAuthBridge> once useGoogleLogin is ready.
+  // getLogin is a zero-arg factory that returns the current googleLogin fn.
+  const registerGoogleLogin = useCallback((getLogin) => {
+    googleLoginRef.current = getLogin;
   }, []);
 
   const handleLoginSuccess = useCallback(async (tokenResponse) => {
@@ -69,19 +88,17 @@ export function useAuth() {
     }
   }, []);
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: handleLoginSuccess,
-    onError: (err) => {
-      setError('Google sign-in failed. Please try again.');
-      console.error('Google OAuth error:', err);
-    },
-    scope: GOOGLE_SCOPES,
-  });
+  const handleLoginError = useCallback((err) => {
+    setError('Google sign-in failed. Please try again.');
+    console.error('Google OAuth error:', err);
+  }, []);
 
   const signIn = useCallback(() => {
     setError(null);
-    googleLogin();
-  }, [googleLogin]);
+    if (googleLoginRef.current) {
+      googleLoginRef.current()();
+    }
+  }, []);
 
   const signOut = useCallback(async () => {
     try {
@@ -100,5 +117,15 @@ export function useAuth() {
     }
   }, [user, signOut]);
 
-  return { user, loading, error, signIn, signOut, refreshToken };
+  return {
+    user,
+    loading,
+    error,
+    signIn,
+    signOut,
+    refreshToken,
+    registerGoogleLogin,
+    handleLoginSuccess,
+    handleLoginError,
+  };
 }
