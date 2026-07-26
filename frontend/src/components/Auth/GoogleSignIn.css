@@ -1,19 +1,49 @@
 .signin-container {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 1rem;
+  overflow: hidden;
+  background: linear-gradient(160deg, #6b4226 0%, #4a2f1a 55%, #2e1c10 100%);
+}
+
+.signin-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--signin-bg-image);
+  background-size: cover;
+  background-position: top center;
+  opacity: 0.28;
+  filter: blur(1px) saturate(0.9);
+}
+
+.signin-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.08) 0px,
+      rgba(0, 0, 0, 0.08) 2px,
+      rgba(255, 255, 255, 0.02) 2px,
+      rgba(255, 255, 255, 0.02) 10px
+    ),
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 40%, rgba(20, 12, 6, 0.65) 100%);
 }
 
 .signin-card {
-  background: #fff;
+  position: relative;
+  z-index: 1;
+  background: #fdf8f0;
   border-radius: 20px;
   padding: 2.5rem 2rem;
   max-width: 420px;
   width: 100%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   text-align: center;
 }
 
@@ -78,7 +108,7 @@
   font-size: 0.875rem;
   padding: 0.5rem;
   border-radius: 8px;
-  background: #f7f7fc;
+  background: #f6efe1;
 }
 
 .feature-item span:first-child {
