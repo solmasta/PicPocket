@@ -15,12 +15,16 @@ across the root, `frontend/`, and `backend/` packages are kept in lockstep.
   albums omit photo data from the link; same-device viewing still prefers
   the live IndexedDB copy.
 
-### Removed
-- `wrangler.toml` and `worker.js` (Cloudflare Worker deployment
-  scaffolding). Neither was wired into an actual deployment — no CI step
-  ran `wrangler deploy`, no `account_id` was configured, and the frontend
-  never called those endpoints — so they were dead code duplicating the
-  Express backend's routes and drifting out of sync with it.
+### Note
+- `wrangler.toml` and `worker.js` were briefly removed under the
+  (incorrect) assumption that no live deployment used them. A Cloudflare
+  Pages build tied to this repo actually runs `npm run build` followed by
+  `npx wrangler deploy`, configured directly in the Cloudflare dashboard —
+  invisible from the repo alone — so removing them broke that deploy.
+  Both files are restored as-is. Whether to keep the API routes in
+  `worker.js` (currently unused by the frontend, duplicated from
+  `backend/src/routes/*`) or trim `worker.js` down to asset-only hosting
+  is a separate decision, since it now affects a real deployment.
 
 ## [1.0.0] - baseline
 
