@@ -5,6 +5,7 @@ import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
 import Footer from './components/Layout/Footer';
 import GoogleSignIn from './components/Auth/GoogleSignIn';
+import GoogleAuthBridge from './components/Auth/GoogleAuthBridge';
 import PhotoGallery from './components/Gallery/PhotoGallery';
 import PhotoUpload from './components/Upload/PhotoUpload';
 import TagSearch from './components/Tags/TagSearch';
@@ -19,6 +20,7 @@ import HorseProfile from './components/HorseProfile';
 import Settings from './components/Settings/Settings';
 import { useAuth } from './hooks/useAuth';
 import { usePhotos } from './hooks/usePhotos';
+import { isGoogleAuthConfigured } from './config/googleAuth';
 
 function App() {
   return (
@@ -32,7 +34,16 @@ function App() {
 }
 
 function MainApp() {
-  const { user, loading: authLoading, signOut, signIn, error } = useAuth();
+  const {
+    user,
+    loading: authLoading,
+    signOut,
+    signIn,
+    error,
+    registerGoogleLogin,
+    handleLoginSuccess,
+    handleLoginError,
+  } = useAuth();
   const { photos, addPhoto, deletePhoto, updatePhoto, loading: photosLoading } = usePhotos(user);
   const [activeView, setActiveView] = useState('gallery');
   const [selectedPhoto, setSelectedPhoto] = useState(null);
@@ -52,17 +63,36 @@ function MainApp() {
     setActiveView('filters');
   };
 
+  // Registers the Google OAuth login trigger with useAuth so signIn() has
+  // something to call. Mounted whenever a Client ID is configured (matches
+  // the GoogleOAuthProvider gate in index.js).
+  const googleAuthBridge = isGoogleAuthConfigured() ? (
+    <GoogleAuthBridge
+      onSuccess={handleLoginSuccess}
+      onError={handleLoginError}
+      onReady={registerGoogleLogin}
+    />
+  ) : null;
+
   if (authLoading) {
     return (
-      <div className="loading-screen">
-        <div className="loading-spinner" />
-        <p>Loading Pic-Pocket...</p>
-      </div>
+      <>
+        {googleAuthBridge}
+        <div className="loading-screen">
+          <div className="loading-spinner" />
+          <p>Loading Pic-Pocket...</p>
+        </div>
+      </>
     );
   }
 
   if (!user) {
-    return <GoogleSignIn signIn={signIn} loading={authLoading} error={error} />;
+    return (
+      <>
+        {googleAuthBridge}
+        <GoogleSignIn signIn={signIn} loading={authLoading} error={error} />
+      </>
+    );
   }
 
   const renderView = () => {
@@ -112,6 +142,7 @@ function MainApp() {
 
   return (
     <div className="app-container">
+      {googleAuthBridge}
       <Header
         user={user}
         onSignOut={signOut}
