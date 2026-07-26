@@ -8,3 +8,7 @@
   color: #888;
   font-size: 0.8rem;
 }
+
+.app-footer__version {
+  color: #aaa;
+}
