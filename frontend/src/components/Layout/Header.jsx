@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './Header.css';
-import logo from '../../logo.svg';
+import logo from '../../assets/pic-pocket-logo.png';
 
 function Header({ user, onSignOut, onToggleSidebar }) {
   const [avatarFailed, setAvatarFailed] = useState(false);
