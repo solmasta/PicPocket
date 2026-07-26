@@ -43,9 +43,11 @@ function Header({ user, onSignOut, onToggleSidebar }) {
               <span className="user-name">{user.name}</span>
               <span className="user-email">{user.email}</span>
             </div>
-            <button className="sign-out-btn" onClick={onSignOut}>
-              Sign Out
-            </button>
+            {!user.isLocal && (
+              <button className="sign-out-btn" onClick={onSignOut}>
+                Sign Out
+              </button>
+            )}
           </div>
         )}
       </div>

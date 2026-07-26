@@ -1,11 +1,15 @@
 import React from 'react';
 import './GoogleSignIn.css';
 import logo from '../../assets/pic-pocket-logo.png';
+import barnBackground from '../../assets/faye-pic-pocket.jpg';
 
 function GoogleSignIn({ signIn, loading, error }) {
 
   return (
-    <div className="signin-container">
+    <div
+      className="signin-container"
+      style={{ '--signin-bg-image': `url(${barnBackground})` }}
+    >
       <div className="signin-card">
         <div className="signin-logo">
           <img src={logo} alt="Pic-Pocket mascot logo" className="signin-logo-img" />

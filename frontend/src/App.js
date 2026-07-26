@@ -6,6 +6,7 @@ import Sidebar from './components/Layout/Sidebar';
 import Footer from './components/Layout/Footer';
 import GoogleSignIn from './components/Auth/GoogleSignIn';
 import GoogleAuthBridge from './components/Auth/GoogleAuthBridge';
+import Splash from './components/Splash/Splash';
 import PhotoGallery from './components/Gallery/PhotoGallery';
 import PhotoUpload from './components/Upload/PhotoUpload';
 import TagSearch from './components/Tags/TagSearch';
@@ -78,10 +79,7 @@ function MainApp() {
     return (
       <>
         {googleAuthBridge}
-        <div className="loading-screen">
-          <div className="loading-spinner" />
-          <p>Loading Pic-Pocket...</p>
-        </div>
+        <Splash />
       </>
     );
   }
