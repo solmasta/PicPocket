@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useLocation, Link } from 'react-router-dom';
 import { getAllAlbums, getAllPhotos } from '../../utils/indexedDB';
+import { decodeSharePayload } from '../../utils/shareLink';
 import './SharedAlbumView.css';
 
 function SharedAlbumView() {
   const { token } = useParams();
+  const location = useLocation();
   const [album, setAlbum] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,27 +15,46 @@ function SharedAlbumView() {
   useEffect(() => {
     async function loadAlbum() {
       try {
+        // Same-device viewing: if this browser is the one that created the
+        // album, IndexedDB has the freshest copy — prefer it.
         const albums = await getAllAlbums();
-        const found = albums.find((a) => a.shareToken === token);
+        const localAlbum = albums.find((a) => a.shareToken === token);
 
-        if (!found) {
+        if (localAlbum) {
+          setAlbum(localAlbum);
+          if (localAlbum.isPublic) {
+            const allPhotos = await getAllPhotos();
+            setPhotos(allPhotos.filter((p) => localAlbum.photos.includes(p.id)));
+          }
+          return;
+        }
+
+        // Cross-device viewing: fall back to the snapshot baked into the
+        // link itself, since there's no server to look the album up on.
+        const encoded = location.hash.slice(1);
+        const payload = encoded ? decodeSharePayload(encoded) : null;
+
+        if (!payload) {
           setNotFound(true);
           return;
         }
 
-        setAlbum(found);
-
-        if (found.isPublic) {
-          const allPhotos = await getAllPhotos();
-          setPhotos(allPhotos.filter((p) => found.photos.includes(p.id)));
-        }
+        setAlbum({
+          name: payload.name,
+          createdAt: payload.createdAt,
+          isPublic: payload.isPublic,
+          photos: (payload.photos || []).map((p) => p.id),
+        });
+        setPhotos(payload.isPublic ? payload.photos || [] : []);
+      } catch {
+        setNotFound(true);
       } finally {
         setLoading(false);
       }
     }
 
     loadAlbum();
-  }, [token]);
+  }, [token, location.hash]);
 
   if (loading) {
     return (

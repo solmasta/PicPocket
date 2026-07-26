@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { saveAlbum, getAllAlbums, deleteAlbum } from '../../utils/indexedDB';
+import { encodeSharePayload } from '../../utils/shareLink';
 import './AlbumSharing.css';
 
 function AlbumSharing({ photos, user }) {
@@ -52,7 +53,24 @@ function AlbumSharing({ photos, user }) {
   };
 
   const generateShareLink = (album) => {
-    const link = `${window.location.origin}/album/${album.shareToken}`;
+    // Only bake photo data into the link when the album is public — the
+    // fragment is a self-contained snapshot, so a private album must not
+    // leak its photos into a copyable URL.
+    const albumPhotos = album.isPublic
+      ? photos
+          .filter((p) => album.photos.includes(p.id))
+          .map((p) => ({ id: p.id, fileName: p.fileName, thumbnail: p.thumbnail || p.dataUrl }))
+      : [];
+
+    const payload = {
+      name: album.name,
+      createdAt: album.createdAt,
+      isPublic: album.isPublic,
+      photos: albumPhotos,
+    };
+
+    const encoded = encodeSharePayload(payload);
+    const link = `${window.location.origin}/album/${album.shareToken}#${encoded}`;
     setShareLink(link);
     setActiveAlbum(album);
     navigator.clipboard?.writeText(link);
@@ -222,7 +240,9 @@ function AlbumSharing({ photos, user }) {
                 </button>
               </div>
               <p className="share-note">
-                Link copied to clipboard! {!activeAlbum.isPublic && '(Album is private — make it public to share)'}
+                {activeAlbum.isPublic
+                  ? 'Link copied to clipboard! Anyone with this link can view these photos — even after you make the album private again, since the link already contains them.'
+                  : 'Album is private — make it public before sharing so the link actually shows the photos.'}
               </p>
             </div>
           )}
