@@ -1,6 +1,6 @@
 import React from 'react';
 import './GoogleSignIn.css';
-import logo from '../../logo.svg';
+import logo from '../../assets/pic-pocket-logo.png';
 
 function GoogleSignIn({ signIn, loading, error }) {
 

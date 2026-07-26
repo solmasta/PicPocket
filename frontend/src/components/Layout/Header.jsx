@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './Header.css';
-import logo from '../../logo.svg';
+import logo from '../../assets/pic-pocket-logo.png';
 
 function Header({ user, onSignOut, onToggleSidebar }) {
   const [avatarFailed, setAvatarFailed] = useState(false);
@@ -33,9 +33,11 @@ function Header({ user, onSignOut, onToggleSidebar }) {
                 onError={() => setAvatarFailed(true)}
               />
             ) : (
-              <div className="user-avatar user-avatar-fallback" aria-label={user.name}>
-                {user.name ? user.name.charAt(0).toUpperCase() : '?'}
-              </div>
+              <img
+                src={`${process.env.PUBLIC_URL}/logo192.png`}
+                alt={user.name || 'Pic-Pocket'}
+                className="user-avatar user-avatar-fallback"
+              />
             )}
             <div className="user-info">
               <span className="user-name">{user.name}</span>
