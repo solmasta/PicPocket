@@ -9,10 +9,13 @@ The app runs fully offline with no sign-in required (photos are stored in the br
 
 1. Go to the [Google Cloud Console](https://console.cloud.google.com/) and create (or select) a project.
 2. Under **APIs & Services → Library**, enable the **Google Drive API** and **Google Photos Library API**.
-3. Under **APIs & Services → OAuth consent screen**, configure the consent screen (External is fine for testing) and add the scopes:
+3. Under **APIs & Services → OAuth consent screen → Data Access**, click **Add or Remove Scopes** and add:
    - `openid`, `profile`, `email`
    - `https://www.googleapis.com/auth/drive.file`
-   - `https://www.googleapis.com/auth/photoslibrary`
+   - `https://www.googleapis.com/auth/photoslibrary.appendonly`
+   - `https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata`
+
+   Note: Google retired the broad `.../auth/photoslibrary` (full-library) scope on March 31, 2025. PicPocket only reads/writes its own "PicPals Backup" album, so the two narrower `appendonly` / `readonly.appcreateddata` scopes above are sufficient and are what the app actually requests.
 4. Under **APIs & Services → Credentials → Create Credentials → OAuth client ID**, choose **Web application**.
 5. Add **Authorized JavaScript origins**:
    - `http://localhost:3000` (local dev)
