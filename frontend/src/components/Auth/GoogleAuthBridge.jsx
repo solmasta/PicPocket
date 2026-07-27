@@ -5,7 +5,8 @@ const GOOGLE_SCOPES = [
   'openid',
   'profile',
   'email',
-  'https://www.googleapis.com/auth/photoslibrary',
+  'https://www.googleapis.com/auth/photoslibrary.appendonly',
+  'https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata',
   'https://www.googleapis.com/auth/drive.file',
 ].join(' ');
 
