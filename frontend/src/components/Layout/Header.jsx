@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './Header.css';
 import logo from '../../assets/pic-pocket-logo.png';
 
-function Header({ user, onSignOut, onToggleSidebar }) {
+function Header({ user, tokenExpired, onSignOut, onReconnect, onToggleSidebar }) {
   const [avatarFailed, setAvatarFailed] = useState(false);
 
   return (
@@ -43,6 +43,15 @@ function Header({ user, onSignOut, onToggleSidebar }) {
               <span className="user-name">{user.name}</span>
               <span className="user-email">{user.email}</span>
             </div>
+            {!user.isLocal && tokenExpired && (
+              <button
+                className="reconnect-btn"
+                onClick={onReconnect}
+                title="Your Google session lapsed — reconnect to resume Drive/Photos backup"
+              >
+                Reconnect
+              </button>
+            )}
             {!user.isLocal && (
               <button className="sign-out-btn" onClick={onSignOut}>
                 Sign Out

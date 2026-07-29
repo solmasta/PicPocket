@@ -7,6 +7,13 @@
   box-sizing: border-box;
 }
 
+html, body {
+  /* Stops the browser's native pull-to-refresh gesture from reloading (and
+     re-authenticating) the whole app when someone overscrolls at the top
+     of a scrollable view — the app handles its own scrolling internally. */
+  overscroll-behavior-y: contain;
+}
+
 body {
   margin: 0;
   padding: 0;

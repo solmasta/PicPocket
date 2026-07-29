@@ -18,11 +18,16 @@ export function useAuth() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [tokenExpired, setTokenExpired] = useState(false);
   // Holds the trigger function returned by @react-oauth/google's
   // useGoogleLogin, supplied by <GoogleAuthBridge> via registerGoogleLogin.
   const googleLoginRef = useRef(null);
 
-  // Restore session from IndexedDB on mount
+  // Restore session from IndexedDB on mount. The signed-in identity is kept
+  // even once its Google access token has expired — the token is only ever
+  // needed for Drive/Photos backup calls, not for using the app itself, so
+  // reopening the app (including after the browser's pull-to-refresh reload)
+  // should never boot someone back to the sign-in screen.
   useEffect(() => {
     async function restoreSession() {
       try {
@@ -34,12 +39,8 @@ export function useAuth() {
         }
         const savedUser = await getAuthUser();
         if (savedUser) {
-          // Check if access token is still valid (rough check)
-          if (savedUser.expiresAt && Date.now() < savedUser.expiresAt) {
-            setUser(savedUser);
-          } else {
-            await clearAuthUser();
-          }
+          setUser(savedUser);
+          setTokenExpired(Boolean(savedUser.expiresAt && Date.now() >= savedUser.expiresAt));
         }
       } catch (err) {
         console.error('Failed to restore auth session:', err);
@@ -50,6 +51,16 @@ export function useAuth() {
 
     restoreSession();
   }, []);
+
+  // Re-check expiry periodically so a long-open tab surfaces the "Reconnect"
+  // affordance once its token lapses, instead of only checking on mount.
+  useEffect(() => {
+    if (!user || !user.expiresAt) return undefined;
+    const check = () => setTokenExpired(Date.now() >= user.expiresAt);
+    check();
+    const interval = setInterval(check, 60 * 1000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Called by <GoogleAuthBridge> once useGoogleLogin is ready.
   // getLogin is a zero-arg factory that returns the current googleLogin fn.
@@ -82,6 +93,7 @@ export function useAuth() {
 
       await saveAuthUser(userData);
       setUser(userData);
+      setTokenExpired(false);
     } catch (err) {
       setError(err.message);
       console.error('Login error:', err);
@@ -104,26 +116,19 @@ export function useAuth() {
     try {
       await clearAuthUser();
       setUser(null);
+      setTokenExpired(false);
     } catch (err) {
       console.error('Sign out error:', err);
     }
   }, []);
 
-  const refreshToken = useCallback(async () => {
-    // Token refresh would require server-side implementation with refresh tokens
-    // For now, prompt re-login when token expires
-    if (user && user.expiresAt && Date.now() >= user.expiresAt) {
-      await signOut();
-    }
-  }, [user, signOut]);
-
   return {
     user,
     loading,
     error,
+    tokenExpired,
     signIn,
     signOut,
-    refreshToken,
     registerGoogleLogin,
     handleLoginSuccess,
     handleLoginError,
