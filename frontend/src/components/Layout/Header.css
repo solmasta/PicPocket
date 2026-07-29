@@ -113,6 +113,22 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
+.reconnect-btn {
+  background: #fbbf24;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #3b2a00;
+  padding: 0.4rem 0.875rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.reconnect-btn:hover {
+  background: #f9d979;
+}
+
 @media (max-width: 600px) {
   .app-header {
     padding: 0 0.75rem;

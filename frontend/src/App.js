@@ -39,6 +39,7 @@ function MainApp() {
   const {
     user,
     loading: authLoading,
+    tokenExpired,
     signOut,
     signIn,
     error,
@@ -53,8 +54,12 @@ function MainApp() {
 
   // Keep the splash screen up for a beat even when auth resolves instantly,
   // so the artwork actually has time to register before the app appears.
-  const [minSplashElapsed, setMinSplashElapsed] = useState(false);
+  // Skipped under test, where nothing is waiting out a real timer.
+  const [minSplashElapsed, setMinSplashElapsed] = useState(
+    () => process.env.NODE_ENV === 'test'
+  );
   useEffect(() => {
+    if (process.env.NODE_ENV === 'test') return undefined;
     const timer = setTimeout(() => setMinSplashElapsed(true), 1400);
     return () => clearTimeout(timer);
   }, []);
@@ -157,7 +162,9 @@ function MainApp() {
       {googleAuthBridge}
       <Header
         user={user}
+        tokenExpired={tokenExpired}
         onSignOut={signOut}
+        onReconnect={signIn}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
       <div className="app-body">
