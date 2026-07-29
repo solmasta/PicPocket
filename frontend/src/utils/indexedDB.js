@@ -1,13 +1,14 @@
 import { openDB } from 'idb';
 
 const DB_NAME = 'picpals-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 const STORES = {
   AUTH: 'auth',
   PHOTOS: 'photos',
   ALBUMS: 'albums',
   TAGS: 'tags',
+  PROFILES: 'profiles',
 };
 
 let dbInstance = null;
@@ -30,6 +31,9 @@ export async function getDB() {
       }
       if (!db.objectStoreNames.contains(STORES.TAGS)) {
         db.createObjectStore(STORES.TAGS, { keyPath: 'name' });
+      }
+      if (!db.objectStoreNames.contains(STORES.PROFILES)) {
+        db.createObjectStore(STORES.PROFILES, { keyPath: 'userId' });
       }
     },
   });
@@ -111,6 +115,17 @@ export async function getTagCount(tag) {
 export async function getAllTags() {
   const db = await getDB();
   return db.getAll(STORES.TAGS);
+}
+
+// Horse profile operations
+export async function saveHorseProfile(profile) {
+  const db = await getDB();
+  await db.put(STORES.PROFILES, profile);
+}
+
+export async function getHorseProfile(userId) {
+  const db = await getDB();
+  return db.get(STORES.PROFILES, userId);
 }
 
 export { STORES };

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './styles/App.css';
+import backgroundImage from './assets/faye-pic-pocket.jpg';
 import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
 import Footer from './components/Layout/Footer';
@@ -50,6 +51,14 @@ function MainApp() {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768);
 
+  // Keep the splash screen up for a beat even when auth resolves instantly,
+  // so the artwork actually has time to register before the app appears.
+  const [minSplashElapsed, setMinSplashElapsed] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setMinSplashElapsed(true), 1400);
+    return () => clearTimeout(timer);
+  }, []);
+
   const isMobile = () => window.innerWidth <= 768;
 
   const handleViewChange = (view) => {
@@ -75,7 +84,7 @@ function MainApp() {
     />
   ) : null;
 
-  if (authLoading) {
+  if (authLoading || !minSplashElapsed) {
     return (
       <>
         {googleAuthBridge}
@@ -122,7 +131,7 @@ function MainApp() {
       case 'sharing':
         return <AlbumSharing photos={photos} user={user} />;
       case 'horse-profile':
-        return <HorseProfile />;
+        return <HorseProfile user={user} />;
       case 'settings':
         return <Settings user={user} />;
       default:
@@ -140,6 +149,11 @@ function MainApp() {
 
   return (
     <div className="app-container">
+      <div
+        className="app-background"
+        style={{ backgroundImage: `url(${backgroundImage})` }}
+        aria-hidden="true"
+      />
       {googleAuthBridge}
       <Header
         user={user}
