@@ -1,7 +1,26 @@
 .app-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+
+.app-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-size: cover;
+  background-position: top center;
+  background-attachment: fixed;
+  opacity: 0.12;
+}
+
+.app-container > .app-header,
+.app-container > .app-body,
+.app-container > .app-footer {
+  position: relative;
+  z-index: 1;
 }
 
 .app-body {
@@ -11,7 +30,7 @@
 
 .main-content {
   flex: 1;
-  background: #f7f7fc;
+  background: rgba(247, 247, 252, 0.86);
   min-height: calc(100vh - 64px - 48px);
   overflow-y: auto;
   transition: margin-left 0.25s ease;

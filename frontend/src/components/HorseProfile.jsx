@@ -1,4 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { getHorseProfile, saveHorseProfile } from '../utils/indexedDB';
+import { resizeImage } from '../utils/imageFilters';
 
 const BREEDS = [
   'Arabian', 'Thoroughbred', 'Quarter Horse', 'Mustang', 'Appaloosa',
@@ -10,38 +12,80 @@ const COAT_COLORS = [
   'Dun', 'Buckskin', 'Cremello', 'Pinto', 'Other',
 ];
 
-export default function HorseProfile() {
-  const [profile, setProfile] = useState({
-    name: '',
-    breed: '',
-    coatColor: '',
-    age: '',
-    owner: '',
-    bio: '',
-  });
+const EMPTY_PROFILE = {
+  name: '',
+  breed: '',
+  coatColor: '',
+  age: '',
+  owner: '',
+  bio: '',
+};
+
+export default function HorseProfile({ user }) {
+  const [profile, setProfile] = useState(EMPTY_PROFILE);
   const [avatarSrc, setAvatarSrc] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
   const avatarInputRef = useRef(null);
   const photoInputRef = useRef(null);
+
+  // Load any previously saved profile for this user from IndexedDB.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProfile() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        const stored = await getHorseProfile(user.id);
+        if (!cancelled && stored) {
+          setProfile({ ...EMPTY_PROFILE, ...stored.fields });
+          setAvatarSrc(stored.avatar || null);
+          setPhotos(stored.photos || []);
+        }
+      } catch (err) {
+        console.error('Failed to load horse profile:', err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const handleChange = (field) => (e) => {
     setProfile((prev) => ({ ...prev, [field]: e.target.value }));
     setSaved(false);
   };
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setAvatarSrc(URL.createObjectURL(file));
-    setSaved(false);
+    try {
+      const dataUrl = await resizeImage(file, 400, 400, 0.85);
+      setAvatarSrc(dataUrl);
+      setSaved(false);
+    } catch (err) {
+      console.error('Failed to process avatar image:', err);
+    }
   };
 
-  const handlePhotosChange = (e) => {
+  const handlePhotosChange = async (e) => {
     const files = Array.from(e.target.files);
-    const urls = files.map((f) => URL.createObjectURL(f));
-    setPhotos((prev) => [...prev, ...urls]);
-    setSaved(false);
+    try {
+      const dataUrls = await Promise.all(files.map((f) => resizeImage(f, 1024, 1024, 0.85)));
+      setPhotos((prev) => [...prev, ...dataUrls]);
+      setSaved(false);
+    } catch (err) {
+      console.error('Failed to process gallery photos:', err);
+    }
   };
 
   const handleRemovePhoto = (index) => {
@@ -49,19 +93,41 @@ export default function HorseProfile() {
     setSaved(false);
   };
 
-  const handleSave = () => {
+  const handleSave = useCallback(async () => {
     if (!profile.name.trim()) {
       alert("Please enter the horse's name before saving.");
       return;
     }
-    setSaved(true);
-  };
+    if (!user) return;
+
+    try {
+      await saveHorseProfile({
+        userId: user.id,
+        fields: profile,
+        avatar: avatarSrc,
+        photos,
+        updatedAt: new Date().toISOString(),
+      });
+      setSaved(true);
+    } catch (err) {
+      console.error('Failed to save horse profile:', err);
+      alert('Something went wrong saving the profile. Please try again.');
+    }
+  }, [profile, avatarSrc, photos, user]);
 
   const fieldStyle = {
     display: 'block', marginTop: 4, width: '100%',
     padding: '8px 10px', border: '1px solid #d1d5db',
     borderRadius: 6, fontSize: 14,
   };
+
+  if (loading) {
+    return (
+      <div style={{ maxWidth: 560, margin: '0 auto', padding: 24, fontFamily: 'sans-serif', color: '#6b7280' }}>
+        Loading horse profile…
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: 560, margin: '0 auto', padding: 24, fontFamily: 'sans-serif' }}>
