@@ -78,6 +78,25 @@ function applyRateLimit(request) {
   return null;
 }
 
+const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v3/userinfo';
+
+async function fetchGoogleProfile(accessToken) {
+  const response = await fetch(GOOGLE_USERINFO_URL, {
+    headers: { Authorization: 'Bearer ' + accessToken },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch Google profile');
+  }
+  const profile = await response.json();
+  return {
+    id: profile.sub,
+    email: profile.email,
+    name: profile.name,
+    picture: profile.picture,
+  };
+}
+
 async function verifyAuth(request) {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -87,26 +106,10 @@ async function verifyAuth(request) {
   const token = authHeader.slice(7);
 
   try {
-    const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-      headers: { Authorization: 'Bearer ' + token },
-    });
-
-    if (!response.ok) {
-      return { error: json({ error: 'Invalid or expired access token' }, 401) };
-    }
-
-    const userInfo = await response.json();
-    return {
-      user: {
-        id: userInfo.sub,
-        email: userInfo.email,
-        name: userInfo.name,
-        picture: userInfo.picture,
-        accessToken: token,
-      },
-    };
+    const profile = await fetchGoogleProfile(token);
+    return { user: { ...profile, accessToken: token } };
   } catch {
-    return { error: json({ error: 'Authentication failed' }, 401) };
+    return { error: json({ error: 'Invalid or expired access token' }, 401) };
   }
 }
 
@@ -178,6 +181,82 @@ async function handleApi(request, url, env) {
       name: user.name,
       picture: user.picture,
     });
+  }
+
+  if (request.method === 'POST' && pathname === '/api/auth/google/token') {
+    if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+      return json({ error: 'Google OAuth is not configured on the server' }, 500);
+    }
+
+    const body = await parseJsonBody(request);
+    if (!body || !body.code) {
+      return json({ error: 'code is required' }, 400);
+    }
+
+    try {
+      const tokenRes = await fetch(GOOGLE_TOKEN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          code: body.code,
+          client_id: env.GOOGLE_CLIENT_ID,
+          client_secret: env.GOOGLE_CLIENT_SECRET,
+          redirect_uri: 'postmessage',
+          grant_type: 'authorization_code',
+        }),
+      });
+
+      const tokenData = await tokenRes.json();
+      if (!tokenRes.ok) {
+        return json({ error: tokenData.error_description || 'Failed to exchange authorization code' }, 401);
+      }
+
+      const user = await fetchGoogleProfile(tokenData.access_token);
+      return json({
+        user,
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token || null,
+        expiresIn: tokenData.expires_in,
+      });
+    } catch (err) {
+      return json({ error: err.message }, 500);
+    }
+  }
+
+  if (request.method === 'POST' && pathname === '/api/auth/google/refresh') {
+    if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+      return json({ error: 'Google OAuth is not configured on the server' }, 500);
+    }
+
+    const body = await parseJsonBody(request);
+    if (!body || !body.refreshToken) {
+      return json({ error: 'refreshToken is required' }, 400);
+    }
+
+    try {
+      const tokenRes = await fetch(GOOGLE_TOKEN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          refresh_token: body.refreshToken,
+          client_id: env.GOOGLE_CLIENT_ID,
+          client_secret: env.GOOGLE_CLIENT_SECRET,
+          grant_type: 'refresh_token',
+        }),
+      });
+
+      const tokenData = await tokenRes.json();
+      if (!tokenRes.ok) {
+        return json({ error: tokenData.error_description || 'Failed to refresh access token' }, 401);
+      }
+
+      return json({
+        accessToken: tokenData.access_token,
+        expiresIn: tokenData.expires_in,
+      });
+    } catch (err) {
+      return json({ error: err.message }, 500);
+    }
   }
 
   if (request.method === 'GET' && pathname === '/api/photos') {

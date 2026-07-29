@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { saveAuthUser, getAuthUser, clearAuthUser } from '../utils/indexedDB';
 import { isGoogleAuthConfigured } from '../config/googleAuth';
+import { exchangeGoogleCode, refreshGoogleAccessToken } from '../services/authService';
+
+// Renew the access token this far ahead of its actual expiry, so a silent
+// refresh has already happened by the time anything would notice it lapsed.
+const REFRESH_MARGIN_MS = 5 * 60 * 1000;
 
 // Anonymous, device-local identity used when the person hasn't signed in
 // with Google (or Google sign-in isn't configured at all). Photo storage,
@@ -39,8 +44,10 @@ export function useAuth() {
         }
         const savedUser = await getAuthUser();
         if (savedUser) {
+          // The token-refresh effect below checks expiry (and attempts a
+          // silent refresh) as soon as `user` is set, so it isn't computed
+          // here — just restore the identity.
           setUser(savedUser);
-          setTokenExpired(Boolean(savedUser.expiresAt && Date.now() >= savedUser.expiresAt));
         }
       } catch (err) {
         console.error('Failed to restore auth session:', err);
@@ -52,15 +59,56 @@ export function useAuth() {
     restoreSession();
   }, []);
 
-  // Re-check expiry periodically so a long-open tab surfaces the "Reconnect"
-  // affordance once its token lapses, instead of only checking on mount.
+  // Silently exchanges a stored refresh token for a fresh access token.
+  // Returns true on success. Users who signed in before refresh tokens were
+  // captured (or whose refresh token Google has since revoked) have no
+  // refreshToken to use here — they fall back to the "Reconnect" button.
+  const refreshAccessToken = useCallback(async (currentUser) => {
+    if (!currentUser?.refreshToken) return false;
+    try {
+      const data = await refreshGoogleAccessToken(currentUser.refreshToken);
+      const updated = {
+        ...currentUser,
+        accessToken: data.accessToken,
+        expiresAt: Date.now() + data.expiresIn * 1000,
+      };
+      await saveAuthUser(updated);
+      setUser(updated);
+      setTokenExpired(false);
+      return true;
+    } catch (err) {
+      console.warn('Silent token refresh failed:', err.message);
+      return false;
+    }
+  }, []);
+
+  // Keep the access token fresh for as long as the app stays open: check a
+  // little before it's due to expire and renew it silently. Only falls back
+  // to surfacing the "Reconnect" affordance if there's no refresh token to
+  // use, or Google rejects it (e.g. revoked access).
   useEffect(() => {
     if (!user || !user.expiresAt) return undefined;
-    const check = () => setTokenExpired(Date.now() >= user.expiresAt);
-    check();
-    const interval = setInterval(check, 60 * 1000);
-    return () => clearInterval(interval);
-  }, [user]);
+
+    let cancelled = false;
+    const tick = async () => {
+      const dueForRefresh = Date.now() >= user.expiresAt - REFRESH_MARGIN_MS;
+      if (!dueForRefresh) {
+        setTokenExpired(false);
+        return;
+      }
+      const refreshed = await refreshAccessToken(user);
+      if (!cancelled && !refreshed) {
+        setTokenExpired(Date.now() >= user.expiresAt);
+      }
+    };
+
+    tick();
+    const interval = setInterval(tick, 60 * 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [user, refreshAccessToken]);
 
   // Called by <GoogleAuthBridge> once useGoogleLogin is ready.
   // getLogin is a zero-arg factory that returns the current googleLogin fn.
@@ -68,27 +116,24 @@ export function useAuth() {
     googleLoginRef.current = getLogin;
   }, []);
 
-  const handleLoginSuccess = useCallback(async (tokenResponse) => {
+  const handleLoginSuccess = useCallback(async (codeResponse) => {
     try {
       setError(null);
-      // Fetch user profile using the access token
-      const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: 'Bearer ' + tokenResponse.access_token },
-      });
+      // Exchange the one-time authorization code server-side (the Google
+      // client secret this needs can't live in the frontend) for an access
+      // token plus a refresh token, so the session can renew itself later
+      // without ever showing the user another sign-in prompt.
+      const data = await exchangeGoogleCode(codeResponse.code);
 
-      if (!profileRes.ok) {
-        throw new Error('Failed to fetch user profile');
-      }
-
-      const profile = await profileRes.json();
       const userData = {
-        id: profile.sub,
-        name: profile.name,
-        email: profile.email,
-        picture: profile.picture,
-        accessToken: tokenResponse.access_token,
-        expiresAt: Date.now() + (tokenResponse.expires_in || 3600) * 1000,
-        scope: tokenResponse.scope,
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        picture: data.user.picture,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        expiresAt: Date.now() + data.expiresIn * 1000,
+        scope: codeResponse.scope,
       };
 
       await saveAuthUser(userData);
