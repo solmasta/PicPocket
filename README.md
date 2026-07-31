@@ -20,7 +20,7 @@ The app runs fully offline with no sign-in required (photos are stored in the br
 5. Add **Authorized JavaScript origins**:
    - `http://localhost:3000` (local dev)
    - your deployed site's origin, e.g. `https://<github-username>.github.io` (GitHub Pages)
-6. Save and copy the generated **Client ID** and **Client Secret** — both are required now that sign-in exchanges its authorization code for a refresh token server-side (see below), not just the Client ID as before.
+6. Save and copy the generated **Client ID** (and, if you also run backend-side OAuth flows, the **Client Secret**).
 
 ### 2. Configure local development
 
@@ -45,13 +45,3 @@ The GitHub Pages deploy workflow (`.github/workflows/deploy-gh-pages.yml`) build
 3. Re-run the deploy workflow (or push to `main`) so the build picks it up.
 
 Note: the deployed backend (wherever it's hosted) also needs `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` set as environment variables for server-side Drive/Photos operations to work.
-
-### 4. Required for the live site: Cloudflare Worker environment variables
-
-**The real deployment for this repo is a Cloudflare Pages build that runs `npx wrangler deploy`** (see `wrangler.toml` / `worker.js`), not the GitHub Pages workflow above. Sign-in now exchanges its one-time authorization code for a Google access token **and refresh token** via `POST /api/auth/google/token` (and silently renews the access token via `POST /api/auth/google/refresh`) — both handled by `worker.js`, which needs its own copy of the OAuth credentials:
-
-1. In the Cloudflare dashboard, go to the Pages/Workers project → **Settings → Environment Variables**.
-2. Add `GOOGLE_CLIENT_ID` (same value as `REACT_APP_GOOGLE_CLIENT_ID`) and `GOOGLE_CLIENT_SECRET` (mark it **Encrypt**, since it's a real secret).
-3. Redeploy so the Worker picks them up.
-
-**Without these two variables set on the Worker, Google sign-in will fail outright** (it no longer works purely client-side) — the sign-in screen will show "Google OAuth is not configured on the server" instead of signing anyone in.
