@@ -4,6 +4,26 @@ All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version numbers
 across the root, `frontend/`, and `backend/` packages are kept in lockstep.
 
+## [1.2.3] - 2026-07-31
+
+### Fixed
+- Google sign-in was completely broken on the live GitHub Pages
+  deployment (`solmasta.github.io`) — "Request failed with status code
+  405". The previous release switched sign-in to an OAuth flow that
+  exchanges its code for a token via a backend endpoint
+  (`POST /api/auth/google/token`), but GitHub Pages is static hosting
+  with no way to run that endpoint at all, unlike the Cloudflare Worker
+  deployment this was built and tested against. Reverted sign-in back
+  to the client-side implicit flow (no backend required), so it works
+  on both deployments again. The pull-to-refresh fix and "don't sign
+  out just because the access token expired, show Reconnect instead"
+  behavior from the same release are kept, since neither depends on a
+  backend.
+- Net effect: sessions on GitHub Pages go back to needing a manual
+  "Reconnect" tap after the ~1hr access token lapses (no silent
+  renewal) until this project settles on one deployment target that
+  can actually run the token-refresh backend.
+
 ## [1.1.0] - 2026-07-26
 
 ### Fixed
