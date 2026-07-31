@@ -4,6 +4,18 @@ All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version numbers
 across the root, `frontend/`, and `backend/` packages are kept in lockstep.
 
+## [1.2.4] - 2026-07-31
+
+### Changed
+- Signed-in sessions now stay alive until you actually sign out, on
+  every deployment (including GitHub Pages, no backend required). A
+  little before the ~1hr Google access token is due to expire, the app
+  asks Google for a fresh one with no UI at all (`prompt: ''`), which
+  succeeds silently as long as the browser still has an active Google
+  session — no popup, no click. The "Reconnect" button now only shows
+  up if that silent renewal doesn't land within a few seconds (e.g. the
+  Google session itself ended, or the browser blocks the request).
+
 ## [1.2.3] - 2026-07-31
 
 ### Fixed
