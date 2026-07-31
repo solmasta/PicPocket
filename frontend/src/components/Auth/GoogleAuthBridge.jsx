@@ -15,7 +15,6 @@ const GOOGLE_SCOPES = [
 // call useGoogleLogin unconditionally here.
 function GoogleAuthBridge({ onSuccess, onError, onReady }) {
   const googleLogin = useGoogleLogin({
-    flow: 'auth-code',
     onSuccess,
     onError,
     scope: GOOGLE_SCOPES,
