@@ -2,6 +2,13 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { saveAuthUser, getAuthUser, clearAuthUser } from '../utils/indexedDB';
 import { isGoogleAuthConfigured } from '../config/googleAuth';
 
+// Start trying to renew the access token this far ahead of its actual
+// expiry, so a silent renewal has time to land before anything notices.
+const REFRESH_MARGIN_MS = 5 * 60 * 1000;
+// How long to wait for a silent (no-UI) renewal attempt before giving up
+// and surfacing the "Reconnect" button instead.
+const SILENT_RECONNECT_TIMEOUT_MS = 4000;
+
 // Anonymous, device-local identity used when the person hasn't signed in
 // with Google (or Google sign-in isn't configured at all). Photo storage,
 // gallery, filters, etc. all key off `user.id`, so this just needs to be
@@ -22,6 +29,10 @@ export function useAuth() {
   // Holds the trigger function returned by @react-oauth/google's
   // useGoogleLogin, supplied by <GoogleAuthBridge> via registerGoogleLogin.
   const googleLoginRef = useRef(null);
+  // Tracks whether the in-flight Google request is a background silent
+  // renewal (vs. an explicit click), so a failed silent attempt can stay
+  // quiet instead of showing the user a "sign-in failed" error.
+  const silentAttemptRef = useRef(false);
 
   // Restore session from IndexedDB on mount. The signed-in identity is kept
   // even once its Google access token has expired — the token is only ever
@@ -39,8 +50,10 @@ export function useAuth() {
         }
         const savedUser = await getAuthUser();
         if (savedUser) {
+          // The renewal effect below checks expiry (and attempts a silent
+          // renewal) as soon as `user` is set, so it isn't computed here —
+          // just restore the identity.
           setUser(savedUser);
-          setTokenExpired(Boolean(savedUser.expiresAt && Date.now() >= savedUser.expiresAt));
         }
       } catch (err) {
         console.error('Failed to restore auth session:', err);
@@ -52,14 +65,45 @@ export function useAuth() {
     restoreSession();
   }, []);
 
-  // Re-check expiry periodically so a long-open tab surfaces the "Reconnect"
-  // affordance once its token lapses, instead of only checking on mount.
+  // Keep the session alive without ever prompting: a little before the
+  // access token is due to expire, ask Google for a fresh one with no UI
+  // (prompt: ''), which succeeds silently as long as the browser still has
+  // an active Google session — no backend, no popup, no click required.
+  // Only if that doesn't resolve in time does the "Reconnect" button show
+  // up, as a one-tap fallback (e.g. the user signed out of Google
+  // elsewhere, or the browser blocks the silent request).
   useEffect(() => {
     if (!user || !user.expiresAt) return undefined;
-    const check = () => setTokenExpired(Date.now() >= user.expiresAt);
-    check();
-    const interval = setInterval(check, 60 * 1000);
-    return () => clearInterval(interval);
+
+    let cancelled = false;
+    let fallbackTimer = null;
+
+    const tick = () => {
+      const dueForRefresh = Date.now() >= user.expiresAt - REFRESH_MARGIN_MS;
+      if (!dueForRefresh) {
+        setTokenExpired(false);
+        return;
+      }
+      if (!googleLoginRef.current) {
+        setTokenExpired(true);
+        return;
+      }
+
+      silentAttemptRef.current = true;
+      googleLoginRef.current()({ prompt: '' });
+
+      fallbackTimer = setTimeout(() => {
+        if (!cancelled) setTokenExpired(Date.now() >= user.expiresAt);
+      }, SILENT_RECONNECT_TIMEOUT_MS);
+    };
+
+    tick();
+    const interval = setInterval(tick, 60 * 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+    };
   }, [user]);
 
   // Called by <GoogleAuthBridge> once useGoogleLogin is ready.
@@ -94,6 +138,7 @@ export function useAuth() {
       await saveAuthUser(userData);
       setUser(userData);
       setTokenExpired(false);
+      silentAttemptRef.current = false;
     } catch (err) {
       setError(err.message);
       console.error('Login error:', err);
@@ -101,12 +146,21 @@ export function useAuth() {
   }, []);
 
   const handleLoginError = useCallback((err) => {
+    if (silentAttemptRef.current) {
+      // A background renewal attempt failing is expected sometimes (no
+      // active Google session, third-party cookies blocked, etc.) — the
+      // "Reconnect" fallback covers it, so don't alarm the user over it.
+      silentAttemptRef.current = false;
+      console.warn('Silent Google reconnect failed:', err);
+      return;
+    }
     setError('Google sign-in failed. Please try again.');
     console.error('Google OAuth error:', err);
   }, []);
 
   const signIn = useCallback(() => {
     setError(null);
+    silentAttemptRef.current = false;
     if (googleLoginRef.current) {
       googleLoginRef.current()();
     }
