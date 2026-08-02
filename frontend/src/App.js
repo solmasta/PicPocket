@@ -66,8 +66,32 @@ function MainApp() {
 
   const isMobile = () => window.innerWidth <= 768;
 
-  const handleViewChange = (view) => {
+  // Sync in-app view navigation with browser history. Switching views
+  // (sidebar clicks, opening a photo, etc.) never used to touch history at
+  // all, so the *first* press of the back button had nothing in-app to
+  // consume — it just left/closed the page. That felt like being signed
+  // out even though the session itself (in IndexedDB) was untouched.
+  // Pushing a history entry per view means back steps through the app's
+  // views first, and only exits once you're already back at the gallery.
+  useEffect(() => {
+    window.history.replaceState({ picPocketView: 'gallery' }, '');
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = (event) => {
+      setActiveView(event.state?.picPocketView || 'gallery');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateToView = (view) => {
     setActiveView(view);
+    window.history.pushState({ picPocketView: view }, '');
+  };
+
+  const handleViewChange = (view) => {
+    navigateToView(view);
     if (isMobile()) {
       setSidebarOpen(false);
     }
@@ -75,7 +99,7 @@ function MainApp() {
 
   const handleSelectPhotoForEdit = (photo) => {
     setSelectedPhoto(photo);
-    setActiveView('filters');
+    navigateToView('filters');
   };
 
   // Registers the Google OAuth login trigger with useAuth so signIn() has
@@ -116,7 +140,7 @@ function MainApp() {
             loading={photosLoading}
             onDelete={deletePhoto}
             onSelect={handleSelectPhotoForEdit}
-            onViewChange={setActiveView}
+            onViewChange={navigateToView}
           />
         );
       case 'upload':
@@ -124,7 +148,7 @@ function MainApp() {
       case 'search':
         return <TagSearch photos={photos} onSelect={handleSelectPhotoForEdit} />;
       case 'filters':
-        return <PhotoFilters photo={selectedPhoto} onSave={updatePhoto} onViewChange={setActiveView} />;
+        return <PhotoFilters photo={selectedPhoto} onSave={updatePhoto} onViewChange={navigateToView} />;
       case 'collage':
         return <CollageMaker photos={photos} />;
       case 'stories':
@@ -146,7 +170,7 @@ function MainApp() {
             loading={photosLoading}
             onDelete={deletePhoto}
             onSelect={handleSelectPhotoForEdit}
-            onViewChange={setActiveView}
+            onViewChange={navigateToView}
           />
         );
     }

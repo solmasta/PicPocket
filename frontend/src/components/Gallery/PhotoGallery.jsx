@@ -32,8 +32,9 @@ function PhotoGallery({ photos, loading, onDelete, onSelect, onViewChange }) {
     });
 
   const handlePhotoSelect = (photo) => {
+    // onSelect (App's handleSelectPhotoForEdit) already navigates to the
+    // filters view, so this doesn't push a second history entry for it.
     onSelect(photo);
-    onViewChange('filters');
   };
 
   if (loading) {
