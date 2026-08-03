@@ -4,6 +4,72 @@ All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version numbers
 across the root, `frontend/`, and `backend/` packages are kept in lockstep.
 
+## [1.3.0] - 2026-08-03
+
+### Added
+- **Storage Ledger.** A new "Storage Ledger" view (sidebar, under Horse
+  Profile) answers "what's backed up, and where" across this device's
+  local library, Google Drive, and Google Photos:
+  - Overview counts: photos on this device, how many are marked backed
+    up to Drive/Photos, and how many aren't backed up anywhere.
+  - A "Check Cloud Storage" button that fetches the live contents of
+    the Drive and Photos backup folders/albums and reconciles them
+    against local records — flagging any photo marked as backed up
+    whose remote copy has since gone missing.
+  - Per-photo status table (thumbnail, Drive status, Photos status).
+  - An "orphaned remote files" section listing anything found in Drive
+    or Photos that this device's local library has no record of —
+    typically backups made from another device or browser session,
+    which were previously invisible since nothing in the app ever
+    listed cloud contents back.
+  - Read-only/reconciliation only for now — it surfaces drift and
+    other-device backups but doesn't restore anything into local
+    storage.
+
+## [1.2.8] - 2026-08-03
+
+### Fixed
+- **Gallery thumbnails looked noticeably blurrier than the uploaded
+  photo.** `createThumbnail` generated a fixed 200x200px square, but a
+  gallery card renders at up to ~300+ CSS px (more on a single-column
+  mobile layout), then gets multiplied again by devicePixelRatio on any
+  retina/high-DPI screen — so the 200px source was being upscaled
+  2-3x+ and looked soft next to the original. Thumbnails are now
+  generated at 480x480 with slightly higher JPEG quality (0.7 → 0.82),
+  which comfortably covers real-world card sizes at typical DPRs.
+  Only affects photos uploaded from now on — existing thumbnails
+  already in IndexedDB aren't regenerated retroactively.
+
+## [1.2.7] - 2026-08-03
+
+### Fixed
+- **Cloud backup checkboxes silently did nothing for accounts without
+  Drive/Photos access.** The Upload screen's "Backup to Google Drive"
+  and "Backup to Google Photos" checkboxes were checkable for any
+  user, including one signed in locally with no Google connection.
+  Checking them and uploading gave no indication that nothing was
+  actually backed up — the attempt was skipped and only logged to the
+  console. The checkboxes are now disabled (with an explanatory hint)
+  unless the signed-in user actually has that scope, and a genuine
+  backup failure (as opposed to no access) now surfaces in the
+  upload error banner instead of only `console.warn`.
+- **The app's background artwork bled an "AI-Generated" disclosure
+  badge onto every screen.** `faye-pic-pocket.jpg` — used as the
+  low-opacity background behind every view, and at much higher
+  visibility on the splash and sign-in screens — had a baked-in
+  "AI-Generated" pill in its top-right corner. Because the image is
+  anchored `top center`, that badge peeked out above/behind the
+  header on every page, reading as a rendering glitch. Removed it
+  from the source image with a seamless sky patch.
+- **Resizing the window (or rotating a device) left the sidebar
+  stuck.** `sidebarOpen` was only ever computed once at mount from
+  `window.innerWidth`, so shrinking the window from desktop to a
+  mobile width after load left a desktop-open sidebar covering the
+  entire screen. The app now listens for resize and resets the
+  sidebar to that breakpoint's default only when the mobile/desktop
+  boundary is actually crossed, leaving manual toggles within a
+  breakpoint alone.
+
 ## [1.2.6] - 2026-08-03
 
 ### Fixed

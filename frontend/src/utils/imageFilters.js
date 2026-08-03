@@ -155,9 +155,14 @@ export function getImageDimensions(file) {
 }
 
 /**
- * Create a thumbnail from a data URL
+ * Create a thumbnail from a data URL.
+ *
+ * Sized at 480px (well above the ~200-300 CSS px a gallery card actually
+ * renders at) so it still looks sharp after the browser multiplies by
+ * devicePixelRatio on standard retina/high-DPI screens — a 200px thumbnail
+ * upscaled 2-3x for those screens was visibly blurry next to the original.
  */
-export function createThumbnail(dataUrl, size = 200) {
+export function createThumbnail(dataUrl, size = 480) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -174,7 +179,7 @@ export function createThumbnail(dataUrl, size = 200) {
       const offsetY = (size - scaledHeight) / 2;
 
       ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
-      resolve(canvas.toDataURL('image/jpeg', 0.7));
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
     };
     img.onerror = reject;
     img.src = dataUrl;

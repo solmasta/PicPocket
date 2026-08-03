@@ -206,6 +206,17 @@
   cursor: pointer;
 }
 
+.checkbox-label--disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.option-hint {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin: 0.5rem 0 0;
+}
+
 .upload-btn {
   width: 100%;
   padding: 0.875rem;

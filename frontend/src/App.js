@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './styles/App.css';
 import backgroundImage from './assets/faye-pic-pocket.jpg';
@@ -19,6 +19,7 @@ import MemoryLane from './components/MemoryLane/MemoryLane';
 import AlbumSharing from './components/Sharing/AlbumSharing';
 import SharedAlbumView from './components/Sharing/SharedAlbumView';
 import HorseProfile from './components/HorseProfile';
+import StorageLedger from './components/Storage/StorageLedger';
 import Settings from './components/Settings/Settings';
 import { useAuth } from './hooks/useAuth';
 import { usePhotos } from './hooks/usePhotos';
@@ -51,6 +52,25 @@ function MainApp() {
   const [activeView, setActiveView] = useState('gallery');
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768);
+  // Tracks which side of the mobile/desktop breakpoint we were last on, so a
+  // resize (window shrink, device rotation) that crosses it can reset the
+  // sidebar to that breakpoint's default open/closed state — without this,
+  // sidebarOpen is only ever set at mount and a later resize leaves it stuck
+  // (e.g. a desktop-open sidebar staying open, full-width, after shrinking
+  // to a mobile viewport). Resizes that stay within the same breakpoint
+  // don't touch it, so a manual toggle via the hamburger isn't fought.
+  const isDesktopRef = useRef(window.innerWidth > 768);
+  useEffect(() => {
+    const handleResize = () => {
+      const desktop = window.innerWidth > 768;
+      if (desktop !== isDesktopRef.current) {
+        isDesktopRef.current = desktop;
+        setSidebarOpen(desktop);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Keep the splash screen up for a beat even when auth resolves instantly,
   // so the artwork actually has time to register before the app appears.
@@ -137,6 +157,8 @@ function MainApp() {
         return <AlbumSharing photos={photos} user={user} />;
       case 'horse-profile':
         return <HorseProfile user={user} />;
+      case 'storage':
+        return <StorageLedger photos={photos} user={user} />;
       case 'settings':
         return <Settings user={user} />;
       default:

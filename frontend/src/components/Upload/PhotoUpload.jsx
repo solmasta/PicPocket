@@ -10,6 +10,10 @@ const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'i
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 
 function PhotoUpload({ onUpload, onBackupComplete, user }) {
+  const scope = user?.scope || '';
+  const hasDriveAccess = Boolean(user?.accessToken) && scope.includes('drive.file');
+  const hasPhotosAccess = Boolean(user?.accessToken) && scope.includes('photoslibrary');
+
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [tags, setTags] = useState([]);
   const [locationEnabled, setLocationEnabled] = useState(false);
@@ -90,24 +94,26 @@ function PhotoUpload({ onUpload, onBackupComplete, user }) {
 
         if (photo) {
           // Backup to Google Drive
-          if (backupToDrive && user?.accessToken) {
+          if (backupToDrive && hasDriveAccess) {
             try {
               const driveFile = await uploadToDrive(user.accessToken, file, file.name);
               photo.cloudBackup = { ...photo.cloudBackup, googleDrive: driveFile.id };
               setUploadProgress((prev) => ({ ...prev, [file.name]: 75 }));
             } catch (err) {
               console.warn('Drive backup failed:', err.message);
+              setErrors((prev) => [...prev, `${file.name}: Google Drive backup failed (${err.message})`]);
             }
           }
 
           // Backup to Google Photos
-          if (backupToPhotos && user?.accessToken) {
+          if (backupToPhotos && hasPhotosAccess) {
             try {
               const gPhoto = await uploadToGooglePhotos(user.accessToken, file);
               photo.cloudBackup = { ...photo.cloudBackup, googlePhotos: gPhoto?.id };
               setUploadProgress((prev) => ({ ...prev, [file.name]: 95 }));
             } catch (err) {
               console.warn('Google Photos backup failed:', err.message);
+              setErrors((prev) => [...prev, `${file.name}: Google Photos backup failed (${err.message})`]);
             }
           }
 
@@ -242,23 +248,30 @@ function PhotoUpload({ onUpload, onBackupComplete, user }) {
         <div className="option-section">
           <label className="option-label">Cloud Backup</label>
           <div className="backup-options">
-            <label className="checkbox-label">
+            <label className={`checkbox-label ${!hasDriveAccess ? 'checkbox-label--disabled' : ''}`}>
               <input
                 type="checkbox"
-                checked={backupToDrive}
+                checked={hasDriveAccess && backupToDrive}
+                disabled={!hasDriveAccess}
                 onChange={(e) => setBackupToDrive(e.target.checked)}
               />
               Backup to Google Drive
             </label>
-            <label className="checkbox-label">
+            <label className={`checkbox-label ${!hasPhotosAccess ? 'checkbox-label--disabled' : ''}`}>
               <input
                 type="checkbox"
-                checked={backupToPhotos}
+                checked={hasPhotosAccess && backupToPhotos}
+                disabled={!hasPhotosAccess}
                 onChange={(e) => setBackupToPhotos(e.target.checked)}
               />
               Backup to Google Photos
             </label>
           </div>
+          {(!hasDriveAccess || !hasPhotosAccess) && (
+            <p className="option-hint">
+              Sign in with Google and grant Drive/Photos access in Settings to enable cloud backup.
+            </p>
+          )}
         </div>
       </div>
 
