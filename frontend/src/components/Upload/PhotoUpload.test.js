@@ -29,4 +29,38 @@ describe('PhotoUpload cloud backup options', () => {
       screen.queryByText(/sign in with google and grant drive\/photos access/i)
     ).toBeNull();
   });
+
+  test('OneDrive/Dropbox checkboxes are disabled until those are connected in Settings', () => {
+    render(
+      <PhotoUpload
+        onUpload={jest.fn()}
+        user={{ isLocal: true }}
+        storageConnections={{ connections: { onedrive: null, dropbox: null } }}
+      />
+    );
+
+    expect(screen.getByLabelText(/backup to onedrive/i).disabled).toBe(true);
+    expect(screen.getByLabelText(/backup to dropbox/i).disabled).toBe(true);
+    expect(screen.getByText(/connect onedrive\/dropbox in settings/i)).not.toBeNull();
+  });
+
+  test('OneDrive/Dropbox checkboxes enable once connected, independent of Google', () => {
+    render(
+      <PhotoUpload
+        onUpload={jest.fn()}
+        user={{ isLocal: true }}
+        storageConnections={{
+          connections: {
+            onedrive: { accessToken: 'od-token', accountName: 'Daughter OneDrive' },
+            dropbox: { accessToken: 'db-token', accountName: 'Daughter Dropbox' },
+          },
+        }}
+      />
+    );
+
+    expect(screen.getByLabelText(/backup to onedrive/i).disabled).toBe(false);
+    expect(screen.getByLabelText(/backup to dropbox/i).disabled).toBe(false);
+    // Google is still not connected for this (local) user.
+    expect(screen.getByLabelText(/backup to google drive/i).disabled).toBe(true);
+  });
 });

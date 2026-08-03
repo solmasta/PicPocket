@@ -87,6 +87,15 @@
   line-height: 1.45;
 }
 
+.ledger-section__desc + .ledger-section__desc {
+  margin-top: 0.4rem;
+}
+
+.ledger-section__desc--muted {
+  color: #9ca3af;
+  font-size: 0.78rem;
+}
+
 .ledger-btn {
   padding: 0.55rem 1.1rem;
   border-radius: 8px;

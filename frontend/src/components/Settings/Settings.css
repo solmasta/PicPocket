@@ -182,6 +182,27 @@
   margin: -0.25rem 0 0.5rem 1.75rem;
 }
 
+.settings__divider {
+  border: none;
+  border-top: 1px solid #f3f4f6;
+  margin: 0.75rem 0;
+}
+
+.settings__account-name {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+.settings__connect-error {
+  font-size: 0.8rem;
+  color: #b91c1c;
+  background: #fee2e2;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  margin: -0.3rem 0 0.5rem;
+}
+
 /* Buttons */
 .settings__btn {
   padding: 0.45rem 1rem;

@@ -23,6 +23,7 @@ import StorageLedger from './components/Storage/StorageLedger';
 import Settings from './components/Settings/Settings';
 import { useAuth } from './hooks/useAuth';
 import { usePhotos } from './hooks/usePhotos';
+import { useStorageConnections } from './hooks/useStorageConnections';
 import { isGoogleAuthConfigured } from './config/googleAuth';
 
 function App() {
@@ -49,6 +50,7 @@ function MainApp() {
     handleLoginError,
   } = useAuth();
   const { photos, addPhoto, deletePhoto, updatePhoto, loading: photosLoading } = usePhotos(user);
+  const storageConnections = useStorageConnections();
   const [activeView, setActiveView] = useState('gallery');
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768);
@@ -140,7 +142,14 @@ function MainApp() {
           />
         );
       case 'upload':
-        return <PhotoUpload onUpload={addPhoto} onBackupComplete={updatePhoto} user={user} />;
+        return (
+          <PhotoUpload
+            onUpload={addPhoto}
+            onBackupComplete={updatePhoto}
+            user={user}
+            storageConnections={storageConnections}
+          />
+        );
       case 'search':
         return <TagSearch photos={photos} onSelect={handleSelectPhotoForEdit} />;
       case 'filters':
@@ -158,9 +167,17 @@ function MainApp() {
       case 'horse-profile':
         return <HorseProfile user={user} />;
       case 'storage':
-        return <StorageLedger photos={photos} user={user} onImport={addPhoto} onImportBackupTag={updatePhoto} />;
+        return (
+          <StorageLedger
+            photos={photos}
+            user={user}
+            onImport={addPhoto}
+            onImportBackupTag={updatePhoto}
+            storageConnections={storageConnections}
+          />
+        );
       case 'settings':
-        return <Settings user={user} />;
+        return <Settings user={user} storageConnections={storageConnections} />;
       default:
         return (
           <PhotoGallery

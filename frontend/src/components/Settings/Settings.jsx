@@ -2,10 +2,20 @@ import { useState, useEffect } from 'react';
 import { getAutoBackupPref, setAutoBackupPref } from '../../utils/preferences';
 import './Settings.css';
 
-export default function Settings({ user }) {
+export default function Settings({ user, storageConnections }) {
   const [autoBackup, setAutoBackup] = useState(() => getAutoBackupPref());
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const [exportMessage, setExportMessage] = useState('');
+
+  const {
+    connections = {},
+    connecting = null,
+    errors: connectionErrors = {},
+    connect,
+    disconnect,
+    isOneDriveConfigured = false,
+    isDropboxConfigured = false,
+  } = storageConnections || {};
 
   useEffect(() => {
     const goOnline = () => setIsOnline(true);
@@ -75,6 +85,68 @@ export default function Settings({ user }) {
             <span className="settings__status settings__status--warning">Not connected</span>
           )}
         </div>
+
+        <hr className="settings__divider" />
+        <p className="settings__description">
+          Additional storage accounts your daughter can control from this app — for backup
+          and to pull photos in from other devices/sessions via the Storage Ledger.
+        </p>
+
+        <div className="settings__status-row">
+          <span className="settings__label">
+            <span className="settings__label-icon">🟦</span>
+            OneDrive
+            {connections.onedrive && (
+              <span className="settings__account-name">{connections.onedrive.accountName}</span>
+            )}
+          </span>
+          {connections.onedrive ? (
+            <button className="settings__btn" onClick={() => disconnect('onedrive')}>
+              Disconnect
+            </button>
+          ) : !isOneDriveConfigured ? (
+            <span className="settings__status settings__status--warning" title="Set REACT_APP_ONEDRIVE_CLIENT_ID to enable">
+              Not set up yet
+            </span>
+          ) : (
+            <button
+              className="settings__btn settings__btn--primary"
+              onClick={() => connect('onedrive')}
+              disabled={connecting === 'onedrive'}
+            >
+              {connecting === 'onedrive' ? 'Connecting…' : 'Connect'}
+            </button>
+          )}
+        </div>
+        {connectionErrors.onedrive && <p className="settings__connect-error">⚠️ {connectionErrors.onedrive}</p>}
+
+        <div className="settings__status-row">
+          <span className="settings__label">
+            <span className="settings__label-icon">🔵</span>
+            Dropbox
+            {connections.dropbox && (
+              <span className="settings__account-name">{connections.dropbox.accountName}</span>
+            )}
+          </span>
+          {connections.dropbox ? (
+            <button className="settings__btn" onClick={() => disconnect('dropbox')}>
+              Disconnect
+            </button>
+          ) : !isDropboxConfigured ? (
+            <span className="settings__status settings__status--warning" title="Set REACT_APP_DROPBOX_CLIENT_ID to enable">
+              Not set up yet
+            </span>
+          ) : (
+            <button
+              className="settings__btn settings__btn--primary"
+              onClick={() => connect('dropbox')}
+              disabled={connecting === 'dropbox'}
+            >
+              {connecting === 'dropbox' ? 'Connecting…' : 'Connect'}
+            </button>
+          )}
+        </div>
+        {connectionErrors.dropbox && <p className="settings__connect-error">⚠️ {connectionErrors.dropbox}</p>}
       </section>
 
       {/* Backup & Sync */}

@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { listDriveFiles, downloadDriveFile } from '../../services/googleDriveService';
 import { listGooglePhotos, downloadGooglePhotoBytes } from '../../services/googlePhotosService';
+import { listOneDriveFiles, downloadOneDriveFile } from '../../services/oneDriveStorageService';
+import { listDropboxFiles, downloadDropboxFile } from '../../services/dropboxStorageService';
 import './StorageLedger.css';
 
 // Safety cap on how many Google Photos pages to walk when reconciling, so a
@@ -21,6 +23,74 @@ async function fetchAllGooglePhotos(accessToken) {
   return items;
 }
 
+// Each provider knows how to check availability, list its backup
+// folder/album, and download an item's bytes for import — everything else
+// (the table, the orphan list, the import buttons) is generic over this.
+// `cloudBackup` field names match what PhotoUpload already writes when it
+// backs a photo up, so reconciliation lines up with existing records.
+const PROVIDERS = [
+  {
+    key: 'googleDrive',
+    label: 'Google Drive',
+    icon: '☁️',
+    isAvailable: (ctx) => ctx.hasDriveAccess,
+    list: async (ctx) => {
+      const files = await listDriveFiles(ctx.user.accessToken);
+      return files.map((f) => ({ id: f.id, name: f.name, createdTime: f.createdTime, link: f.webViewLink, raw: f }));
+    },
+    download: async (ctx, item) => {
+      const blob = await downloadDriveFile(ctx.user.accessToken, item.id);
+      return new File([blob], item.name, { type: item.raw.mimeType || blob.type || 'image/jpeg' });
+    },
+    unavailableHint: 'Sign in with Google and grant Drive access in Settings',
+  },
+  {
+    key: 'googlePhotos',
+    label: 'Google Photos',
+    icon: '🖼️',
+    isAvailable: (ctx) => ctx.hasPhotosAccess,
+    list: async (ctx) => {
+      const items = await fetchAllGooglePhotos(ctx.user.accessToken);
+      return items.map((p) => ({ id: p.id, name: p.filename || `${p.id}.jpg`, createdTime: null, link: p.productUrl, raw: p }));
+    },
+    download: async (ctx, item) => {
+      const blob = await downloadGooglePhotoBytes(item.raw);
+      return new File([blob], item.name, { type: item.raw.mimeType || blob.type || 'image/jpeg' });
+    },
+    unavailableHint: 'Sign in with Google and grant Photos access in Settings',
+  },
+  {
+    key: 'oneDrive',
+    label: 'OneDrive',
+    icon: '🟦',
+    isAvailable: (ctx) => Boolean(ctx.oneDriveConnection?.accessToken),
+    list: async (ctx) => {
+      const files = await listOneDriveFiles(ctx.oneDriveConnection.accessToken);
+      return files.map((f) => ({ id: f.id, name: f.name, createdTime: f.createdDateTime, link: f.webUrl, raw: f }));
+    },
+    download: async (ctx, item) => {
+      const blob = await downloadOneDriveFile(ctx.oneDriveConnection.accessToken, item.id);
+      return new File([blob], item.name, { type: item.raw.file?.mimeType || blob.type || 'image/jpeg' });
+    },
+    unavailableHint: 'Connect OneDrive in Settings',
+  },
+  {
+    key: 'dropbox',
+    label: 'Dropbox',
+    icon: '🔵',
+    isAvailable: (ctx) => Boolean(ctx.dropboxConnection?.accessToken),
+    list: async (ctx) => {
+      const files = await listDropboxFiles(ctx.dropboxConnection.accessToken);
+      return files.map((f) => ({ id: f.id, name: f.name, createdTime: f.client_modified, link: null, raw: f }));
+    },
+    download: async (ctx, item) => {
+      const blob = await downloadDropboxFile(ctx.dropboxConnection.accessToken, item.raw.path_lower);
+      return new File([blob], item.name, { type: blob.type || 'image/jpeg' });
+    },
+    unavailableHint: 'Connect Dropbox in Settings',
+  },
+];
+
 function formatBytes(bytes) {
   if (!bytes && bytes !== 0) return '—';
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
@@ -35,23 +105,33 @@ function StatusPill({ status }) {
   return <span className="ledger-status ledger-status--none">— Not backed up</span>;
 }
 
-export default function StorageLedger({ photos, user, onImport, onImportBackupTag }) {
-  const [driveFiles, setDriveFiles] = useState(null); // null = not checked yet this session
-  const [photosItems, setPhotosItems] = useState(null);
+export default function StorageLedger({ photos, user, onImport, onImportBackupTag, storageConnections }) {
+  const oneDriveConnection = storageConnections?.connections?.onedrive || null;
+  const dropboxConnection = storageConnections?.connections?.dropbox || null;
+
+  const scope = user?.scope || '';
+  const ctx = {
+    user,
+    oneDriveConnection,
+    dropboxConnection,
+    hasDriveAccess: Boolean(user?.accessToken) && scope.includes('drive.file'),
+    hasPhotosAccess: Boolean(user?.accessToken) && scope.includes('photoslibrary'),
+  };
+  const availableProviders = PROVIDERS.filter((p) => p.isAvailable(ctx));
+  const unavailableProviders = PROVIDERS.filter((p) => !p.isAvailable(ctx));
+  const canReconcile = availableProviders.length > 0;
+
+  // { [providerKey]: null (not checked) | [] | [...items] }
+  const [remoteByProvider, setRemoteByProvider] = useState({});
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState(null);
   const [lastChecked, setLastChecked] = useState(null);
 
   const [storageEstimate, setStorageEstimate] = useState(null);
-  const [importingIds, setImportingIds] = useState(() => new Set());
-  const [importedIds, setImportedIds] = useState(() => new Set());
+  const [importingKeys, setImportingKeys] = useState(() => new Set());
+  const [importedKeys, setImportedKeys] = useState(() => new Set());
   const [importErrors, setImportErrors] = useState({});
   const [importingAll, setImportingAll] = useState(false);
-
-  const scope = user?.scope || '';
-  const hasDriveAccess = Boolean(user?.accessToken) && scope.includes('drive.file');
-  const hasPhotosAccess = Boolean(user?.accessToken) && scope.includes('photoslibrary');
-  const canReconcile = hasDriveAccess || hasPhotosAccess;
 
   const refreshStorageEstimate = useCallback(() => {
     if (navigator.storage?.estimate) {
@@ -67,16 +147,13 @@ export default function StorageLedger({ photos, user, onImport, onImportBackupTa
     setChecking(true);
     setCheckError(null);
     try {
-      const [drive, photosResult] = await Promise.all([
-        hasDriveAccess ? listDriveFiles(user.accessToken) : Promise.resolve([]),
-        hasPhotosAccess ? fetchAllGooglePhotos(user.accessToken) : Promise.resolve([]),
-      ]);
-      setDriveFiles(drive);
-      setPhotosItems(photosResult);
+      const results = await Promise.all(
+        availableProviders.map(async (p) => [p.key, await p.list(ctx)])
+      );
+      setRemoteByProvider((prev) => ({ ...prev, ...Object.fromEntries(results) }));
       setLastChecked(new Date());
-      // Importing earlier may have happened in a previous check; a fresh
-      // check re-derives orphans from scratch, so drop stale import markers.
-      setImportedIds(new Set());
+      // A fresh check re-derives orphans from scratch, so drop stale markers.
+      setImportedKeys(new Set());
       setImportErrors({});
     } catch (err) {
       setCheckError(err.message || 'Failed to check cloud storage.');
@@ -85,98 +162,76 @@ export default function StorageLedger({ photos, user, onImport, onImportBackupTa
     }
   };
 
-  const driveIds = new Set((driveFiles || []).map((f) => f.id));
-  const photosIds = new Set((photosItems || []).map((p) => p.id));
+  const idKey = (providerKey, id) => `${providerKey}:${id}`;
 
   const rows = photos.map((photo) => {
-    const driveId = photo.cloudBackup?.googleDrive;
-    const photosId = photo.cloudBackup?.googlePhotos;
-    const driveStatus = !driveId ? 'none' : driveFiles === null ? 'unchecked' : driveIds.has(driveId) ? 'ok' : 'missing';
-    const photosStatus = !photosId ? 'none' : photosItems === null ? 'unchecked' : photosIds.has(photosId) ? 'ok' : 'missing';
-    return { photo, driveStatus, photosStatus };
+    const statuses = PROVIDERS.map((p) => {
+      const remoteId = photo.cloudBackup?.[p.key];
+      const remoteItems = remoteByProvider[p.key];
+      const remoteIds = new Set((remoteItems || []).map((item) => item.id));
+      const status = !remoteId ? 'none' : remoteItems === undefined || remoteItems === null ? 'unchecked' : remoteIds.has(remoteId) ? 'ok' : 'missing';
+      return { provider: p, status };
+    });
+    return { photo, statuses };
   });
 
-  const localDriveIds = new Set(photos.map((p) => p.cloudBackup?.googleDrive).filter(Boolean));
-  const localPhotosIds = new Set(photos.map((p) => p.cloudBackup?.googlePhotos).filter(Boolean));
-  const orphanedDrive = (driveFiles || []).filter((f) => !localDriveIds.has(f.id) && !importedIds.has(f.id));
-  const orphanedPhotos = (photosItems || []).filter((p) => !localPhotosIds.has(p.id) && !importedIds.has(p.id));
+  const orphansByProvider = PROVIDERS.map((p) => {
+    const localIds = new Set(photos.map((photo) => photo.cloudBackup?.[p.key]).filter(Boolean));
+    const items = (remoteByProvider[p.key] || []).filter(
+      (item) => !localIds.has(item.id) && !importedKeys.has(idKey(p.key, item.id))
+    );
+    return { provider: p, items };
+  }).filter(({ items }) => items.length > 0);
 
   const totalLocal = photos.length;
-  const backedUpDrive = photos.filter((p) => p.cloudBackup?.googleDrive).length;
-  const backedUpPhotos = photos.filter((p) => p.cloudBackup?.googlePhotos).length;
-  const backedUpNowhere = photos.filter((p) => !p.cloudBackup?.googleDrive && !p.cloudBackup?.googlePhotos).length;
+  const backedUpNowhere = photos.filter((p) => !PROVIDERS.some((provider) => p.cloudBackup?.[provider.key])).length;
+  const totalOrphaned = orphansByProvider.reduce((sum, g) => sum + g.items.length, 0);
 
-  const markImporting = (id, isImporting) => {
-    setImportingIds((prev) => {
+  const markImporting = (key, isImporting) => {
+    setImportingKeys((prev) => {
       const next = new Set(prev);
-      if (isImporting) next.add(id);
-      else next.delete(id);
+      if (isImporting) next.add(key);
+      else next.delete(key);
       return next;
     });
   };
 
-  const importDriveFile = async (file) => {
-    markImporting(file.id, true);
+  const importItem = async (provider, item) => {
+    const key = idKey(provider.key, item.id);
+    markImporting(key, true);
     setImportErrors((prev) => {
       const next = { ...prev };
-      delete next[file.id];
+      delete next[key];
       return next;
     });
     try {
-      const blob = await downloadDriveFile(user.accessToken, file.id);
-      const asFile = new File([blob], file.name, { type: file.mimeType || blob.type || 'image/jpeg' });
-      const photo = await onImport(asFile, { tags: [] });
+      const file = await provider.download(ctx, item);
+      const photo = await onImport(file, { tags: [] });
       if (photo) {
-        await onImportBackupTag({ ...photo, cloudBackup: { ...photo.cloudBackup, googleDrive: file.id } });
+        await onImportBackupTag({ ...photo, cloudBackup: { ...photo.cloudBackup, [provider.key]: item.id } });
       }
-      setImportedIds((prev) => new Set(prev).add(file.id));
+      setImportedKeys((prev) => new Set(prev).add(key));
       refreshStorageEstimate();
     } catch (err) {
-      setImportErrors((prev) => ({ ...prev, [file.id]: err.message || 'Import failed.' }));
+      setImportErrors((prev) => ({ ...prev, [key]: err.message || 'Import failed.' }));
     } finally {
-      markImporting(file.id, false);
-    }
-  };
-
-  const importGooglePhoto = async (item) => {
-    markImporting(item.id, true);
-    setImportErrors((prev) => {
-      const next = { ...prev };
-      delete next[item.id];
-      return next;
-    });
-    try {
-      const blob = await downloadGooglePhotoBytes(item);
-      const fileName = item.filename || `${item.id}.jpg`;
-      const asFile = new File([blob], fileName, { type: item.mimeType || blob.type || 'image/jpeg' });
-      const photo = await onImport(asFile, { tags: [] });
-      if (photo) {
-        await onImportBackupTag({ ...photo, cloudBackup: { ...photo.cloudBackup, googlePhotos: item.id } });
-      }
-      setImportedIds((prev) => new Set(prev).add(item.id));
-      refreshStorageEstimate();
-    } catch (err) {
-      setImportErrors((prev) => ({ ...prev, [item.id]: err.message || 'Import failed.' }));
-    } finally {
-      markImporting(item.id, false);
+      markImporting(key, false);
     }
   };
 
   const importAll = async () => {
     setImportingAll(true);
     // Sequential on purpose: each import writes a full-size photo into
-    // IndexedDB, and running Drive + Photos downloads all at once would
-    // both hammer the API rate limits and make per-item progress unreadable.
-    for (const file of orphanedDrive) {
-      await importDriveFile(file);
-    }
-    for (const item of orphanedPhotos) {
-      await importGooglePhoto(item);
+    // IndexedDB, and running every provider's downloads at once would both
+    // hammer API rate limits and make per-item progress unreadable.
+    for (const { provider, items } of orphansByProvider) {
+      for (const item of items) {
+        await importItem(provider, item);
+      }
     }
     setImportingAll(false);
   };
 
-  const totalOrphaned = orphanedDrive.length + orphanedPhotos.length;
   const usagePct = storageEstimate?.quota
     ? Math.min(100, Math.round((storageEstimate.usage / storageEstimate.quota) * 100))
     : null;
@@ -186,9 +241,9 @@ export default function StorageLedger({ photos, user, onImport, onImportBackupTa
       <h1 className="storage-ledger__title">🗄️ Storage Ledger</h1>
       <p className="storage-ledger__intro">
         This device's local library is the one place with the most room to keep everything —
-        Google Drive and Google Photos backups are useful, but they're scattered across
-        whichever device made them. Bring backups from other devices/sessions in here, and
-        check how much room is left to do it.
+        Google Drive, Google Photos, OneDrive, and Dropbox backups are useful, but they're
+        scattered across whichever device made them. Bring backups from other
+        devices/sessions in here, and check how much room is left to do it.
       </p>
 
       {/* Local storage space available for consolidating everything here */}
@@ -215,14 +270,14 @@ export default function StorageLedger({ photos, user, onImport, onImportBackupTa
           <span className="ledger-stat__value">{totalLocal}</span>
           <span className="ledger-stat__label">On this device</span>
         </div>
-        <div className="ledger-stat">
-          <span className="ledger-stat__value">{backedUpDrive}</span>
-          <span className="ledger-stat__label">☁️ Marked backed up to Drive</span>
-        </div>
-        <div className="ledger-stat">
-          <span className="ledger-stat__value">{backedUpPhotos}</span>
-          <span className="ledger-stat__label">🖼️ Marked backed up to Photos</span>
-        </div>
+        {PROVIDERS.map((p) => (
+          <div className="ledger-stat" key={p.key}>
+            <span className="ledger-stat__value">
+              {photos.filter((photo) => photo.cloudBackup?.[p.key]).length}
+            </span>
+            <span className="ledger-stat__label">{p.icon} Marked backed up to {p.label}</span>
+          </div>
+        ))}
         <div className="ledger-stat ledger-stat--warn">
           <span className="ledger-stat__value">{backedUpNowhere}</span>
           <span className="ledger-stat__label">Not backed up anywhere</span>
@@ -236,9 +291,14 @@ export default function StorageLedger({ photos, user, onImport, onImportBackupTa
             <h2 className="ledger-section__title">Check Cloud Storage</h2>
             <p className="ledger-section__desc">
               {canReconcile
-                ? "Fetch what's actually in your Google Drive and Google Photos backup folders right now, and compare it against this device's records."
-                : 'Sign in with Google and grant Drive/Photos access to reconcile against your cloud storage — until then, only the local counts above are available.'}
+                ? `Fetch what's actually in ${availableProviders.map((p) => p.label).join(', ')} right now, and compare it against this device's records.`
+                : 'Sign in with Google, or connect OneDrive/Dropbox in Settings, to reconcile against your cloud storage — until then, only the local counts above are available.'}
             </p>
+            {canReconcile && unavailableProviders.length > 0 && (
+              <p className="ledger-section__desc ledger-section__desc--muted">
+                Not included yet: {unavailableProviders.map((p) => `${p.label} (${p.unavailableHint})`).join('; ')}.
+              </p>
+            )}
           </div>
           <button
             className="ledger-btn"
@@ -265,12 +325,13 @@ export default function StorageLedger({ photos, user, onImport, onImportBackupTa
               <thead>
                 <tr>
                   <th>Photo</th>
-                  <th>Google Drive</th>
-                  <th>Google Photos</th>
+                  {PROVIDERS.map((p) => (
+                    <th key={p.key}>{p.icon} {p.label}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {rows.map(({ photo, driveStatus, photosStatus }) => (
+                {rows.map(({ photo, statuses }) => (
                   <tr key={photo.id}>
                     <td className="ledger-photo-cell">
                       <img
@@ -282,8 +343,9 @@ export default function StorageLedger({ photos, user, onImport, onImportBackupTa
                         {photo.fileName}
                       </span>
                     </td>
-                    <td><StatusPill status={driveStatus} /></td>
-                    <td><StatusPill status={photosStatus} /></td>
+                    {statuses.map(({ provider, status }) => (
+                      <td key={provider.key}><StatusPill status={status} /></td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
@@ -299,7 +361,7 @@ export default function StorageLedger({ photos, user, onImport, onImportBackupTa
             <div>
               <h2 className="ledger-section__title">Found in the Cloud, Not on This Device</h2>
               <p className="ledger-section__desc">
-                Backed up under this Google account — likely from another device or browser —
+                Backed up under a connected account — likely from another device or browser —
                 but missing from this device's local library. Add them here so everything
                 lives in one place.
               </p>
@@ -309,57 +371,40 @@ export default function StorageLedger({ photos, user, onImport, onImportBackupTa
             </button>
           </div>
 
-          {orphanedDrive.length > 0 && (
-            <div className="ledger-orphan-group">
-              <h3 className="ledger-orphan-title">☁️ Google Drive ({orphanedDrive.length})</h3>
+          {orphansByProvider.map(({ provider, items }) => (
+            <div className="ledger-orphan-group" key={provider.key}>
+              <h3 className="ledger-orphan-title">{provider.icon} {provider.label} ({items.length})</h3>
               <ul className="ledger-orphan-list">
-                {orphanedDrive.map((f) => (
-                  <li key={f.id} className="ledger-orphan-item">
-                    <div>
-                      <a href={f.webViewLink} target="_blank" rel="noreferrer">{f.name}</a>
-                      {f.createdTime && (
-                        <span className="ledger-orphan-date">
-                          {' '}· {new Date(f.createdTime).toLocaleDateString()}
-                        </span>
-                      )}
-                      {importErrors[f.id] && <p className="ledger-error ledger-error--inline">⚠️ {importErrors[f.id]}</p>}
-                    </div>
-                    <button
-                      className="ledger-btn ledger-btn--sm"
-                      onClick={() => importDriveFile(f)}
-                      disabled={importingIds.has(f.id) || importingAll}
-                    >
-                      {importingIds.has(f.id) ? 'Adding…' : 'Add to This Device'}
-                    </button>
-                  </li>
-                ))}
+                {items.map((item) => {
+                  const key = idKey(provider.key, item.id);
+                  return (
+                    <li key={key} className="ledger-orphan-item">
+                      <div>
+                        {item.link ? (
+                          <a href={item.link} target="_blank" rel="noreferrer">{item.name}</a>
+                        ) : (
+                          <span>{item.name}</span>
+                        )}
+                        {item.createdTime && (
+                          <span className="ledger-orphan-date">
+                            {' '}· {new Date(item.createdTime).toLocaleDateString()}
+                          </span>
+                        )}
+                        {importErrors[key] && <p className="ledger-error ledger-error--inline">⚠️ {importErrors[key]}</p>}
+                      </div>
+                      <button
+                        className="ledger-btn ledger-btn--sm"
+                        onClick={() => importItem(provider, item)}
+                        disabled={importingKeys.has(key) || importingAll}
+                      >
+                        {importingKeys.has(key) ? 'Adding…' : 'Add to This Device'}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
-          )}
-          {orphanedPhotos.length > 0 && (
-            <div className="ledger-orphan-group">
-              <h3 className="ledger-orphan-title">🖼️ Google Photos ({orphanedPhotos.length})</h3>
-              <ul className="ledger-orphan-list">
-                {orphanedPhotos.map((p) => (
-                  <li key={p.id} className="ledger-orphan-item">
-                    <div>
-                      <a href={p.productUrl || '#'} target="_blank" rel="noreferrer">
-                        {p.filename || p.id}
-                      </a>
-                      {importErrors[p.id] && <p className="ledger-error ledger-error--inline">⚠️ {importErrors[p.id]}</p>}
-                    </div>
-                    <button
-                      className="ledger-btn ledger-btn--sm"
-                      onClick={() => importGooglePhoto(p)}
-                      disabled={importingIds.has(p.id) || importingAll}
-                    >
-                      {importingIds.has(p.id) ? 'Adding…' : 'Add to This Device'}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          ))}
         </div>
       )}
     </div>

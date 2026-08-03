@@ -1,7 +1,7 @@
 import { openDB } from 'idb';
 
 const DB_NAME = 'picpals-db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 const STORES = {
   AUTH: 'auth',
@@ -9,6 +9,7 @@ const STORES = {
   ALBUMS: 'albums',
   TAGS: 'tags',
   PROFILES: 'profiles',
+  CONNECTIONS: 'connections',
 };
 
 let dbInstance = null;
@@ -34,6 +35,14 @@ export async function getDB() {
       }
       if (!db.objectStoreNames.contains(STORES.PROFILES)) {
         db.createObjectStore(STORES.PROFILES, { keyPath: 'userId' });
+      }
+      if (!db.objectStoreNames.contains(STORES.CONNECTIONS)) {
+        // Optional storage connections (OneDrive, Dropbox, ...) — separate
+        // from the AUTH store because they're additional backup
+        // destinations, not the app's sign-in identity. Keyed by provider
+        // id ('onedrive', 'dropbox') so there's at most one connection per
+        // provider.
+        db.createObjectStore(STORES.CONNECTIONS, { keyPath: 'provider' });
       }
     },
   });
@@ -115,6 +124,27 @@ export async function getTagCount(tag) {
 export async function getAllTags() {
   const db = await getDB();
   return db.getAll(STORES.TAGS);
+}
+
+// Storage connection operations (OneDrive, Dropbox, ...)
+export async function saveConnection(provider, data) {
+  const db = await getDB();
+  await db.put(STORES.CONNECTIONS, { provider, ...data });
+}
+
+export async function getConnection(provider) {
+  const db = await getDB();
+  return db.get(STORES.CONNECTIONS, provider);
+}
+
+export async function getAllConnections() {
+  const db = await getDB();
+  return db.getAll(STORES.CONNECTIONS);
+}
+
+export async function clearConnection(provider) {
+  const db = await getDB();
+  await db.delete(STORES.CONNECTIONS, provider);
 }
 
 // Horse profile operations
