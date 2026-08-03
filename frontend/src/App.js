@@ -120,7 +120,7 @@ function MainApp() {
           />
         );
       case 'upload':
-        return <PhotoUpload onUpload={addPhoto} user={user} />;
+        return <PhotoUpload onUpload={addPhoto} onBackupComplete={updatePhoto} user={user} />;
       case 'search':
         return <TagSearch photos={photos} onSelect={handleSelectPhotoForEdit} />;
       case 'filters':

@@ -102,6 +102,9 @@ function PhotoCard({ photo, onDelete, onSelect, viewMode }) {
         {photo.cloudBackup?.googleDrive && (
           <span className="cloud-badge" title="Backed up to Google Drive">☁️</span>
         )}
+        {photo.cloudBackup?.googlePhotos && (
+          <span className="cloud-badge photos-badge" title="Backed up to Google Photos">🖼️</span>
+        )}
       </div>
 
       {showActions && (

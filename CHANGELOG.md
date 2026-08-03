@@ -4,6 +4,31 @@ All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version numbers
 across the root, `frontend/`, and `backend/` packages are kept in lockstep.
 
+## [1.2.5] - 2026-08-03
+
+### Fixed
+- A successful Google Drive/Photos backup at upload time was never
+  actually saved back to IndexedDB, only mutated on the in-memory photo
+  object. The gallery's ☁️ "Backed up" badge could briefly reflect a
+  successful backup, but a page reload (or just re-fetching photos)
+  showed the photo as not backed up even though the upload to Google
+  had genuinely succeeded — `PhotoUpload` now persists the backup
+  result via `updatePhoto` so it survives reloads.
+
+### Added
+- A separate 🖼️ badge for photos backed up to Google Photos, alongside
+  the existing ☁️ Google Drive badge (previously only Drive backup was
+  shown at all).
+
+### Note
+- This does not change how backup is triggered: photos are still only
+  backed up to Google Drive/Photos at upload time, only while signed
+  in with the relevant checkbox ticked, and only going forward (photos
+  already in the gallery are not retroactively backed up). IndexedDB
+  remains the only copy of the photo bytes themselves — there is still
+  no "restore from Drive/Photos" flow, so clearing browser storage
+  still loses photos regardless of backup status.
+
 ## [1.2.4] - 2026-07-31
 
 ### Changed
