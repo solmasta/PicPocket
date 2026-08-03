@@ -19,6 +19,7 @@ import MemoryLane from './components/MemoryLane/MemoryLane';
 import AlbumSharing from './components/Sharing/AlbumSharing';
 import SharedAlbumView from './components/Sharing/SharedAlbumView';
 import HorseProfile from './components/HorseProfile';
+import StorageLedger from './components/Storage/StorageLedger';
 import Settings from './components/Settings/Settings';
 import { useAuth } from './hooks/useAuth';
 import { usePhotos } from './hooks/usePhotos';
@@ -156,6 +157,8 @@ function MainApp() {
         return <AlbumSharing photos={photos} user={user} />;
       case 'horse-profile':
         return <HorseProfile user={user} />;
+      case 'storage':
+        return <StorageLedger photos={photos} user={user} />;
       case 'settings':
         return <Settings user={user} />;
       default:

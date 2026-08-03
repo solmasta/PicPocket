@@ -4,6 +4,28 @@ All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version numbers
 across the root, `frontend/`, and `backend/` packages are kept in lockstep.
 
+## [1.3.0] - 2026-08-03
+
+### Added
+- **Storage Ledger.** A new "Storage Ledger" view (sidebar, under Horse
+  Profile) answers "what's backed up, and where" across this device's
+  local library, Google Drive, and Google Photos:
+  - Overview counts: photos on this device, how many are marked backed
+    up to Drive/Photos, and how many aren't backed up anywhere.
+  - A "Check Cloud Storage" button that fetches the live contents of
+    the Drive and Photos backup folders/albums and reconciles them
+    against local records — flagging any photo marked as backed up
+    whose remote copy has since gone missing.
+  - Per-photo status table (thumbnail, Drive status, Photos status).
+  - An "orphaned remote files" section listing anything found in Drive
+    or Photos that this device's local library has no record of —
+    typically backups made from another device or browser session,
+    which were previously invisible since nothing in the app ever
+    listed cloud contents back.
+  - Read-only/reconciliation only for now — it surfaces drift and
+    other-device backups but doesn't restore anything into local
+    storage.
+
 ## [1.2.8] - 2026-08-03
 
 ### Fixed
