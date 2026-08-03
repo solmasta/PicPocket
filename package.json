@@ -1,6 +1,6 @@
 {
   "name": "pic-pocket",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Pic-Pocket photo storage app - monorepo root",
   "private": true,
   "scripts": {
