@@ -4,6 +4,20 @@ All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version numbers
 across the root, `frontend/`, and `backend/` packages are kept in lockstep.
 
+## [1.2.8] - 2026-08-03
+
+### Fixed
+- **Gallery thumbnails looked noticeably blurrier than the uploaded
+  photo.** `createThumbnail` generated a fixed 200x200px square, but a
+  gallery card renders at up to ~300+ CSS px (more on a single-column
+  mobile layout), then gets multiplied again by devicePixelRatio on any
+  retina/high-DPI screen — so the 200px source was being upscaled
+  2-3x+ and looked soft next to the original. Thumbnails are now
+  generated at 480x480 with slightly higher JPEG quality (0.7 → 0.82),
+  which comfortably covers real-world card sizes at typical DPRs.
+  Only affects photos uploaded from now on — existing thumbnails
+  already in IndexedDB aren't regenerated retroactively.
+
 ## [1.2.7] - 2026-08-03
 
 ### Fixed
