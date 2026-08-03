@@ -4,6 +4,36 @@ All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version numbers
 across the root, `frontend/`, and `backend/` packages are kept in lockstep.
 
+## [1.2.7] - 2026-08-03
+
+### Fixed
+- **Cloud backup checkboxes silently did nothing for accounts without
+  Drive/Photos access.** The Upload screen's "Backup to Google Drive"
+  and "Backup to Google Photos" checkboxes were checkable for any
+  user, including one signed in locally with no Google connection.
+  Checking them and uploading gave no indication that nothing was
+  actually backed up — the attempt was skipped and only logged to the
+  console. The checkboxes are now disabled (with an explanatory hint)
+  unless the signed-in user actually has that scope, and a genuine
+  backup failure (as opposed to no access) now surfaces in the
+  upload error banner instead of only `console.warn`.
+- **The app's background artwork bled an "AI-Generated" disclosure
+  badge onto every screen.** `faye-pic-pocket.jpg` — used as the
+  low-opacity background behind every view, and at much higher
+  visibility on the splash and sign-in screens — had a baked-in
+  "AI-Generated" pill in its top-right corner. Because the image is
+  anchored `top center`, that badge peeked out above/behind the
+  header on every page, reading as a rendering glitch. Removed it
+  from the source image with a seamless sky patch.
+- **Resizing the window (or rotating a device) left the sidebar
+  stuck.** `sidebarOpen` was only ever computed once at mount from
+  `window.innerWidth`, so shrinking the window from desktop to a
+  mobile width after load left a desktop-open sidebar covering the
+  entire screen. The app now listens for resize and resets the
+  sidebar to that breakpoint's default only when the mobile/desktop
+  boundary is actually crossed, leaving manual toggles within a
+  breakpoint alone.
+
 ## [1.2.6] - 2026-08-03
 
 ### Fixed
