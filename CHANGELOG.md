@@ -4,6 +4,17 @@ All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version numbers
 across the root, `frontend/`, and `backend/` packages are kept in lockstep.
 
+## [1.2.6] - 2026-08-03
+
+### Fixed
+- **Signing out didn't actually revoke Drive/Photos access.** `signOut`
+  only deleted the locally cached user record — the Google access token
+  itself stayed valid at Google until it happened to expire on its own
+  (up to an hour later), and the app's silent token-renewal flow had no
+  way to know sign-out had happened. `signOut` now calls Google's token
+  revocation endpoint first, so the grant is actually terminated the
+  moment someone signs out, not just hidden from the UI.
+
 ## [1.2.5] - 2026-08-03
 
 ### Fixed

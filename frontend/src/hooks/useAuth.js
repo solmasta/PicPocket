@@ -168,13 +168,27 @@ export function useAuth() {
 
   const signOut = useCallback(async () => {
     try {
+      if (user?.accessToken) {
+        // Best-effort: tell Google to revoke the grant so Drive/Photos
+        // access actually ends here, instead of the access token (and the
+        // silent-renewal flow above) remaining usable until it happens to
+        // expire on its own after "signing out".
+        try {
+          await fetch(
+            `https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(user.accessToken)}`,
+            { method: 'POST' }
+          );
+        } catch (revokeErr) {
+          console.warn('Failed to revoke Google token:', revokeErr);
+        }
+      }
       await clearAuthUser();
       setUser(null);
       setTokenExpired(false);
     } catch (err) {
       console.error('Sign out error:', err);
     }
-  }, []);
+  }, [user]);
 
   return {
     user,
