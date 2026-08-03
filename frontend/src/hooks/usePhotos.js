@@ -95,7 +95,11 @@ export function usePhotos(user) {
       } catch (err) {
         setError(err.message);
         console.error('Failed to add photo:', err);
-        return null;
+        // Re-throw so callers (PhotoUpload) know the save actually failed
+        // instead of treating a swallowed error as a silent success — a
+        // photo that never made it into IndexedDB must not show a green
+        // "100%" progress bar with no error.
+        throw err;
       } finally {
         setLoading(false);
       }

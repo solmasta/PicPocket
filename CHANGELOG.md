@@ -7,6 +7,17 @@ across the root, `frontend/`, and `backend/` packages are kept in lockstep.
 ## [1.2.5] - 2026-08-03
 
 ### Fixed
+- **Uploads that failed to save could silently report success.**
+  `usePhotos.addPhoto` caught its own errors (e.g. IndexedDB write
+  failures — quota exceeded, private-browsing storage limits, etc.)
+  and returned `null` instead of throwing. `PhotoUpload` then treated
+  that `null` as "nothing to back up" and still advanced the progress
+  bar to 100% with no error shown, clearing the file picker as if the
+  upload worked. The photo was never actually written to IndexedDB, so
+  it would be gone the next time the gallery loaded — even though
+  nothing on screen indicated a failure. `addPhoto` now re-throws so
+  `PhotoUpload`'s existing (but previously unreachable) error banner
+  actually surfaces the failure.
 - A successful Google Drive/Photos backup at upload time was never
   actually saved back to IndexedDB, only mutated on the in-memory photo
   object. The gallery's ☁️ "Backed up" badge could briefly reflect a
