@@ -64,6 +64,10 @@
   font-size: 1rem;
 }
 
+.cloud-badge.photos-badge {
+  right: 28px;
+}
+
 .card-overlay {
   position: absolute;
   top: 0;

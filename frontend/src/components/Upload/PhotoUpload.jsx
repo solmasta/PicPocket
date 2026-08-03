@@ -9,7 +9,7 @@ import './PhotoUpload.css';
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic'];
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 
-function PhotoUpload({ onUpload, user }) {
+function PhotoUpload({ onUpload, onBackupComplete, user }) {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [tags, setTags] = useState([]);
   const [locationEnabled, setLocationEnabled] = useState(false);
@@ -108,6 +108,16 @@ function PhotoUpload({ onUpload, user }) {
               setUploadProgress((prev) => ({ ...prev, [file.name]: 95 }));
             } catch (err) {
               console.warn('Google Photos backup failed:', err.message);
+            }
+          }
+
+          // Persist whatever backup status was achieved so it survives a
+          // reload and shows up in the gallery's cloud badge — without
+          // this, uploadToDrive/uploadToGooglePhotos succeeding above only
+          // mutated the in-memory photo object, never IndexedDB.
+          if (photo.cloudBackup?.googleDrive || photo.cloudBackup?.googlePhotos) {
+            if (onBackupComplete) {
+              await onBackupComplete(photo);
             }
           }
         }
