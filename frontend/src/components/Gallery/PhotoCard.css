@@ -68,6 +68,14 @@
   right: 28px;
 }
 
+.cloud-badge.onedrive-badge {
+  right: 50px;
+}
+
+.cloud-badge.dropbox-badge {
+  right: 72px;
+}
+
 .card-overlay {
   position: absolute;
   top: 0;

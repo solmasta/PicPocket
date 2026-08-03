@@ -3,22 +3,30 @@ import TagManager from '../Tags/TagManager';
 import LocationTag from '../Location/LocationTag';
 import { uploadToDrive } from '../../services/googleDriveService';
 import { uploadToGooglePhotos } from '../../services/googlePhotosService';
+import { uploadToOneDrive } from '../../services/oneDriveStorageService';
+import { uploadToDropbox } from '../../services/dropboxStorageService';
 import { getAutoBackupPref } from '../../utils/preferences';
 import './PhotoUpload.css';
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic'];
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 
-function PhotoUpload({ onUpload, onBackupComplete, user }) {
+function PhotoUpload({ onUpload, onBackupComplete, user, storageConnections }) {
   const scope = user?.scope || '';
   const hasDriveAccess = Boolean(user?.accessToken) && scope.includes('drive.file');
   const hasPhotosAccess = Boolean(user?.accessToken) && scope.includes('photoslibrary');
+  const oneDriveConnection = storageConnections?.connections?.onedrive || null;
+  const dropboxConnection = storageConnections?.connections?.dropbox || null;
+  const hasOneDriveAccess = Boolean(oneDriveConnection?.accessToken);
+  const hasDropboxAccess = Boolean(dropboxConnection?.accessToken);
 
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [tags, setTags] = useState([]);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [backupToDrive, setBackupToDrive] = useState(() => getAutoBackupPref());
   const [backupToPhotos, setBackupToPhotos] = useState(() => getAutoBackupPref());
+  const [backupToOneDrive, setBackupToOneDrive] = useState(() => getAutoBackupPref());
+  const [backupToDropbox, setBackupToDropbox] = useState(() => getAutoBackupPref());
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
   const [errors, setErrors] = useState([]);
@@ -117,11 +125,38 @@ function PhotoUpload({ onUpload, onBackupComplete, user }) {
             }
           }
 
+          // Backup to OneDrive
+          if (backupToOneDrive && hasOneDriveAccess) {
+            try {
+              const oneDriveFile = await uploadToOneDrive(oneDriveConnection.accessToken, file, file.name);
+              photo.cloudBackup = { ...photo.cloudBackup, oneDrive: oneDriveFile.id };
+            } catch (err) {
+              console.warn('OneDrive backup failed:', err.message);
+              setErrors((prev) => [...prev, `${file.name}: OneDrive backup failed (${err.message})`]);
+            }
+          }
+
+          // Backup to Dropbox
+          if (backupToDropbox && hasDropboxAccess) {
+            try {
+              const dropboxFile = await uploadToDropbox(dropboxConnection.accessToken, file, file.name);
+              photo.cloudBackup = { ...photo.cloudBackup, dropbox: dropboxFile.path_lower || dropboxFile.id };
+            } catch (err) {
+              console.warn('Dropbox backup failed:', err.message);
+              setErrors((prev) => [...prev, `${file.name}: Dropbox backup failed (${err.message})`]);
+            }
+          }
+
           // Persist whatever backup status was achieved so it survives a
           // reload and shows up in the gallery's cloud badge — without
-          // this, uploadToDrive/uploadToGooglePhotos succeeding above only
-          // mutated the in-memory photo object, never IndexedDB.
-          if (photo.cloudBackup?.googleDrive || photo.cloudBackup?.googlePhotos) {
+          // this, the upload* calls above only mutated the in-memory photo
+          // object, never IndexedDB.
+          if (
+            photo.cloudBackup?.googleDrive ||
+            photo.cloudBackup?.googlePhotos ||
+            photo.cloudBackup?.oneDrive ||
+            photo.cloudBackup?.dropbox
+          ) {
             if (onBackupComplete) {
               await onBackupComplete(photo);
             }
@@ -266,10 +301,33 @@ function PhotoUpload({ onUpload, onBackupComplete, user }) {
               />
               Backup to Google Photos
             </label>
+            <label className={`checkbox-label ${!hasOneDriveAccess ? 'checkbox-label--disabled' : ''}`}>
+              <input
+                type="checkbox"
+                checked={hasOneDriveAccess && backupToOneDrive}
+                disabled={!hasOneDriveAccess}
+                onChange={(e) => setBackupToOneDrive(e.target.checked)}
+              />
+              Backup to OneDrive
+            </label>
+            <label className={`checkbox-label ${!hasDropboxAccess ? 'checkbox-label--disabled' : ''}`}>
+              <input
+                type="checkbox"
+                checked={hasDropboxAccess && backupToDropbox}
+                disabled={!hasDropboxAccess}
+                onChange={(e) => setBackupToDropbox(e.target.checked)}
+              />
+              Backup to Dropbox
+            </label>
           </div>
           {(!hasDriveAccess || !hasPhotosAccess) && (
             <p className="option-hint">
-              Sign in with Google and grant Drive/Photos access in Settings to enable cloud backup.
+              Sign in with Google and grant Drive/Photos access in Settings to enable Google backup.
+            </p>
+          )}
+          {(!hasOneDriveAccess || !hasDropboxAccess) && (
+            <p className="option-hint">
+              Connect OneDrive/Dropbox in Settings to enable backup there too.
             </p>
           )}
         </div>

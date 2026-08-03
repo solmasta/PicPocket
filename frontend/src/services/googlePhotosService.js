@@ -122,3 +122,21 @@ export async function listGooglePhotos(accessToken, pageToken = null) {
     nextPageToken: data.nextPageToken,
   };
 }
+
+/**
+ * Download a Google Photos media item's original bytes (used to restore a
+ * photo backed up from another device/session into this device's local
+ * library). mediaItem.baseUrl is a short-lived (~60 min) signed URL — '=d'
+ * requests the original, full-resolution file.
+ * @returns {Promise<Blob>}
+ */
+export async function downloadGooglePhotoBytes(mediaItem) {
+  if (!mediaItem?.baseUrl) {
+    throw new Error('This photo has no download URL (it may need to be re-checked).');
+  }
+  const res = await fetch(`${mediaItem.baseUrl}=d`);
+  if (!res.ok) {
+    throw new Error('Failed to download photo from Google Photos');
+  }
+  return res.blob();
+}

@@ -4,6 +4,52 @@ All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version numbers
 across the root, `frontend/`, and `backend/` packages are kept in lockstep.
 
+## [1.4.0] - 2026-08-03
+
+### Added
+- **OneDrive and Dropbox as additional storage connections**, alongside
+  Google Drive/Photos, controllable entirely from Settings:
+  - New "Connections" rows for OneDrive (5 GB free) and Dropbox (2 GB
+    free) with Connect/Disconnect buttons. Each is independent of the
+    app's sign-in identity — a local (no-Google) user can connect
+    either or both, and a Google-signed-in user can have all four
+    connected at once.
+  - Uses a popup-based OAuth flow (no backend token exchange needed,
+    matching the app's frontend-only architecture) against a dedicated
+    app-scoped folder in each service (OneDrive's "App Folder",
+    a "/PicPals Backup" folder in Dropbox) — never the person's whole
+    account.
+  - Upload's Cloud Backup checkboxes now include OneDrive/Dropbox,
+    gated on being connected, exactly like Drive/Photos.
+  - The Storage Ledger now reconciles and imports from all four
+    providers — "Found in the Cloud, Not on This Device" and "Add to
+    This Device" work the same way for OneDrive/Dropbox as they do for
+    Drive/Photos.
+  - Gallery photo cards show a distinct badge (🟦 OneDrive, 🔵 Dropbox)
+    alongside the existing ☁️/🖼️ Google badges.
+  - **Requires setup before it's usable**: OneDrive/Dropbox show "Not
+    set up yet" in Settings until `REACT_APP_ONEDRIVE_CLIENT_ID` /
+    `REACT_APP_DROPBOX_CLIENT_ID` are set to a real Client ID
+    registered in the Azure Portal / Dropbox App Console — see
+    `frontend/.env.example` for the registration notes. Until then,
+    every other part of the app behaves exactly as before.
+
+## [1.3.1] - 2026-08-03
+
+### Added
+- **Storage Ledger can now actually restore photos, not just report on
+  them.** Each "Found in the Cloud, Not on This Device" entry has an
+  "Add to This Device" button (plus an "Add All to This Device" bulk
+  action) that downloads the original bytes from Drive/Google Photos,
+  imports them into this device's local library exactly like a normal
+  upload, and tags them as already backed up so they don't get
+  re-uploaded. Imported photos show up in the regular Gallery
+  immediately — they're not stuck in a separate ledger view.
+- **Local storage space indicator.** The Storage Ledger now shows how
+  much of this device's local storage is used vs. available
+  (`navigator.storage.estimate()`), so it's clear how much room there
+  is to consolidate photos from other devices/sessions into one place.
+
 ## [1.3.0] - 2026-08-03
 
 ### Added

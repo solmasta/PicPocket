@@ -1,10 +1,14 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import StorageLedger from './StorageLedger';
-import { listDriveFiles } from '../../services/googleDriveService';
+import { listDriveFiles, downloadDriveFile } from '../../services/googleDriveService';
 import { listGooglePhotos } from '../../services/googlePhotosService';
+import { listOneDriveFiles, downloadOneDriveFile } from '../../services/oneDriveStorageService';
+import { listDropboxFiles } from '../../services/dropboxStorageService';
 
 jest.mock('../../services/googleDriveService');
 jest.mock('../../services/googlePhotosService');
+jest.mock('../../services/oneDriveStorageService');
+jest.mock('../../services/dropboxStorageService');
 
 const GOOGLE_USER = {
   id: 'u1',
@@ -23,7 +27,7 @@ describe('StorageLedger', () => {
   });
 
   test('local-only user sees local counts and a disabled reconcile button', () => {
-    render(<StorageLedger photos={photos} user={{ isLocal: true }} />);
+    render(<StorageLedger photos={photos} user={{ isLocal: true }} onImport={jest.fn()} onImportBackupTag={jest.fn()} />);
 
     expect(screen.getByText('2')).not.toBeNull(); // total local
     const button = screen.getByRole('button', { name: /check cloud storage/i });
@@ -34,7 +38,7 @@ describe('StorageLedger', () => {
     listDriveFiles.mockResolvedValue([]); // drive-1 is NOT present remotely
     listGooglePhotos.mockResolvedValue({ items: [], nextPageToken: undefined });
 
-    render(<StorageLedger photos={photos} user={GOOGLE_USER} />);
+    render(<StorageLedger photos={photos} user={GOOGLE_USER} onImport={jest.fn()} onImportBackupTag={jest.fn()} />);
 
     fireEvent.click(screen.getByRole('button', { name: /check cloud storage/i }));
 
@@ -49,9 +53,115 @@ describe('StorageLedger', () => {
     ]);
     listGooglePhotos.mockResolvedValue({ items: [], nextPageToken: undefined });
 
-    render(<StorageLedger photos={photos} user={GOOGLE_USER} />);
+    render(<StorageLedger photos={photos} user={GOOGLE_USER} onImport={jest.fn()} onImportBackupTag={jest.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: /check cloud storage/i }));
 
     expect(await screen.findByText('from-another-device.jpg')).not.toBeNull();
+  });
+
+  test('"Add to This Device" downloads an orphaned Drive file, imports it, tags it as backed up, and removes it from the orphan list', async () => {
+    listDriveFiles.mockResolvedValue([
+      { id: 'drive-orphan', name: 'from-another-device.jpg', webViewLink: 'https://drive.example/orphan', mimeType: 'image/jpeg' },
+    ]);
+    listGooglePhotos.mockResolvedValue({ items: [], nextPageToken: undefined });
+    downloadDriveFile.mockResolvedValue(new Blob(['bytes'], { type: 'image/jpeg' }));
+
+    const importedPhoto = { id: 'new-local-id', fileName: 'from-another-device.jpg', cloudBackup: {} };
+    const onImport = jest.fn().mockResolvedValue(importedPhoto);
+    const onImportBackupTag = jest.fn().mockResolvedValue(undefined);
+
+    render(
+      <StorageLedger
+        photos={photos}
+        user={GOOGLE_USER}
+        onImport={onImport}
+        onImportBackupTag={onImportBackupTag}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /check cloud storage/i }));
+    await screen.findByText('from-another-device.jpg');
+
+    fireEvent.click(screen.getByRole('button', { name: /add to this device/i }));
+
+    await waitFor(() => expect(onImport).toHaveBeenCalled());
+    const [fileArg] = onImport.mock.calls[0];
+    expect(fileArg.name).toBe('from-another-device.jpg');
+
+    await waitFor(() =>
+      expect(onImportBackupTag).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'new-local-id', cloudBackup: expect.objectContaining({ googleDrive: 'drive-orphan' }) })
+      )
+    );
+
+    // The orphan entry disappears once imported.
+    await waitFor(() => expect(screen.queryByText('from-another-device.jpg')).toBeNull());
+  });
+
+  test('a failed import shows an inline error instead of crashing', async () => {
+    listDriveFiles.mockResolvedValue([
+      { id: 'drive-orphan', name: 'broken.jpg', webViewLink: 'https://drive.example/orphan', mimeType: 'image/jpeg' },
+    ]);
+    listGooglePhotos.mockResolvedValue({ items: [], nextPageToken: undefined });
+    downloadDriveFile.mockRejectedValue(new Error('Failed to download file from Google Drive'));
+
+    render(
+      <StorageLedger
+        photos={photos}
+        user={GOOGLE_USER}
+        onImport={jest.fn()}
+        onImportBackupTag={jest.fn()}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /check cloud storage/i }));
+    await screen.findByText('broken.jpg');
+
+    fireEvent.click(screen.getByRole('button', { name: /add to this device/i }));
+
+    expect(await screen.findByText(/failed to download file from google drive/i)).not.toBeNull();
+    // Still listed as an orphan since the import didn't succeed.
+    expect(screen.queryByText('broken.jpg')).not.toBeNull();
+  });
+
+  test('reconciles and imports from OneDrive once connected in Settings — independent of Google', async () => {
+    listDriveFiles.mockResolvedValue([]);
+    listGooglePhotos.mockResolvedValue({ items: [], nextPageToken: undefined });
+    listOneDriveFiles.mockResolvedValue([
+      { id: 'od-orphan', name: 'road-trip.jpg', webUrl: 'https://onedrive.example/orphan', createdDateTime: '2024-02-01T00:00:00Z' },
+    ]);
+    downloadOneDriveFile.mockResolvedValue(new Blob(['bytes'], { type: 'image/jpeg' }));
+    listDropboxFiles.mockResolvedValue([]);
+
+    const importedPhoto = { id: 'new-local-id-2', fileName: 'road-trip.jpg', cloudBackup: {} };
+    const onImport = jest.fn().mockResolvedValue(importedPhoto);
+    const onImportBackupTag = jest.fn().mockResolvedValue(undefined);
+
+    render(
+      <StorageLedger
+        photos={[]}
+        user={{ isLocal: true }} // no Google connection at all
+        onImport={onImport}
+        onImportBackupTag={onImportBackupTag}
+        storageConnections={{ connections: { onedrive: { accessToken: 'od-token' }, dropbox: null } }}
+      />
+    );
+
+    // Reconcile button is enabled purely because OneDrive is connected.
+    const checkBtn = screen.getByRole('button', { name: /check cloud storage/i });
+    expect(checkBtn.disabled).toBe(false);
+    fireEvent.click(checkBtn);
+
+    expect(await screen.findByText('road-trip.jpg')).not.toBeNull();
+    expect(listOneDriveFiles).toHaveBeenCalledWith('od-token');
+    // Google APIs weren't called at all — there's no Google connection here.
+    expect(listDriveFiles).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /add to this device/i }));
+
+    await waitFor(() =>
+      expect(onImportBackupTag).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'new-local-id-2', cloudBackup: expect.objectContaining({ oneDrive: 'od-orphan' }) })
+      )
+    );
+    await waitFor(() => expect(screen.queryByText('road-trip.jpg')).toBeNull());
   });
 });
