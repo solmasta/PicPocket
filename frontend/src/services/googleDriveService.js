@@ -97,9 +97,25 @@ export async function deleteFromDrive(accessToken, fileId) {
 export async function listDriveFiles(accessToken) {
   const folderId = await getOrCreateFolder(accessToken);
   const res = await fetch(
-    `${DRIVE_API}/files?q='${folderId}' in parents and trashed=false&fields=files(id,name,size,createdTime,webViewLink)&orderBy=createdTime desc`,
+    `${DRIVE_API}/files?q='${folderId}' in parents and trashed=false&fields=files(id,name,size,createdTime,webViewLink,mimeType)&orderBy=createdTime desc`,
     { headers: { Authorization: 'Bearer ' + accessToken } }
   );
   const data = await res.json();
   return data.files || [];
+}
+
+/**
+ * Download a Drive file's raw bytes (used to restore a photo that's backed
+ * up in Drive — e.g. from another device — into this device's local
+ * library).
+ * @returns {Promise<Blob>}
+ */
+export async function downloadDriveFile(accessToken, fileId) {
+  const res = await fetch(`${DRIVE_API}/files/${fileId}?alt=media`, {
+    headers: { Authorization: 'Bearer ' + accessToken },
+  });
+  if (!res.ok) {
+    throw new Error('Failed to download file from Google Drive');
+  }
+  return res.blob();
 }

@@ -158,7 +158,7 @@ function MainApp() {
       case 'horse-profile':
         return <HorseProfile user={user} />;
       case 'storage':
-        return <StorageLedger photos={photos} user={user} />;
+        return <StorageLedger photos={photos} user={user} onImport={addPhoto} onImportBackupTag={updatePhoto} />;
       case 'settings':
         return <Settings user={user} />;
       default:

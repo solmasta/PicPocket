@@ -4,6 +4,22 @@ All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version numbers
 across the root, `frontend/`, and `backend/` packages are kept in lockstep.
 
+## [1.3.1] - 2026-08-03
+
+### Added
+- **Storage Ledger can now actually restore photos, not just report on
+  them.** Each "Found in the Cloud, Not on This Device" entry has an
+  "Add to This Device" button (plus an "Add All to This Device" bulk
+  action) that downloads the original bytes from Drive/Google Photos,
+  imports them into this device's local library exactly like a normal
+  upload, and tags them as already backed up so they don't get
+  re-uploaded. Imported photos show up in the regular Gallery
+  immediately — they're not stuck in a separate ledger view.
+- **Local storage space indicator.** The Storage Ledger now shows how
+  much of this device's local storage is used vs. available
+  (`navigator.storage.estimate()`), so it's clear how much room there
+  is to consolidate photos from other devices/sessions into one place.
+
 ## [1.3.0] - 2026-08-03
 
 ### Added
