@@ -24,8 +24,14 @@ export async function handlePhotos(request) {
           if (photo.location) photo.location = JSON.parse(photo.location);
           if (photo.cloudBackup) photo.cloudBackup = JSON.parse(photo.cloudBackup);
           
-          // Add file URL
-          photo.url = await fileStorage.getFileUrl(photo.id);
+          // Add signed URL for secure access
+          try {
+            photo.url = await fileStorage.createSignedUrl(photo.id);
+          } catch (error) {
+            console.error('Error creating signed URL:', error);
+            // Fallback to direct URL
+            photo.url = await fileStorage.getFileUrl(photo.id);
+          }
           
           return json(photo);
         } else {
@@ -43,7 +49,16 @@ export async function handlePhotos(request) {
             if (photo.tags) photo.tags = JSON.parse(photo.tags);
             if (photo.location) photo.location = JSON.parse(photo.location);
             if (photo.cloudBackup) photo.cloudBackup = JSON.parse(photo.cloudBackup);
-            photo.url = await fileStorage.getFileUrl(photo.id);
+            
+            // Add signed URL for secure access
+            try {
+              photo.url = await fileStorage.createSignedUrl(photo.id);
+            } catch (error) {
+              console.error('Error creating signed URL:', error);
+              // Fallback to direct URL
+              photo.url = await fileStorage.getFileUrl(photo.id);
+            }
+            
             return photo;
           }));
           
@@ -89,6 +104,15 @@ export async function handlePhotos(request) {
           JSON.stringify(cloudBackup)
         ).run();
         
+        // Create signed URL for the new photo
+        let photoUrl;
+        try {
+          photoUrl = await fileStorage.createSignedUrl(photoId);
+        } catch (error) {
+          console.error('Error creating signed URL:', error);
+          photoUrl = storageResult.url;
+        }
+        
         const newPhoto = {
           id: photoId,
           userId: user.id,
@@ -99,7 +123,7 @@ export async function handlePhotos(request) {
           tags,
           location,
           cloudBackup,
-          url: storageResult.url
+          url: photoUrl
         };
         
         return json(newPhoto, 201);
@@ -136,12 +160,21 @@ export async function handlePhotos(request) {
           user.id
         ).run();
         
+        // Create signed URL for the updated photo
+        let updatedPhotoUrl;
+        try {
+          updatedPhotoUrl = await fileStorage.createSignedUrl(request.params.id);
+        } catch (error) {
+          console.error('Error creating signed URL:', error);
+          updatedPhotoUrl = await fileStorage.getFileUrl(request.params.id);
+        }
+        
         const updatedPhoto = {
           ...photo,
           tags: updates.tags || JSON.parse(photo.tags),
           location: updates.location || (photo.location ? JSON.parse(photo.location) : null),
           cloudBackup: updates.cloudBackup || (photo.cloudBackup ? JSON.parse(photo.cloudBackup) : null),
-          url: await fileStorage.getFileUrl(request.params.id)
+          url: updatedPhotoUrl
         };
         
         return json(updatedPhoto);
