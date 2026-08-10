@@ -1,168 +1,170 @@
 import { useState, useEffect, useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import {
-  savePhoto,
-  getAllPhotos,
-  deletePhoto as deletePhotoFromDB,
-  getPhotosByTag,
-} from '../utils/indexedDB';
-import { resizeImage, createThumbnail, getImageDimensions } from '../utils/imageFilters';
-import { getCurrentPosition, reverseGeocode } from '../utils/geolocation';
+import * as indexedDB from '../utils/indexedDB';
+import * as photoService from '../services/photoService';
 
-export function usePhotos(user) {
+export function usePhotos() {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [total, setTotal] = useState(0);
 
-  // Load photos from IndexedDB on mount
+  // Load photos from IndexedDB on initial load
   useEffect(() => {
-    if (!user) {
-      setPhotos([]);
-      return;
-    }
-
-    async function loadPhotos() {
-      setLoading(true);
+    const loadLocalPhotos = async () => {
       try {
-        const storedPhotos = await getAllPhotos();
-        // Filter to current user's photos
-        const userPhotos = storedPhotos.filter((p) => p.userId === user.id);
-        userPhotos.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
-        setPhotos(userPhotos);
+        setLoading(true);
+        const localPhotos = await indexedDB.getAllPhotos();
+        setPhotos(localPhotos);
       } catch (err) {
-        setError(err.message);
-        console.error('Failed to load photos:', err);
+        console.error('Failed to load local photos:', err);
+        setError('Failed to load local photos');
       } finally {
         setLoading(false);
       }
-    }
+    };
 
-    loadPhotos();
-  }, [user]);
+    loadLocalPhotos();
+  }, []);
 
-  const addPhoto = useCallback(
-    async (file, options = {}) => {
-      if (!user) return null;
-
+  // Fetch photos from server with pagination
+  const fetchServerPhotos = useCallback(async (pageNum = 1) => {
+    try {
       setLoading(true);
-      setError(null);
-
-      try {
-        const { tags = [], locationEnabled = false } = options;
-
-        // Get dimensions
-        const dimensions = await getImageDimensions(file);
-
-        // Resize image for storage
-        const dataUrl = await resizeImage(file);
-        const thumbnail = await createThumbnail(dataUrl);
-
-        // Get location if enabled
-        let location = null;
-        if (locationEnabled) {
-          try {
-            const coords = await getCurrentPosition();
-            const locationName = await reverseGeocode(coords.lat, coords.lng);
-            location = { ...coords, name: locationName };
-          } catch {
-            console.warn('Could not get location');
-          }
+      const response = await photoService.fetchPhotos(pageNum);
+      
+      if (response.photos) {
+        // Save photos to IndexedDB
+        for (const photo of response.photos) {
+          await indexedDB.savePhoto({ ...photo, syncedToServer: true });
         }
-
-        const photo = {
-          id: uuidv4(),
-          userId: user.id,
-          fileName: file.name,
-          fileSize: file.size,
-          mimeType: file.type,
-          uploadDate: new Date().toISOString(),
-          dataUrl,
-          thumbnail,
-          tags,
-          location,
-          dimensions,
-          filter: 'none',
-          isPublic: false,
-          cloudBackup: {
-            googlePhotos: null,
-            googleDrive: null,
-          },
-        };
-
-        await savePhoto(photo);
-        setPhotos((prev) => [photo, ...prev]);
-        return photo;
-      } catch (err) {
-        setError(err.message);
-        console.error('Failed to add photo:', err);
-        // Re-throw so callers (PhotoUpload) know the save actually failed
-        // instead of treating a swallowed error as a silent success — a
-        // photo that never made it into IndexedDB must not show a green
-        // "100%" progress bar with no error.
-        throw err;
-      } finally {
-        setLoading(false);
+        
+        // Update state
+        if (pageNum === 1) {
+          setPhotos(response.photos);
+        } else {
+          setPhotos(prev => [...prev, ...response.photos]);
+        }
+        
+        setHasMore(response.photos.length === response.limit);
+        setTotal(response.total);
+        setPage(pageNum);
       }
-    },
-    [user]
-  );
+    } catch (err) {
+      console.error('Failed to fetch server photos:', err);
+      setError('Failed to fetch photos from server');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
+  // Load more photos (pagination)
+  const loadMore = useCallback(() => {
+    if (hasMore && !loading) {
+      fetchServerPhotos(page + 1);
+    }
+  }, [page, hasMore, loading, fetchServerPhotos]);
+
+  // Refresh photos from server
+  const refreshPhotos = useCallback(() => {
+    fetchServerPhotos(1);
+  }, [fetchServerPhotos]);
+
+  // Upload a new photo
+  const uploadPhoto = useCallback(async (file, tags = [], location = null) => {
+    try {
+      // Save to IndexedDB first
+      const localPhoto = {
+        id: `local_${Date.now()}`,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        uploadDate: new Date().toISOString(),
+        tags,
+        location,
+        cloudBackup: {},
+        syncedToServer: false
+      };
+      
+      await indexedDB.savePhoto(localPhoto);
+      setPhotos(prev => [localPhoto, ...prev]);
+      
+      // Upload to server
+      const serverPhoto = await photoService.uploadPhoto(file, tags, location);
+      
+      // Update local photo with server data
+      await indexedDB.savePhoto({ ...serverPhoto, syncedToServer: true });
+      
+      // Update UI
+      setPhotos(prev => prev.map(p => 
+        p.id === localPhoto.id ? { ...serverPhoto, syncedToServer: true } : p
+      ));
+      
+      return serverPhoto;
+    } catch (err) {
+      console.error('Failed to upload photo:', err);
+      setError('Failed to upload photo');
+      throw err;
+    }
+  }, []);
+
+  // Delete a photo
   const deletePhoto = useCallback(async (photoId) => {
     try {
-      await deletePhotoFromDB(photoId);
-      setPhotos((prev) => prev.filter((p) => p.id !== photoId));
-    } catch (err) {
-      setError(err.message);
-      console.error('Failed to delete photo:', err);
-    }
-  }, []);
-
-  const updatePhoto = useCallback(async (updatedPhoto) => {
-    try {
-      await savePhoto(updatedPhoto);
-      setPhotos((prev) => prev.map((p) => (p.id === updatedPhoto.id ? updatedPhoto : p)));
-    } catch (err) {
-      setError(err.message);
-      console.error('Failed to update photo:', err);
-    }
-  }, []);
-
-  const searchByTag = useCallback(
-    async (tag) => {
-      try {
-        const taggedPhotos = await getPhotosByTag(tag);
-        return taggedPhotos.filter((p) => p.userId === user?.id);
-      } catch (err) {
-        console.error('Failed to search by tag:', err);
-        return [];
+      // Delete from server if it was synced
+      const photo = photos.find(p => p.id === photoId);
+      if (photo && photo.syncedToServer) {
+        await photoService.deletePhoto(photoId);
       }
-    },
-    [user]
-  );
+      
+      // Delete from IndexedDB
+      await indexedDB.deletePhoto(photoId);
+      
+      // Update UI
+      setPhotos(prev => prev.filter(p => p.id !== photoId));
+    } catch (err) {
+      console.error('Failed to delete photo:', err);
+      setError('Failed to delete photo');
+      throw err;
+    }
+  }, [photos]);
 
-  const getMemoryLanePhotos = useCallback(() => {
-    const today = new Date();
-    const todayMonth = today.getMonth();
-    const todayDay = today.getDate();
-
-    return photos.filter((photo) => {
-      const uploadDate = new Date(photo.uploadDate);
-      return (
-        uploadDate.getMonth() === todayMonth &&
-        uploadDate.getDate() === todayDay &&
-        uploadDate.getFullYear() < today.getFullYear()
-      );
-    });
+  // Update photo tags
+  const updatePhotoTags = useCallback(async (photoId, tags) => {
+    try {
+      const photo = photos.find(p => p.id === photoId);
+      
+      // Update on server if synced
+      if (photo && photo.syncedToServer) {
+        await photoService.updatePhoto(photoId, { tags });
+      }
+      
+      // Update in IndexedDB
+      await indexedDB.savePhoto({ ...photo, tags });
+      
+      // Update UI
+      setPhotos(prev => prev.map(p => 
+        p.id === photoId ? { ...p, tags } : p
+      ));
+    } catch (err) {
+      console.error('Failed to update photo tags:', err);
+      setError('Failed to update photo tags');
+      throw err;
+    }
   }, [photos]);
 
   return {
     photos,
     loading,
     error,
-    addPhoto,
+    hasMore,
+    total,
+    fetchServerPhotos,
+    loadMore,
+    refreshPhotos,
+    uploadPhoto,
     deletePhoto,
-    updatePhoto,
-    searchByTag,
-    getMemoryLanePhotos,
+    updatePhotoTags
   };
 }
