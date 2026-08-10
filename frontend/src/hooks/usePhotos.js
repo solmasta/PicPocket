@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as indexedDB from '../utils/indexedDB';
 import * as photoService from '../services/photoService';
+import { resizeImage, createThumbnail } from '../utils/imageFilters';
 
-export function usePhotos() {
+export function usePhotos(user) {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -71,18 +72,31 @@ export function usePhotos() {
     fetchServerPhotos(1);
   }, [fetchServerPhotos]);
 
-  // Upload a new photo
-  const uploadPhoto = useCallback(async (file, tags = [], location = null) => {
+  // Upload a new photo with proper resizing and thumbnail generation
+  const uploadPhoto = useCallback(async (file, options = {}) => {
     try {
+      const { tags = [], location = null } = options;
+      
+      // Create thumbnail for better performance
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      
+      const thumbnail = await createThumbnail(dataUrl);
+      
       // Save to IndexedDB first
       const localPhoto = {
-        id: `local_${Date.now()}`,
+        id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         fileName: file.name,
         fileType: file.type,
         fileSize: file.size,
         uploadDate: new Date().toISOString(),
         tags,
         location,
+        dataUrl: thumbnail, // Store thumbnail for quick loading
         cloudBackup: {},
         syncedToServer: false
       };
@@ -90,18 +104,24 @@ export function usePhotos() {
       await indexedDB.savePhoto(localPhoto);
       setPhotos(prev => [localPhoto, ...prev]);
       
-      // Upload to server
+      // Upload to server with full quality image
       const serverPhoto = await photoService.uploadPhoto(file, tags, location);
       
       // Update local photo with server data
-      await indexedDB.savePhoto({ ...serverPhoto, syncedToServer: true });
+      const updatedPhoto = {
+        ...serverPhoto,
+        dataUrl: thumbnail, // Keep thumbnail for performance
+        syncedToServer: true
+      };
+      
+      await indexedDB.savePhoto(updatedPhoto);
       
       // Update UI
       setPhotos(prev => prev.map(p => 
-        p.id === localPhoto.id ? { ...serverPhoto, syncedToServer: true } : p
+        p.id === localPhoto.id ? updatedPhoto : p
       ));
       
-      return serverPhoto;
+      return updatedPhoto;
     } catch (err) {
       console.error('Failed to upload photo:', err);
       setError('Failed to upload photo');
