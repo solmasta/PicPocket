@@ -1,0 +1,201 @@
+/* Enhanced Sidebar with Modern Design and Horse Theme */
+.sidebar {
+  width: 300px;
+  background: linear-gradient(135deg, #2c3e50 0%, #1a2a3a 100%);
+  color: var(--color-text-inverse);
+  height: calc(100vh - 70px);
+  position: fixed;
+  top: 70px;
+  left: 0;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: var(--shadow-xl);
+  transition: transform var(--transition-normal);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar.closed {
+  transform: translateX(-100%);
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar-nav {
+  padding: 1.5rem 0;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 1rem 1.8rem;
+  background: none;
+  border: none;
+  color: #ecf0f1;
+  font-size: 1.1rem;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+  position: relative;
+  border-left: 4px solid transparent;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(8px);
+  border-left: 4px solid var(--color-primary);
+}
+
+.nav-item.active {
+  background: rgba(108, 99, 255, 0.3);
+  color: var(--color-text-inverse);
+  border-left: 4px solid var(--color-primary);
+}
+
+.nav-item.active::after {
+  content: "▶";
+  position: absolute;
+  right: 20px;
+  font-size: 14px;
+}
+
+.nav-icon {
+  font-size: 1.4rem;
+  margin-right: 1rem;
+  width: 28px;
+  text-align: center;
+  transition: all var(--transition-fast);
+}
+
+.nav-item:hover .nav-icon {
+  transform: scale(1.2);
+}
+
+.nav-label {
+  flex-grow: 1;
+}
+
+/* Horse-themed styling for horse profile item */
+.nav-item.horse-theme {
+  background: rgba(139, 69, 19, 0.25);
+  border-left: 4px solid var(--color-horse-gold);
+}
+
+.nav-item.horse-theme:hover {
+  background: rgba(139, 69, 19, 0.4);
+  border-left: 4px solid var(--color-horse-saddle);
+}
+
+.nav-item.horse-theme.active {
+  background: rgba(139, 69, 19, 0.5);
+  border-left: 4px solid var(--color-horse-saddle);
+}
+
+.nav-item.horse-theme .nav-icon {
+  animation: horseGlow 2s infinite alternate;
+  color: var(--color-horse-gold);
+}
+
+@keyframes horseGlow {
+  0% {
+    text-shadow: 0 0 8px rgba(139, 69, 19, 0.6);
+    transform: scale(1);
+  }
+  100% {
+    text-shadow: 0 0 20px rgba(210, 105, 30, 0.9);
+    transform: scale(1.2);
+  }
+}
+
+/* Special styling for the horse profile section */
+.nav-item.horse-profile {
+  background: linear-gradient(90deg, rgba(139, 69, 19, 0.3) 0%, transparent 100%);
+  margin: 0.5rem 1rem;
+  border-radius: var(--border-radius-lg);
+  border-left: none;
+  border: 1px solid rgba(210, 105, 30, 0.3);
+}
+
+.nav-item.horse-profile:hover {
+  background: linear-gradient(90deg, rgba(139, 69, 19, 0.5) 0%, transparent 100%);
+  transform: translateX(5px);
+  border: 1px solid rgba(210, 105, 30, 0.6);
+}
+
+.nav-item.horse-profile .nav-icon {
+  color: var(--color-horse-gold);
+}
+
+.nav-item.horse-profile .nav-label {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-horse-tan);
+}
+
+/* Divider */
+.sidebar-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 1rem 1.5rem;
+}
+
+/* Footer section in sidebar */
+.sidebar-footer {
+  padding: 1.5rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: auto;
+}
+
+.sidebar-footer a {
+  color: var(--color-primary-light);
+  text-decoration: none;
+}
+
+.sidebar-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: calc(100vh - 60px);
+    top: 60px;
+  }
+  
+  .nav-item {
+    padding: 1.3rem 1.8rem;
+    font-size: 1.2rem;
+  }
+  
+  .nav-icon {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-item {
+    padding: 1.1rem 1.5rem;
+    font-size: 1.05rem;
+  }
+  
+  .nav-icon {
+    font-size: 1.4rem;
+    margin-right: 0.8rem;
+  }
+  
+  .nav-label {
+    font-size: 1rem;
+  }
+}
