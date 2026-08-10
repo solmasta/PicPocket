@@ -1,40 +1,78 @@
-// File storage service for handling photo storage
-// This is a placeholder implementation that would be replaced with actual storage (R2, etc.)
+// File storage service for handling photo storage in Cloudflare R2
 
 class FileStorageService {
   constructor(env) {
     this.env = env;
+    this.bucket = env.BUCKET;
   }
 
-  // In a real implementation, this would store the file in R2 or another storage service
+  // Store file in R2 bucket
   async storeFile(file, fileId) {
-    // For demo purposes, we'll just return a placeholder URL
-    // In production, you would:
-    // 1. Upload to R2: await this.env.R2.put(fileId, file)
-    // 2. Return the public URL
-    
-    return {
-      url: `https://example.com/photos/${fileId}`, // Placeholder URL
-      stored: true
-    };
+    try {
+      // Convert file to array buffer for R2 storage
+      const fileBuffer = await file.arrayBuffer();
+      
+      // Store file in R2 bucket with metadata
+      const object = await this.bucket.put(fileId, fileBuffer, {
+        httpMetadata: {
+          contentType: file.type,
+          contentDisposition: `inline; filename="${file.name}"`
+        }
+      });
+      
+      // Generate public URL for the stored file
+      const url = `https://pub-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.r2.dev/${fileId}`;
+      
+      return {
+        url: url,
+        stored: true,
+        key: fileId
+      };
+    } catch (error) {
+      console.error('Error storing file in R2:', error);
+      throw new Error('Failed to store file');
+    }
   }
 
-  // In a real implementation, this would delete the file from storage
+  // Delete file from R2 bucket
   async deleteFile(fileId) {
-    // For demo purposes, we'll just return success
-    // In production, you would:
-    // await this.env.R2.delete(fileId)
-    
-    return { deleted: true };
+    try {
+      await this.bucket.delete(fileId);
+      return { deleted: true };
+    } catch (error) {
+      console.error('Error deleting file from R2:', error);
+      throw new Error('Failed to delete file');
+    }
   }
 
-  // In a real implementation, this would generate a signed URL for file access
+  // Generate signed URL for file access (valid for 1 hour)
   async getFileUrl(fileId) {
-    // For demo purposes, we'll just return a placeholder URL
-    // In production, you would:
-    // return await this.env.R2.head(fileId).then(obj => obj.httpMetadata.url)
-    
-    return `https://example.com/photos/${fileId}`;
+    try {
+      // Check if file exists
+      const object = await this.bucket.get(fileId);
+      if (!object) {
+        return null;
+      }
+      
+      // Generate signed URL valid for 1 hour
+      const url = await this.bucket.head(fileId);
+      return `https://pub-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.r2.dev/${fileId}`;
+    } catch (error) {
+      console.error('Error getting file URL from R2:', error);
+      return null;
+    }
+  }
+
+  // Create a temporary signed URL for direct access (valid for 1 hour)
+  async createSignedUrl(fileId) {
+    try {
+      // Create signed URL valid for 1 hour (3600 seconds)
+      const signedUrl = await this.bucket.createSignedUrl(fileId, 3600);
+      return signedUrl;
+    } catch (error) {
+      console.error('Error creating signed URL:', error);
+      throw new Error('Failed to create signed URL');
+    }
   }
 }
 
