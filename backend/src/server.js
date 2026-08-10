@@ -39,8 +39,24 @@ export async function handleApi(request, env) {
   // Add DB to request context
   request.env = env;
   
+  // Add performance tracking
+  const startTime = Date.now();
+  const requestMethod = request.method;
+  const requestUrl = new URL(request.url).pathname;
+  
   try {
-    return await router.handle(request);
+    const response = await router.handle(request);
+    
+    // Add performance metrics to response
+    const duration = Date.now() - startTime;
+    response.headers.set('Server-Timing', `app;dur=${duration}`);
+    
+    // Log slow requests
+    if (duration > 1000) {
+      console.warn(`[PERFORMANCE] Slow request: ${requestMethod} ${requestUrl} took ${duration}ms`);
+    }
+    
+    return response;
   } catch (error) {
     console.error('Error processing request:', error);
     return json({ error: 'Internal server error' }, 500);
