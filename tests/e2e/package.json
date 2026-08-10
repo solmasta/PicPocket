@@ -1,0 +1,13 @@
+{
+  "name": "picpocket-e2e-tests",
+  "version": "1.0.0",
+  "description": "End-to-end tests for PicPocket",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --headed",
+    "test:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}
