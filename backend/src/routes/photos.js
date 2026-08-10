@@ -1,10 +1,10 @@
 import { json } from 'itty-router-extras';
-import FileStorageService from '../services/fileStorage.js';
+import OptimizedFileStorageService from '../services/optimizedFileStorage.js';
 
 export async function handlePhotos(request) {
   const { env, user } = request;
   const { DB } = env;
-  const fileStorage = new FileStorageService(env);
+  const fileStorage = new OptimizedFileStorageService(env);
   
   try {
     switch (request.method) {
