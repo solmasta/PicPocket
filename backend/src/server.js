@@ -4,6 +4,7 @@ import { json, cors, withParams } from 'itty-router-extras';
 import { handlePhotos } from './routes/photos.js';
 import { handleAuth } from './routes/auth.js';
 import { handleAlbums } from './routes/albums.js';
+import { handleSearch } from './routes/search.js';
 
 const router = Router();
 
@@ -28,6 +29,8 @@ router.get('/api/albums/:id', verifyAuth, withParams, handleAlbums);
 router.put('/api/albums/:id', verifyAuth, withParams, handleAlbums);
 router.delete('/api/albums/:id', verifyAuth, withParams, handleAlbums);
 router.post('/api/albums/:id/photos', verifyAuth, withParams, handleAlbums);
+
+router.get('/api/search', verifyAuth, handleSearch);
 
 // 404 handler
 router.all('*', () => new Response('Not Found', { status: 404 }));
