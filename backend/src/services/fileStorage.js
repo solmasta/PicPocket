@@ -1,40 +1,85 @@
-// File storage service for handling photo storage
-// This is a placeholder implementation that would be replaced with actual storage (R2, etc.)
+// File storage service for handling photo storage in Cloudflare R2
 
 class FileStorageService {
   constructor(env) {
     this.env = env;
   }
 
-  // In a real implementation, this would store the file in R2 or another storage service
+  // Store a file in R2 storage
   async storeFile(file, fileId) {
-    // For demo purposes, we'll just return a placeholder URL
-    // In production, you would:
-    // 1. Upload to R2: await this.env.R2.put(fileId, file)
-    // 2. Return the public URL
-    
-    return {
-      url: `https://example.com/photos/${fileId}`, // Placeholder URL
-      stored: true
-    };
+    try {
+      // Convert file to array buffer for R2 storage
+      const fileBuffer = await file.arrayBuffer();
+      
+      // Store file in R2 bucket
+      await this.env.R2.put(fileId, fileBuffer, {
+        httpMetadata: {
+          'content-type': file.type,
+          'content-length': file.size
+        }
+      });
+      
+      // Generate public URL for the file
+      const url = `${this.env.R2_PUBLIC_URL}/${fileId}`;
+      
+      return {
+        url,
+        stored: true
+      };
+    } catch (error) {
+      console.error('Failed to store file in R2:', error);
+      throw new Error('Failed to store file');
+    }
   }
 
-  // In a real implementation, this would delete the file from storage
+  // Delete a file from R2 storage
   async deleteFile(fileId) {
-    // For demo purposes, we'll just return success
-    // In production, you would:
-    // await this.env.R2.delete(fileId)
-    
-    return { deleted: true };
+    try {
+      await this.env.R2.delete(fileId);
+      return { deleted: true };
+    } catch (error) {
+      console.error('Failed to delete file from R2:', error);
+      throw new Error('Failed to delete file');
+    }
   }
 
-  // In a real implementation, this would generate a signed URL for file access
+  // Generate a signed URL for file access (for private files)
   async getFileUrl(fileId) {
-    // For demo purposes, we'll just return a placeholder URL
-    // In production, you would:
-    // return await this.env.R2.head(fileId).then(obj => obj.httpMetadata.url)
-    
-    return `https://example.com/photos/${fileId}`;
+    try {
+      // For public files, return direct URL
+      if (this.env.R2_PUBLIC_URL) {
+        return `${this.env.R2_PUBLIC_URL}/${fileId}`;
+      }
+      
+      // For private files, generate signed URL
+      const url = await this.env.R2.createSignedUrl(fileId, { expiry: 3600 }); // 1 hour expiry
+      return url;
+    } catch (error) {
+      console.error('Failed to generate file URL:', error);
+      // Fallback to placeholder if URL generation fails
+      return `https://placehold.co/300x300?text=${encodeURIComponent(fileId)}`;
+    }
+  }
+
+  // Get file metadata
+  async getFileMetadata(fileId) {
+    try {
+      const obj = await this.env.R2.head(fileId);
+      if (!obj) {
+        return null;
+      }
+      
+      return {
+        key: obj.key,
+        size: obj.size,
+        etag: obj.etag,
+        uploaded: obj.uploaded,
+        httpMetadata: obj.httpMetadata
+      };
+    } catch (error) {
+      console.error('Failed to get file metadata:', error);
+      return null;
+    }
   }
 }
 
