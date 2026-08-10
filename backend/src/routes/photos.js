@@ -1,8 +1,10 @@
 import { json } from 'itty-router-extras';
+import FileStorageService from '../services/fileStorage.js';
 
 export async function handlePhotos(request) {
   const { env, user } = request;
   const { DB } = env;
+  const fileStorage = new FileStorageService(env);
   
   try {
     switch (request.method) {
@@ -22,6 +24,9 @@ export async function handlePhotos(request) {
           if (photo.location) photo.location = JSON.parse(photo.location);
           if (photo.cloudBackup) photo.cloudBackup = JSON.parse(photo.cloudBackup);
           
+          // Add file URL
+          photo.url = await fileStorage.getFileUrl(photo.id);
+          
           return json(photo);
         } else {
           // Get all photos with pagination
@@ -33,13 +38,14 @@ export async function handlePhotos(request) {
             "SELECT * FROM photos WHERE userId = ? ORDER BY uploadDate DESC LIMIT ? OFFSET ?"
           ).bind(user.id, limit, offset).all();
           
-          // Parse JSON fields for each photo
-          const photos = results.map(photo => {
+          // Parse JSON fields for each photo and add URLs
+          const photos = await Promise.all(results.map(async (photo) => {
             if (photo.tags) photo.tags = JSON.parse(photo.tags);
             if (photo.location) photo.location = JSON.parse(photo.location);
             if (photo.cloudBackup) photo.cloudBackup = JSON.parse(photo.cloudBackup);
+            photo.url = await fileStorage.getFileUrl(photo.id);
             return photo;
-          });
+          }));
           
           return json({
             photos,
@@ -64,9 +70,10 @@ export async function handlePhotos(request) {
         const photoId = crypto.randomUUID();
         const uploadDate = new Date().toISOString();
         
-        // In a real implementation, you would store the file in R2
-        // For now, we'll just store metadata
+        // Store the file
+        const storageResult = await fileStorage.storeFile(file, photoId);
         
+        // Store metadata in database
         await DB.prepare(`
           INSERT INTO photos (id, userId, fileName, fileType, fileSize, uploadDate, tags, location, cloudBackup)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -91,7 +98,8 @@ export async function handlePhotos(request) {
           uploadDate,
           tags,
           location,
-          cloudBackup
+          cloudBackup,
+          url: storageResult.url
         };
         
         return json(newPhoto, 201);
@@ -132,7 +140,8 @@ export async function handlePhotos(request) {
           ...photo,
           tags: updates.tags || JSON.parse(photo.tags),
           location: updates.location || (photo.location ? JSON.parse(photo.location) : null),
-          cloudBackup: updates.cloudBackup || (photo.cloudBackup ? JSON.parse(photo.cloudBackup) : null)
+          cloudBackup: updates.cloudBackup || (photo.cloudBackup ? JSON.parse(photo.cloudBackup) : null),
+          url: await fileStorage.getFileUrl(request.params.id)
         };
         
         return json(updatedPhoto);
@@ -143,6 +152,10 @@ export async function handlePhotos(request) {
           return json({ error: 'Photo ID is required' }, 400);
         }
         
+        // Delete file from storage
+        await fileStorage.deleteFile(request.params.id);
+        
+        // Delete from database
         const result = await DB.prepare(
           "DELETE FROM photos WHERE id = ? AND userId = ?"
         ).bind(request.params.id, user.id).run();
