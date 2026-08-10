@@ -41,7 +41,7 @@ function Header({ user, tokenExpired, onSignOut, onReconnect, onToggleSidebar })
             )}
             <div className="user-info">
               <span className="user-name">{user.name}</span>
-              <span className="user-email">{user.email}</span>
+              <span className="user-email">{user.email || (user.isLocal ? 'Local User' : '')}</span>
             </div>
             {!user.isLocal && tokenExpired && (
               <button
@@ -52,11 +52,13 @@ function Header({ user, tokenExpired, onSignOut, onReconnect, onToggleSidebar })
                 Reconnect
               </button>
             )}
-            {!user.isLocal && (
-              <button className="sign-out-btn" onClick={onSignOut}>
-                Sign Out
-              </button>
-            )}
+            <button 
+              className="sign-out-btn" 
+              onClick={onSignOut}
+              aria-label={`Sign out ${user.name}`}
+            >
+              Sign Out
+            </button>
           </div>
         )}
       </div>
