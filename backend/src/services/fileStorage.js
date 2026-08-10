@@ -3,82 +3,75 @@
 class FileStorageService {
   constructor(env) {
     this.env = env;
+    this.bucket = env.BUCKET;
   }
 
-  // Store a file in R2 storage
+  // Store file in R2 bucket
   async storeFile(file, fileId) {
     try {
       // Convert file to array buffer for R2 storage
       const fileBuffer = await file.arrayBuffer();
       
-      // Store file in R2 bucket
-      await this.env.R2.put(fileId, fileBuffer, {
+      // Store file in R2 bucket with metadata
+      const object = await this.bucket.put(fileId, fileBuffer, {
         httpMetadata: {
-          'content-type': file.type,
-          'content-length': file.size
+          contentType: file.type,
+          contentDisposition: `inline; filename="${file.name}"`
         }
       });
       
-      // Generate public URL for the file
-      const url = `${this.env.R2_PUBLIC_URL}/${fileId}`;
+      // Generate public URL for the stored file
+      const url = `https://pub-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.r2.dev/${fileId}`;
       
       return {
-        url,
-        stored: true
+        url: url,
+        stored: true,
+        key: fileId
       };
     } catch (error) {
-      console.error('Failed to store file in R2:', error);
+      console.error('Error storing file in R2:', error);
       throw new Error('Failed to store file');
     }
   }
 
-  // Delete a file from R2 storage
+  // Delete file from R2 bucket
   async deleteFile(fileId) {
     try {
-      await this.env.R2.delete(fileId);
+      await this.bucket.delete(fileId);
       return { deleted: true };
     } catch (error) {
-      console.error('Failed to delete file from R2:', error);
+      console.error('Error deleting file from R2:', error);
       throw new Error('Failed to delete file');
     }
   }
 
-  // Generate a signed URL for file access (for private files)
+  // Generate signed URL for file access (valid for 1 hour)
   async getFileUrl(fileId) {
     try {
-      // For public files, return direct URL
-      if (this.env.R2_PUBLIC_URL) {
-        return `${this.env.R2_PUBLIC_URL}/${fileId}`;
-      }
-      
-      // For private files, generate signed URL
-      const url = await this.env.R2.createSignedUrl(fileId, { expiry: 3600 }); // 1 hour expiry
-      return url;
-    } catch (error) {
-      console.error('Failed to generate file URL:', error);
-      // Fallback to placeholder if URL generation fails
-      return `https://placehold.co/300x300?text=${encodeURIComponent(fileId)}`;
-    }
-  }
-
-  // Get file metadata
-  async getFileMetadata(fileId) {
-    try {
-      const obj = await this.env.R2.head(fileId);
-      if (!obj) {
+      // Check if file exists
+      const object = await this.bucket.get(fileId);
+      if (!object) {
         return null;
       }
       
-      return {
-        key: obj.key,
-        size: obj.size,
-        etag: obj.etag,
-        uploaded: obj.uploaded,
-        httpMetadata: obj.httpMetadata
-      };
+      // Generate signed URL valid for 1 hour
+      const url = await this.bucket.head(fileId);
+      return `https://pub-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.r2.dev/${fileId}`;
     } catch (error) {
-      console.error('Failed to get file metadata:', error);
+      console.error('Error getting file URL from R2:', error);
       return null;
+    }
+  }
+
+  // Create a temporary signed URL for direct access (valid for 1 hour)
+  async createSignedUrl(fileId) {
+    try {
+      // Create signed URL valid for 1 hour (3600 seconds)
+      const signedUrl = await this.bucket.createSignedUrl(fileId, 3600);
+      return signedUrl;
+    } catch (error) {
+      console.error('Error creating signed URL:', error);
+      throw new Error('Failed to create signed URL');
     }
   }
 }
