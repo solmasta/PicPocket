@@ -1,97 +1,163 @@
-const express = require('express');
-const { v4: uuidv4 } = require('uuid');
-const authMiddleware = require('../middleware/authMiddleware');
-const upload = require('../middleware/upload');
+import { json } from 'itty-router-extras';
 
-const router = express.Router();
-
-// In-memory store for demonstration (replace with a database in production)
-const photoStore = new Map();
-
-/**
- * GET /api/photos
- * List user's photos
- */
-router.get('/', authMiddleware, (req, res) => {
-  const userPhotos = [];
-  for (const photo of photoStore.values()) {
-    if (photo.userId === req.user.id) {
-      userPhotos.push(photo);
+export async function handlePhotos(request) {
+  const { env, user } = request;
+  const { DB } = env;
+  
+  try {
+    switch (request.method) {
+      case 'GET':
+        if (request.params && request.params.id) {
+          // Get specific photo
+          const photo = await DB.prepare(
+            "SELECT * FROM photos WHERE id = ? AND userId = ?"
+          ).bind(request.params.id, user.id).first();
+          
+          if (!photo) {
+            return json({ error: 'Photo not found' }, 404);
+          }
+          
+          // Parse JSON fields
+          if (photo.tags) photo.tags = JSON.parse(photo.tags);
+          if (photo.location) photo.location = JSON.parse(photo.location);
+          if (photo.cloudBackup) photo.cloudBackup = JSON.parse(photo.cloudBackup);
+          
+          return json(photo);
+        } else {
+          // Get all photos with pagination
+          const page = parseInt(request.query.page) || 1;
+          const limit = Math.min(parseInt(request.query.limit) || 20, 100);
+          const offset = (page - 1) * limit;
+          
+          const { results, meta } = await DB.prepare(
+            "SELECT * FROM photos WHERE userId = ? ORDER BY uploadDate DESC LIMIT ? OFFSET ?"
+          ).bind(user.id, limit, offset).all();
+          
+          // Parse JSON fields for each photo
+          const photos = results.map(photo => {
+            if (photo.tags) photo.tags = JSON.parse(photo.tags);
+            if (photo.location) photo.location = JSON.parse(photo.location);
+            if (photo.cloudBackup) photo.cloudBackup = JSON.parse(photo.cloudBackup);
+            return photo;
+          });
+          
+          return json({
+            photos,
+            page,
+            limit,
+            total: meta.count
+          });
+        }
+        
+      case 'POST':
+        // Upload new photo
+        const formData = await request.formData();
+        const file = formData.get('file');
+        const tags = formData.get('tags') ? JSON.parse(formData.get('tags')) : [];
+        const location = formData.get('location') ? JSON.parse(formData.get('location')) : null;
+        const cloudBackup = formData.get('cloudBackup') ? JSON.parse(formData.get('cloudBackup')) : null;
+        
+        if (!file) {
+          return json({ error: 'File is required' }, 400);
+        }
+        
+        const photoId = crypto.randomUUID();
+        const uploadDate = new Date().toISOString();
+        
+        // In a real implementation, you would store the file in R2
+        // For now, we'll just store metadata
+        
+        await DB.prepare(`
+          INSERT INTO photos (id, userId, fileName, fileType, fileSize, uploadDate, tags, location, cloudBackup)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          photoId,
+          user.id,
+          file.name,
+          file.type,
+          file.size,
+          uploadDate,
+          JSON.stringify(tags),
+          JSON.stringify(location),
+          JSON.stringify(cloudBackup)
+        ).run();
+        
+        const newPhoto = {
+          id: photoId,
+          userId: user.id,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          uploadDate,
+          tags,
+          location,
+          cloudBackup
+        };
+        
+        return json(newPhoto, 201);
+        
+      case 'PUT':
+        // Update photo
+        if (!request.params || !request.params.id) {
+          return json({ error: 'Photo ID is required' }, 400);
+        }
+        
+        const updates = await request.json();
+        const photo = await DB.prepare(
+          "SELECT * FROM photos WHERE id = ? AND userId = ?"
+        ).bind(request.params.id, user.id).first();
+        
+        if (!photo) {
+          return json({ error: 'Photo not found' }, 404);
+        }
+        
+        // Update fields
+        const updatedTags = updates.tags ? JSON.stringify(updates.tags) : photo.tags;
+        const updatedLocation = updates.location ? JSON.stringify(updates.location) : photo.location;
+        const updatedCloudBackup = updates.cloudBackup ? JSON.stringify(updates.cloudBackup) : photo.cloudBackup;
+        
+        await DB.prepare(`
+          UPDATE photos 
+          SET tags = ?, location = ?, cloudBackup = ?
+          WHERE id = ? AND userId = ?
+        `).bind(
+          updatedTags,
+          updatedLocation,
+          updatedCloudBackup,
+          request.params.id,
+          user.id
+        ).run();
+        
+        const updatedPhoto = {
+          ...photo,
+          tags: updates.tags || JSON.parse(photo.tags),
+          location: updates.location || (photo.location ? JSON.parse(photo.location) : null),
+          cloudBackup: updates.cloudBackup || (photo.cloudBackup ? JSON.parse(photo.cloudBackup) : null)
+        };
+        
+        return json(updatedPhoto);
+        
+      case 'DELETE':
+        // Delete photo
+        if (!request.params || !request.params.id) {
+          return json({ error: 'Photo ID is required' }, 400);
+        }
+        
+        const result = await DB.prepare(
+          "DELETE FROM photos WHERE id = ? AND userId = ?"
+        ).bind(request.params.id, user.id).run();
+        
+        if (result.meta.changes === 0) {
+          return json({ error: 'Photo not found' }, 404);
+        }
+        
+        return json({ message: 'Photo deleted successfully' });
+        
+      default:
+        return json({ error: 'Method not allowed' }, 405);
     }
+  } catch (error) {
+    console.error('Error handling photos:', error);
+    return json({ error: 'Internal server error' }, 500);
   }
-  userPhotos.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
-  res.json(userPhotos);
-});
-
-/**
- * POST /api/photos/upload
- * Upload a new photo
- */
-router.post('/upload', authMiddleware, upload.single('photo'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No photo file provided' });
-  }
-
-  const tags = req.body.tags ? JSON.parse(req.body.tags) : [];
-  const location = req.body.location ? JSON.parse(req.body.location) : null;
-
-  const photo = {
-    id: uuidv4(),
-    userId: req.user.id,
-    fileName: req.file.originalname,
-    fileSize: req.file.size,
-    mimeType: req.file.mimetype,
-    uploadDate: new Date().toISOString(),
-    tags,
-    location,
-    filter: 'none',
-    isPublic: false,
-    cloudBackup: { googlePhotos: null, googleDrive: null },
-    // Note: In production, store the file in cloud storage and save the URL
-    dataBuffer: req.file.buffer.toString('base64'),
-  };
-
-  photoStore.set(photo.id, photo);
-  res.status(201).json({ id: photo.id, fileName: photo.fileName, uploadDate: photo.uploadDate });
-});
-
-/**
- * PATCH /api/photos/:id
- * Update photo metadata (tags, filter, isPublic, etc.)
- */
-router.patch('/:id', authMiddleware, (req, res) => {
-  const photo = photoStore.get(req.params.id);
-  if (!photo) {
-    return res.status(404).json({ error: 'Photo not found' });
-  }
-  if (photo.userId !== req.user.id) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-
-  const allowed = ['tags', 'filter', 'isPublic', 'location', 'cloudBackup'];
-  allowed.forEach((key) => {
-    if (req.body[key] !== undefined) {
-      photo[key] = req.body[key];
-    }
-  });
-  photoStore.set(photo.id, photo);
-  res.json({ id: photo.id });
-});
-
-/**
- * DELETE /api/photos/:id
- * Delete a photo
- */
-router.delete('/:id', authMiddleware, (req, res) => {
-  const photo = photoStore.get(req.params.id);
-  if (!photo) {
-    return res.status(404).json({ error: 'Photo not found' });
-  }
-  if (photo.userId !== req.user.id) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-  photoStore.delete(req.params.id);
-  res.status(204).send();
-});
-
-module.exports = router;
+}
