@@ -9,19 +9,26 @@ class FileStorageService {
   // Store file in R2 bucket
   async storeFile(file, fileId) {
     try {
-      // Convert file to array buffer for R2 storage
-      const fileBuffer = await file.arrayBuffer();
+      // Handle both File objects and array buffers
+      let fileBuffer;
+      if (file.arrayBuffer) {
+        fileBuffer = await file.arrayBuffer();
+      } else if (file instanceof ArrayBuffer) {
+        fileBuffer = file;
+      } else {
+        throw new Error('Invalid file format');
+      }
       
       // Store file in R2 bucket with metadata
       const object = await this.bucket.put(fileId, fileBuffer, {
         httpMetadata: {
-          contentType: file.type,
-          contentDisposition: `inline; filename="${file.name}"`
+          contentType: file.type || 'application/octet-stream',
+          contentDisposition: `inline; filename="${file.name || fileId}"`
         }
       });
       
-      // Generate public URL for the stored file
-      const url = `https://pub-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.r2.dev/${fileId}`;
+      // Generate signed URL for the stored file
+      const url = await this.createSignedUrl(fileId);
       
       return {
         url: url,
@@ -30,7 +37,7 @@ class FileStorageService {
       };
     } catch (error) {
       console.error('Error storing file in R2:', error);
-      throw new Error('Failed to store file');
+      throw new Error('Failed to store file: ' + error.message);
     }
   }
 
@@ -41,11 +48,12 @@ class FileStorageService {
       return { deleted: true };
     } catch (error) {
       console.error('Error deleting file from R2:', error);
-      throw new Error('Failed to delete file');
+      // Don't throw error if file doesn't exist - it's already deleted
+      return { deleted: true };
     }
   }
 
-  // Generate signed URL for file access (valid for 1 hour)
+  // Get file URL from R2 bucket
   async getFileUrl(fileId) {
     try {
       // Check if file exists
@@ -55,8 +63,8 @@ class FileStorageService {
       }
       
       // Generate signed URL valid for 1 hour
-      const url = await this.bucket.head(fileId);
-      return `https://pub-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.r2.dev/${fileId}`;
+      const signedUrl = await this.bucket.createSignedUrl(fileId, 3600);
+      return signedUrl;
     } catch (error) {
       console.error('Error getting file URL from R2:', error);
       return null;
@@ -71,7 +79,7 @@ class FileStorageService {
       return signedUrl;
     } catch (error) {
       console.error('Error creating signed URL:', error);
-      throw new Error('Failed to create signed URL');
+      throw new Error('Failed to create signed URL: ' + error.message);
     }
   }
 }

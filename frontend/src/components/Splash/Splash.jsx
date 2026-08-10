@@ -10,7 +10,7 @@ function Splash() {
     >
       <div className="splash-scrim" />
       <div className="splash-content">
-        <div className="splash-spinner" />
+        <div className="splash-spinner" role="status" aria-label="Loading Pic-Pocket" />
         <p className="splash-loading-text">Loading Pic-Pocket...</p>
       </div>
     </div>

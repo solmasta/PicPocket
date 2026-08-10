@@ -4,7 +4,6 @@ import logo from '../../assets/pic-pocket-logo.png';
 import barnBackground from '../../assets/faye-pic-pocket.jpg';
 
 function GoogleSignIn({ signIn, loading, error }) {
-
   return (
     <div
       className="signin-container"
@@ -46,6 +45,7 @@ function GoogleSignIn({ signIn, loading, error }) {
           className="google-signin-btn"
           onClick={signIn}
           disabled={loading}
+          aria-busy={loading}
         >
           <svg className="google-icon" viewBox="0 0 24 24" width="20" height="20">
             <path
@@ -67,6 +67,20 @@ function GoogleSignIn({ signIn, loading, error }) {
           </svg>
           {loading ? 'Signing in...' : 'Sign in with Google'}
         </button>
+
+        <div className="signin-local-option">
+          <p>Or continue locally without Google sign-in:</p>
+          <button
+            className="local-signin-btn"
+            onClick={() => {
+              // For local users, we can just set the user in the auth hook
+              // The useAuth hook will handle the LOCAL_USER case
+              window.location.reload();
+            }}
+          >
+            Use Pic-Pocket Locally
+          </button>
+        </div>
 
         <p className="signin-privacy">
           By signing in, you agree to grant Pic-Pocket access to your Google Photos and

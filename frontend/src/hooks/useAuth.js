@@ -46,6 +46,7 @@ export function useAuth() {
           // No Google Client ID — use a stable local identity so the rest
           // of the app (gallery, upload, filters…) works without sign-in.
           setUser(LOCAL_USER);
+          setLoading(false);
           return;
         }
         const savedUser = await getAuthUser();
@@ -54,6 +55,10 @@ export function useAuth() {
           // renewal) as soon as `user` is set, so it isn't computed here —
           // just restore the identity.
           setUser(savedUser);
+        } else {
+          // No saved user, but Google auth is configured
+          // User needs to sign in
+          setUser(null);
         }
       } catch (err) {
         console.error('Failed to restore auth session:', err);
@@ -103,7 +108,7 @@ export function useAuth() {
       cancelled = true;
       clearInterval(interval);
       if (fallbackTimer) clearTimeout(fallbackTimer);
-    };
+    }
   }, [user]);
 
   // Called by <GoogleAuthBridge> once useGoogleLogin is ready.
@@ -168,23 +173,28 @@ export function useAuth() {
 
   const signOut = useCallback(async () => {
     try {
-      if (user?.accessToken) {
-        // Best-effort: tell Google to revoke the grant so Drive/Photos
-        // access actually ends here, instead of the access token (and the
-        // silent-renewal flow above) remaining usable until it happens to
-        // expire on its own after "signing out".
-        try {
-          await fetch(
-            `https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(user.accessToken)}`,
-            { method: 'POST' }
-          );
-        } catch (revokeErr) {
-          console.warn('Failed to revoke Google token:', revokeErr);
+      if (user && !user.isLocal) {
+        if (user.accessToken) {
+          // Best-effort: tell Google to revoke the grant so Drive/Photos
+          // access actually ends here, instead of the access token (and the
+          // silent-renewal flow above) remaining usable until it happens to
+          // expire on its own after "signing out".
+          try {
+            await fetch(
+              `https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(user.accessToken)}`,
+              { method: 'POST' }
+            );
+          } catch (revokeErr) {
+            console.warn('Failed to revoke Google token:', revokeErr);
+          }
         }
+        await clearAuthUser();
+        setUser(null);
+        setTokenExpired(false);
+      } else if (user && user.isLocal) {
+        // For local users, just clear the UI state
+        setUser(null);
       }
-      await clearAuthUser();
-      setUser(null);
-      setTokenExpired(false);
     } catch (err) {
       console.error('Sign out error:', err);
     }

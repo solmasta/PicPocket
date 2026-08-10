@@ -141,6 +141,7 @@
   font-weight: 600;
   color: #333;
   transition: all 0.2s;
+  margin-bottom: 1.5rem;
 }
 
 .google-signin-btn:hover:not(:disabled) {
@@ -152,6 +153,35 @@
 .google-signin-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.signin-local-option {
+  margin: 1.5rem 0;
+  padding: 1rem 0;
+  border-top: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.signin-local-option p {
+  color: #666;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+.local-signin-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: #6c63ff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.local-signin-btn:hover {
+  background: #5a52d5;
 }
 
 .google-icon {
