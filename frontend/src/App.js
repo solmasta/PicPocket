@@ -219,7 +219,7 @@ function MainApp() {
             aria-hidden="true"
           />
         )}
-        <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+        <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} role="main">
           {renderView()}
         </main>
       </div>
