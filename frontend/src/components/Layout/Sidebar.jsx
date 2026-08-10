@@ -24,11 +24,12 @@ function Sidebar({ activeView, onViewChange, isOpen }) {
           {NAV_ITEMS.map((item) => (
             <li key={item.id}>
               <button
-                className={`nav-item ${activeView === item.id ? 'active' : ''}`}
+                className={`nav-item ${activeView === item.id ? 'active' : ''} ${item.id === 'horse-profile' ? 'horse-theme' : ''}`}
                 onClick={() => onViewChange(item.id)}
                 title={item.label}
+                aria-pressed={activeView === item.id}
               >
-                <span className="nav-icon">{item.icon}</span>
+                <span className="nav-icon" aria-hidden="true">{item.icon}</span>
                 <span className="nav-label">{item.label}</span>
               </button>
             </li>

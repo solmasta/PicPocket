@@ -1,130 +1,280 @@
 .photo-gallery {
-  padding: 1.5rem;
-  flex: 1;
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.gallery-toolbar {
+.photo-gallery.error {
+  text-align: center;
+  padding: 40px;
+  color: #e74c3c;
+}
+
+.photo-gallery.error button {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+.photo-gallery.error button:hover {
+  background: #c0392b;
+}
+
+/* Gallery Header */
+.gallery-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 15px;
 }
 
-.gallery-stats h2 {
+.gallery-header h2 {
   margin: 0;
-  font-size: 1.5rem;
-  color: #333;
-}
-
-.photo-count {
-  display: block;
-  font-size: 0.85rem;
-  color: #888;
-  margin-top: 0.2rem;
+  color: #2c3e50;
+  font-size: 28px;
+  font-weight: 700;
 }
 
 .gallery-controls {
   display: flex;
+  gap: 15px;
   align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
 }
 
-.filter-select,
-.sort-select {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  background: #fff;
-  cursor: pointer;
-  color: #555;
-}
-
-.view-toggle {
-  display: flex;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.view-btn {
-  padding: 0.5rem 0.75rem;
-  border: none;
-  background: #fff;
-  cursor: pointer;
-  font-size: 1rem;
-  color: #888;
-  transition: background 0.15s, color 0.15s;
-}
-
-.view-btn.active {
+.refresh-button {
   background: #6c63ff;
-  color: #fff;
-}
-
-.gallery-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
-  gap: 1rem;
-  color: #888;
-}
-
-.gallery-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 350px;
-  gap: 1rem;
-  text-align: center;
-  color: #888;
-}
-
-.empty-icon {
-  font-size: 4rem;
-}
-
-.gallery-empty h3 {
-  font-size: 1.4rem;
-  color: #555;
-  margin: 0;
-}
-
-.gallery-empty p {
-  color: #999;
-  margin: 0;
-}
-
-.photo-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.photo-grid.list-view {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.btn-primary {
-  background: #6c63ff;
-  color: #fff;
+  color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 10px;
+  padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.95rem;
   font-weight: 600;
+  transition: all 0.2s;
+  box-shadow: 0 4px 10px rgba(108, 99, 255, 0.3);
+}
+
+.refresh-button:hover:not(:disabled) {
+  background: #5a52d5;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(108, 99, 255, 0.4);
+}
+
+.refresh-button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Search Results Info */
+.search-results-info {
+  background: #e0e7ff;
+  border-radius: 10px;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.search-results-info p {
+  margin: 0;
+  color: #4f46e5;
+  font-weight: 500;
+}
+
+.clear-search-button {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
   transition: background 0.2s;
 }
 
-.btn-primary:hover {
-  background: #5a52d5;
+.clear-search-button:hover {
+  background: #c0392b;
+}
+
+/* Photo Grid */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+@media (min-width: 768px) {
+  .photo-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .photo-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+/* Load More Button */
+.load-more-container {
+  text-align: center;
+  margin: 30px 0;
+}
+
+.load-more-button {
+  background: linear-gradient(135deg, #6c63ff 0%, #5a52d5 100%);
+  color: white;
+  border: none;
+  padding: 14px 30px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s;
+  box-shadow: 0 6px 20px rgba(108, 99, 255, 0.4);
+}
+
+.load-more-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5a52d5 0%, #4a42c5 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(108, 99, 255, 0.5);
+}
+
+.load-more-button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* No More Photos */
+.no-more-photos {
+  text-align: center;
+  padding: 40px 20px;
+  color: #7f8c8d;
+  font-size: 18px;
+}
+
+.no-more-photos p {
+  margin: 0;
+}
+
+/* Empty Gallery */
+.empty-gallery {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin: 20px;
+}
+
+.empty-gallery-content {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.empty-gallery-icon {
+  font-size: 64px;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.empty-gallery h3 {
+  color: #2c3e50;
+  font-size: 24px;
+  margin: 0 0 15px 0;
+}
+
+.empty-gallery p {
+  color: #7f8c8d;
+  font-size: 18px;
+  margin: 0 0 25px 0;
+}
+
+.upload-photos-button {
+  background: linear-gradient(135deg, #6c63ff 0%, #5a52d5 100%);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s;
+  box-shadow: 0 6px 20px rgba(108, 99, 255, 0.4);
+}
+
+.upload-photos-button:hover {
+  background: linear-gradient(135deg, #5a52d5 0%, #4a42c5 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(108, 99, 255, 0.5);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .photo-gallery {
+    padding: 16px;
+  }
+  
+  .gallery-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .gallery-header h2 {
+    font-size: 24px;
+    text-align: center;
+  }
+  
+  .gallery-controls {
+    justify-content: center;
+  }
+  
+  .photo-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  
+  .search-results-info {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .empty-gallery {
+    margin: 10px;
+    padding: 40px 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .photo-gallery {
+    padding: 12px;
+  }
+  
+  .photo-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .gallery-header h2 {
+    font-size: 22px;
+  }
+  
+  .refresh-button,
+  .clear-search-button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
 }

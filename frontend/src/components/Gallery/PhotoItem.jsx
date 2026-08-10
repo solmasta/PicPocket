@@ -44,8 +44,17 @@ function PhotoItem({ photo, onDelete, onUpdateTags }) {
     return new Date(dateString).toLocaleDateString();
   };
 
+  // Check if photo has horse-related tags
+  const hasHorseTags = photo.tags?.some(tag => 
+    tag.toLowerCase().includes('horse') || 
+    tag.toLowerCase().includes('pony') ||
+    tag.toLowerCase().includes('mare') ||
+    tag.toLowerCase().includes('stallion') ||
+    tag.toLowerCase().includes('foal')
+  );
+
   return (
-    <div className="photo-item">
+    <div className={`photo-item ${hasHorseTags ? 'horse-theme' : ''}`}>
       <div className="photo-preview">
         {photo.fileType?.startsWith('image/') ? (
           <img 
@@ -94,10 +103,11 @@ function PhotoItem({ photo, onDelete, onUpdateTags }) {
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 placeholder="Enter tags separated by commas"
+                aria-label="Edit tags"
               />
               <div className="tags-edit-buttons">
-                <button onClick={handleTagsSave}>Save</button>
-                <button onClick={handleTagsCancel}>Cancel</button>
+                <button onClick={handleTagsSave} aria-label="Save tags">Save</button>
+                <button onClick={handleTagsCancel} aria-label="Cancel editing tags">Cancel</button>
               </div>
             </div>
           ) : (
@@ -105,7 +115,10 @@ function PhotoItem({ photo, onDelete, onUpdateTags }) {
               {photo.tags && photo.tags.length > 0 ? (
                 <div className="tags-list">
                   {photo.tags.map((tag, index) => (
-                    <span key={index} className="tag">
+                    <span 
+                      key={index} 
+                      className={`tag ${tag.toLowerCase().includes('horse') ? 'horse-tag' : ''}`}
+                    >
                       {tag}
                     </span>
                   ))}
@@ -116,6 +129,7 @@ function PhotoItem({ photo, onDelete, onUpdateTags }) {
               <button 
                 className="edit-tags-button" 
                 onClick={handleTagsClick}
+                aria-label="Edit tags"
               >
                 Edit Tags
               </button>
@@ -135,16 +149,26 @@ function PhotoItem({ photo, onDelete, onUpdateTags }) {
         <button 
           className="toggle-details" 
           onClick={() => setShowDetails(!showDetails)}
+          aria-expanded={showDetails}
         >
           {showDetails ? 'Hide Details' : 'Show Details'}
         </button>
         
         {showDetails && (
           <div className="photo-details">
-            <div>ID: {photo.id}</div>
-            <div>Type: {photo.fileType}</div>
+            <div>
+              <span className="photo-details-label">ID:</span>
+              <span>{photo.id}</span>
+            </div>
+            <div>
+              <span className="photo-details-label">Type:</span>
+              <span>{photo.fileType}</span>
+            </div>
             {photo.cloudBackup && Object.keys(photo.cloudBackup).length > 0 && (
-              <div>Backed up to: {Object.keys(photo.cloudBackup).join(', ')}</div>
+              <div>
+                <span className="photo-details-label">Backed up to:</span>
+                <span>{Object.keys(photo.cloudBackup).join(', ')}</span>
+              </div>
             )}
           </div>
         )}

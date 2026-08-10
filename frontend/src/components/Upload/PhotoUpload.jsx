@@ -181,6 +181,24 @@ function PhotoUpload({ onUpload, onBackupComplete, user, storageConnections }) {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  // Auto-add horse tag if user has horse profile
+  const addHorseTag = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const { getHorseProfile } = await import('../../utils/indexedDB');
+      const horseProfile = await getHorseProfile(user.id);
+      if (horseProfile && horseProfile.fields && horseProfile.fields.name) {
+        const horseName = horseProfile.fields.name.toLowerCase();
+        if (!tags.includes(horseName)) {
+          setTags(prev => [...prev, horseName]);
+        }
+      }
+    } catch (err) {
+      console.log('No horse profile found or error loading profile');
+    }
+  }, [user, tags]);
+
   return (
     <div className="photo-upload">
       <h2>Upload Photos</h2>
@@ -208,6 +226,16 @@ function PhotoUpload({ onUpload, onBackupComplete, user, storageConnections }) {
             {isDragging ? 'Drop photos here!' : 'Click or drag photos here to upload'}
           </p>
           <p className="drop-hint">Supports JPG, PNG, GIF, WebP · Max 20 MB per file</p>
+          <button 
+            className="horse-tag-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              addHorseTag();
+            }}
+            type="button"
+          >
+            🐴 Add Horse Tag
+          </button>
         </div>
       </div>
 
@@ -255,7 +283,7 @@ function PhotoUpload({ onUpload, onBackupComplete, user, storageConnections }) {
 
       {/* Errors */}
       {errors.length > 0 && (
-        <div className="upload-errors">
+        <div className="upload-errors" role="alert">
           {errors.map((err, i) => (
             <p key={i} className="upload-error">
               ⚠️ {err}
@@ -337,6 +365,7 @@ function PhotoUpload({ onUpload, onBackupComplete, user, storageConnections }) {
         className="upload-btn"
         onClick={handleUpload}
         disabled={selectedFiles.length === 0 || uploading}
+        aria-busy={uploading}
       >
         {uploading
           ? `Uploading ${selectedFiles.length} photo(s)...`
