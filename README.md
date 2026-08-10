@@ -1,47 +1,142 @@
-# PicPocket
-Pic-Pocket is a fun, easy-to-use photo storage app that keeps your memories safe. Snap, tag, and share your favorite moments with automatic backups to Google Photos and Drive. Create collages, stories, and slideshows, or use AI to auto-tag your photos. Perfect for capturing and reliving all your special moments
+# PicPocket - Enhanced Photo Management Application
 
-## Google Sign-In / Drive & Photos Setup
+PicPocket is a modern photo management application with offline capabilities and cloud backup features.
 
-The app runs fully offline with no sign-in required (photos are stored in the browser via IndexedDB). The "Sign in with Google" screen and the "Sign Out" button in the header only appear once a Google OAuth Client ID is configured — without one, the app silently falls back to a local-only user and Drive/Photos backup is unavailable.
+## Features
 
-### 1. Create a Google OAuth Client ID
+- **Persistent Storage**: Uses Cloudflare D1 database for reliable data storage
+- **Offline Support**: IndexedDB for local caching and offline access
+- **Cloud Backup**: Backup photos to Google Drive, Google Photos, OneDrive, and Dropbox
+- **Tagging System**: Organize photos with custom tags
+- **Location Tagging**: Add geolocation data to photos
+- **Album Creation**: Group photos into custom albums
+- **Search Functionality**: Find photos by tags, names, or locations
+- **Responsive Design**: Works on desktop and mobile devices
 
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/) and create (or select) a project.
-2. Under **APIs & Services → Library**, enable the **Google Drive API** and **Google Photos Library API**.
-3. Under **APIs & Services → OAuth consent screen → Data Access**, click **Add or Remove Scopes** and add:
-   - `openid`, `profile`, `email`
-   - `https://www.googleapis.com/auth/drive.file`
-   - `https://www.googleapis.com/auth/photoslibrary.appendonly`
-   - `https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata`
+## Architecture Improvements
 
-   Note: Google retired the broad `.../auth/photoslibrary` (full-library) scope on March 31, 2025. PicPocket only reads/writes its own "PicPals Backup" album, so the two narrower `appendonly` / `readonly.appcreateddata` scopes above are sufficient and are what the app actually requests.
-4. Under **APIs & Services → Credentials → Create Credentials → OAuth client ID**, choose **Web application**.
-5. Add **Authorized JavaScript origins**:
-   - `http://localhost:3000` (local dev)
-   - your deployed site's origin, e.g. `https://<github-username>.github.io` (GitHub Pages)
-6. Save and copy the generated **Client ID** (and, if you also run backend-side OAuth flows, the **Client Secret**).
+### 1. Persistent Backend Storage
+- Replaced in-memory storage with Cloudflare D1 database
+- Added proper schema for users, photos, albums, and sessions
+- Implemented database migrations
 
-### 2. Configure local development
+### 2. Enhanced Authentication
+- Improved session management with automatic token refresh
+- Added proper logout functionality
+- Better error handling for authentication failures
 
-- `frontend/.env` (copy from `frontend/.env.example`):
-  ```
-  REACT_APP_GOOGLE_CLIENT_ID=your_client_id_here
-  ```
-- `backend/.env` (copy from `backend/.env.example`):
-  ```
-  GOOGLE_CLIENT_ID=your_client_id_here
-  GOOGLE_CLIENT_SECRET=your_client_secret_here
-  ```
+### 3. Pagination Support
+- Added pagination to photo listings for better performance
+- Implemented infinite scrolling in the frontend
+- Configurable page sizes
 
-Restart `npm start` in both `frontend/` and `backend/` after adding these — the sign-in screen and sign-out button will appear automatically once `REACT_APP_GOOGLE_CLIENT_ID` is set.
+### 4. Search Functionality
+- Added full-text search across photos
+- Search by tags, filenames, and location data
+- Real-time search with debouncing
 
-### 3. Configure the deployed (GitHub Pages) build
+### 5. File Storage Integration
+- Added service layer for file storage management
+- Placeholder implementation for R2 integration
+- Proper file URL generation
 
-The GitHub Pages deploy workflow (`.github/workflows/deploy-gh-pages.yml`) builds the frontend with `REACT_APP_GOOGLE_CLIENT_ID` from a GitHub Actions secret, so it must be added to the repo:
+## Setup Instructions
 
-1. In the GitHub repo, go to **Settings → Secrets and variables → Actions → New repository secret**.
-2. Name: `REACT_APP_GOOGLE_CLIENT_ID`, Value: your Client ID.
-3. Re-run the deploy workflow (or push to `main`) so the build picks it up.
+### Prerequisites
+- Node.js 18+
+- Cloudflare account with Workers and D1 enabled
+- Google Cloud Platform account for OAuth
 
-Note: the deployed backend (wherever it's hosted) also needs `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` set as environment variables for server-side Drive/Photos operations to work.
+### Backend Setup
+1. Create a D1 database:
+   ```bash
+   wrangler d1 create picpocket
+   ```
+
+2. Update `wrangler.toml` with your database ID
+
+3. Apply the database schema:
+   ```bash
+   wrangler d1 execute picpocket --file=backend/schema.sql
+   ```
+
+4. Deploy the worker:
+   ```bash
+   wrangler deploy
+   ```
+
+### Frontend Setup
+1. Install dependencies:
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+2. Update the API endpoint in `frontend/src/services/api.js`
+
+3. Start the development server:
+   ```bash
+   npm start
+   ```
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/google` - Google authentication
+- `POST /api/auth/logout` - Logout
+- `GET /api/auth/verify` - Verify session
+
+### Photos
+- `GET /api/photos` - List photos (with pagination)
+- `POST /api/photos` - Upload photo
+- `GET /api/photos/:id` - Get photo details
+- `PUT /api/photos/:id` - Update photo
+- `DELETE /api/photos/:id` - Delete photo
+
+### Albums
+- `GET /api/albums` - List albums
+- `POST /api/albums` - Create album
+- `GET /api/albums/:id` - Get album details
+- `PUT /api/albums/:id` - Update album
+- `DELETE /api/albums/:id` - Delete album
+- `POST /api/albums/:id/photos` - Add photo to album
+
+### Search
+- `GET /api/search` - Search photos
+
+## Development
+
+### Folder Structure
+```
+picpocket/
+├── backend/
+│   ├── src/
+│   │   ├── middleware/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   └── server.js
+│   ├── schema.sql
+│   └── package.json
+├── frontend/
+│   ├── public/
+│   └── src/
+│       ├── components/
+│       ├── hooks/
+│       ├── services/
+│       ├── utils/
+│       └── App.js
+├── worker.js
+├── wrangler.toml
+└── README.md
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details.
