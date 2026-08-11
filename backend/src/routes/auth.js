@@ -1,53 +1,60 @@
 import { json } from 'itty-router-extras';
 
-// In-memory store for demo purposes - replace with database in production
-const sessionStore = new Map();
-const userStore = new Map();
-
 export async function handleAuth(request) {
+  const { DB } = request.env;
+  
   try {
     switch (request.method) {
       case 'POST':
         if (request.url.includes('/auth/google')) {
-          // Google auth simulation
-          const { token } = await request.json();
-          
-          // In a real implementation, you would verify the Google token
+          // Google auth - in a real implementation, you would verify the Google token
           // and get user info from Google's API
+          const { googleId, name, email, avatar } = await request.json();
           
-          // For demo purposes, we'll create a mock user
-          const mockUser = {
-            id: 'user_' + Math.random().toString(36).substr(2, 9),
-            name: 'Demo User',
-            email: 'demo@example.com',
-            avatar: 'https://placehold.co/100x100'
-          };
+          // Check if user already exists
+          let user = await DB.prepare(
+            "SELECT * FROM users WHERE email = ?"
+          ).bind(email).first();
           
-          // Store user (in production, store in database)
-          userStore.set(mockUser.id, mockUser);
+          // Create user if they don't exist
+          if (!user) {
+            const userId = 'user_' + Math.random().toString(36).substr(2, 9);
+            const createdAt = new Date().toISOString();
+            
+            await DB.prepare(`
+              INSERT INTO users (id, name, email, avatar, createdAt)
+              VALUES (?, ?, ?, ?, ?)
+            `).bind(userId, name, email, avatar, createdAt).run();
+            
+            user = { id: userId, name, email, avatar, createdAt };
+          }
           
           // Create session
           const sessionToken = 'session_' + Math.random().toString(36).substr(2, 20);
-          const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour
+          const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
           
-          const session = {
-            user: mockUser,
-            expiresAt
-          };
-          
-          // Store session (in production, store in database)
-          sessionStore.set(sessionToken, session);
+          await DB.prepare(`
+            INSERT INTO sessions (token, userId, expiresAt)
+            VALUES (?, ?, ?)
+          `).bind(sessionToken, user.id, expiresAt.toISOString()).run();
           
           return json({
-            user: mockUser,
+            user: {
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              avatar: user.avatar
+            },
             token: sessionToken,
-            expiresAt
+            expiresAt: expiresAt.toISOString()
           });
         } else if (request.url.includes('/auth/logout')) {
           const authHeader = request.headers.get('Authorization');
           if (authHeader && authHeader.startsWith('Bearer ')) {
             const token = authHeader.slice(7);
-            sessionStore.delete(token);
+            await DB.prepare(
+              "DELETE FROM sessions WHERE token = ?"
+            ).bind(token).run();
           }
           return json({ message: 'Logged out successfully' });
         }
@@ -62,19 +69,32 @@ export async function handleAuth(request) {
           }
           
           const token = authHeader.slice(7);
-          const session = sessionStore.get(token);
+          const session = await DB.prepare(
+            "SELECT s.*, u.id as userId, u.name, u.email, u.avatar FROM sessions s JOIN users u ON s.userId = u.id WHERE s.token = ?"
+          ).bind(token).first();
           
           if (!session) {
             return new Response('Session expired', { status: 401 });
           }
           
           // Check if session has expired
-          if (session.expiresAt < Date.now()) {
-            sessionStore.delete(token);
+          const expiresAt = new Date(session.expiresAt).getTime();
+          if (expiresAt < Date.now()) {
+            // Delete expired session
+            await DB.prepare(
+              "DELETE FROM sessions WHERE token = ?"
+            ).bind(token).run();
             return new Response('Session expired', { status: 401 });
           }
           
-          return json({ user: session.user });
+          const user = {
+            id: session.userId,
+            name: session.name,
+            email: session.email,
+            avatar: session.avatar
+          };
+          
+          return json({ user });
         }
         break;
         
