@@ -1,8 +1,5 @@
 import { json } from 'itty-router-extras';
 
-// In-memory store for demo purposes - replace with database in production
-const sessionStore = new Map();
-
 export async function verifyAuth(request) {
   const authHeader = request.headers.get('Authorization');
   
@@ -12,30 +9,47 @@ export async function verifyAuth(request) {
   
   const token = authHeader.slice(7); // Remove 'Bearer ' prefix
   
-  // In production, verify token against database
-  // For now, we'll use in-memory store for demo
-  const session = sessionStore.get(token);
-  
-  if (!session) {
-    return { error: new Response('Session expired', { status: 401 }) };
-  }
-  
-  // Check if session has expired
-  if (session.expiresAt < Date.now()) {
-    sessionStore.delete(token);
-    return { error: new Response('Session expired', { status: 401 }) };
-  }
-  
-  // Refresh token if it's expiring soon (within 5 minutes)
-  if (session.expiresAt - Date.now() < 5 * 60 * 1000) {
-    const newExpiresAt = Date.now() + 60 * 60 * 1000; // 1 hour from now
-    session.expiresAt = newExpiresAt;
+  // Verify token against database
+  try {
+    const { DB } = request.env;
+    const session = await DB.prepare(
+      "SELECT s.*, u.id as userId, u.name, u.email, u.avatar FROM sessions s JOIN users u ON s.userId = u.id WHERE s.token = ?"
+    ).bind(token).first();
     
-    // In production, update session in database
-    // sessionStore.set(token, session); // Already updated since it's a reference
+    if (!session) {
+      return { error: new Response('Session expired', { status: 401 }) };
+    }
+    
+    // Check if session has expired
+    const expiresAt = new Date(session.expiresAt).getTime();
+    if (expiresAt < Date.now()) {
+      // Delete expired session
+      await DB.prepare(
+        "DELETE FROM sessions WHERE token = ?"
+      ).bind(token).run();
+      return { error: new Response('Session expired', { status: 401 }) };
+    }
+    
+    // Refresh token if it's expiring soon (within 5 minutes)
+    if (expiresAt - Date.now() < 5 * 60 * 1000) {
+      const newExpiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+      await DB.prepare(
+        "UPDATE sessions SET expiresAt = ? WHERE token = ?"
+      ).bind(newExpiresAt.toISOString(), token).run();
+    }
+    
+    const user = {
+      id: session.userId,
+      name: session.name,
+      email: session.email,
+      avatar: session.avatar
+    };
+    
+    return { user };
+  } catch (error) {
+    console.error('Auth verification error:', error);
+    return { error: new Response('Internal server error', { status: 500 }) };
   }
-  
-  return { user: session.user };
 }
 
 export async function authMiddleware(request, env) {
