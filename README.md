@@ -79,6 +79,39 @@ PicPocket is a modern photo management application with offline capabilities and
    npm start
    ```
 
+## Build Process
+
+To build the application for deployment:
+
+```bash
+# Make sure you have esbuild installed
+npm install
+
+# Run the build script
+./build.sh
+```
+
+Or build manually:
+
+```bash
+# Build frontend
+cd frontend
+npm install
+npm run build
+cd ..
+
+# Build worker
+npm run build:worker
+```
+
+## Deployment
+
+### GitHub Pages
+The application is automatically deployed to GitHub Pages on pushes to the main branch.
+
+### Cloudflare Workers
+For Cloudflare deployment, see [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
+
 ## API Endpoints
 
 ### Authentication
