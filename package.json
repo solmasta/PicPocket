@@ -5,10 +5,14 @@
   "private": true,
   "scripts": {
     "build": "cd frontend && npm install && npm run build",
+    "build:worker": "node build-worker.js",
     "start:frontend": "cd frontend && npm start",
     "start:backend": "cd backend && npm run dev",
     "install:all": "cd frontend && npm install && cd ../backend && npm install",
     "test:backend": "cd backend && npm test",
     "test:frontend": "cd frontend && npm test -- --watchAll=false"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.0"
   }
 }
