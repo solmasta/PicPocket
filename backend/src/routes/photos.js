@@ -62,11 +62,16 @@ export async function handlePhotos(request) {
             return photo;
           }));
           
+          // Get total count
+          const countResult = await DB.prepare(
+            "SELECT COUNT(*) as total FROM photos WHERE userId = ?"
+          ).bind(user.id).first();
+          
           return json({
             photos,
             page,
             limit,
-            total: meta.count
+            total: countResult.total
           });
         }
         
