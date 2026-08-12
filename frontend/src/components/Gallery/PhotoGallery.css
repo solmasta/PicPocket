@@ -32,15 +32,17 @@
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-full);
   overflow: hidden;
+  background-color: var(--color-bg-surface);
 }
 
 .view-btn {
-  background: var(--color-white);
+  background: var(--color-bg-surface);
   border: none;
   padding: var(--spacing-xs) var(--spacing-base);
   cursor: pointer;
   font-size: var(--font-size-base);
   transition: background-color var(--transition-fast);
+  color: var(--color-text);
 }
 
 .view-btn.active {
@@ -56,7 +58,8 @@
   padding: var(--spacing-xs) var(--spacing-base);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-full);
-  background: var(--color-white);
+  background: var(--color-bg-surface);
+  color: var(--color-text);
   font-size: var(--font-size-sm);
   cursor: pointer;
 }
@@ -76,12 +79,12 @@
 .empty-state {
   text-align: center;
   padding: var(--spacing-2xl);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .empty-state-icon {
   font-size: var(--font-size-5xl);
-  color: var(--color-gray-300);
+  color: var(--color-gray-400);
   margin-bottom: var(--spacing-base);
 }
 
@@ -98,6 +101,7 @@
   max-width: 500px;
   margin-left: auto;
   margin-right: auto;
+  color: var(--color-text-secondary);
 }
 
 .upload-prompt {
@@ -129,7 +133,7 @@
 .skeleton-card {
   border-radius: var(--border-radius-lg);
   overflow: hidden;
-  background: var(--color-white);
+  background: var(--color-bg-surface);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--color-border);
   height: 100%;
@@ -137,7 +141,7 @@
 
 .skeleton-image {
   padding-top: 75%;
-  background: linear-gradient(90deg, var(--color-gray-200) 25%, var(--color-gray-300) 50%, var(--color-gray-200) 75%);
+  background: linear-gradient(90deg, var(--color-bg-subtle) 25%, var(--color-bg) 50%, var(--color-bg-subtle) 75%);
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
 }
@@ -148,7 +152,7 @@
 
 .skeleton-title {
   height: 1.2rem;
-  background: var(--color-gray-200);
+  background: var(--color-bg-subtle);
   border-radius: var(--border-radius-sm);
   margin-bottom: var(--spacing-sm);
   animation: loading 1.5s infinite;
@@ -156,7 +160,7 @@
 
 .skeleton-meta {
   height: 0.8rem;
-  background: var(--color-gray-200);
+  background: var(--color-bg-subtle);
   border-radius: var(--border-radius-sm);
   width: 60%;
   animation: loading 1.5s infinite;
