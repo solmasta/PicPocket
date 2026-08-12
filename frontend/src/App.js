@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './styles/App.css';
+import './styles/components.css';
 import backgroundImage from './assets/faye-pic-pocket.jpg';
 import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';

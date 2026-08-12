@@ -3,6 +3,9 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background-color: var(--color-bg);
+  font-family: var(--font-family-primary);
+  color: var(--color-text);
 }
 
 .app-background {
@@ -13,7 +16,7 @@
   background-size: cover;
   background-position: top center;
   background-attachment: fixed;
-  opacity: 0.12;
+  opacity: 0.05;
 }
 
 .app-container > .app-header,
@@ -26,29 +29,67 @@
 .app-body {
   display: flex;
   flex: 1;
+  margin-top: var(--header-height);
 }
 
 .main-content {
   flex: 1;
-  background: rgba(247, 247, 252, 0.86);
-  min-height: calc(100vh - 64px - 48px);
-  overflow-y: auto;
-  transition: margin-left 0.25s ease;
+  padding: var(--spacing-lg);
+  margin-left: var(--sidebar-width);
+  transition: margin-left var(--transition-base);
 }
 
-.sidebar-backdrop {
-  display: none;
+.main-content.sidebar-collapsed {
+  margin-left: 0;
 }
 
+.main-content.full-width {
+  margin-left: 0;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
-  .sidebar-backdrop {
-    display: block;
-    position: fixed;
-    top: 64px;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 85;
+  .main-content {
+    padding: var(--spacing-base);
+    margin-left: 0;
   }
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--border-radius-xs);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-subtle);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gray-300);
+  border-radius: var(--border-radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-400);
+}
+
+/* Utility classes */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
