@@ -1,7 +1,7 @@
 .photo-item {
   border-radius: var(--border-radius-lg);
   overflow: hidden;
-  background: var(--color-white);
+  background: var(--color-bg-surface);
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
   border: 1px solid var(--color-border);
@@ -23,7 +23,7 @@
   background: var(--color-bg-subtle);
 }
 
-.photo-image {
+.photo-preview img {
   position: absolute;
   top: 0;
   left: 0;
@@ -33,60 +33,55 @@
   transition: transform var(--transition-base);
 }
 
-.photo-item:hover .photo-image {
+.photo-item:hover .photo-preview img {
   transform: scale(1.05);
 }
 
-.photo-overlay {
+.delete-button {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity var(--transition-base);
-}
-
-.photo-item:hover .photo-overlay {
-  opacity: 1;
-}
-
-.overlay-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-.overlay-btn {
-  background: var(--color-white);
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  background: var(--color-danger);
+  color: var(--color-white);
   border: none;
   border-radius: var(--border-radius-full);
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
   transition: all var(--transition-fast);
   box-shadow: var(--shadow-base);
+  opacity: 0;
+  z-index: 2;
 }
 
-.overlay-btn:hover {
-  background: var(--color-gray-100);
+.photo-item:hover .delete-button {
+  opacity: 1;
+}
+
+.delete-button:hover {
+  background: var(--color-danger-hover);
   transform: scale(1.1);
 }
 
-.overlay-btn.delete {
-  background: var(--color-danger);
-  color: var(--color-white);
+.sync-status {
+  position: absolute;
+  top: var(--spacing-sm);
+  left: var(--spacing-sm);
+  z-index: 2;
 }
 
-.overlay-btn.delete:hover {
-  background: var(--color-danger-hover);
+.sync-pending {
+  background: var(--color-warning);
+  color: var(--color-white);
+  font-size: var(--font-size-xs);
+  padding: var(--spacing-xxs) var(--spacing-xs);
+  border-radius: var(--border-radius-full);
+  font-weight: var(--font-weight-medium);
 }
 
 .photo-info {
@@ -96,7 +91,7 @@
   flex-direction: column;
 }
 
-.photo-title {
+.photo-name {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text);
@@ -109,23 +104,85 @@
 .photo-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-base);
   font-size: var(--font-size-xs);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
   margin-bottom: var(--spacing-sm);
 }
 
-.meta-item {
+.file-size, .upload-date {
   display: flex;
   align-items: center;
   gap: var(--spacing-xxs);
 }
 
 .photo-tags {
+  margin-top: auto;
+}
+
+.tags-edit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.tags-edit input {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.tags-edit input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.tags-edit-buttons {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.tags-edit-buttons button {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tags-edit-buttons button:first-child {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.tags-edit-buttons button:first-child:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.tags-edit-buttons button:last-child {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text);
+}
+
+.tags-edit-buttons button:last-child:hover {
+  background-color: var(--color-bg);
+}
+
+.tags-display {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.tags-list {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-xs);
-  margin-top: auto;
 }
 
 .tag {
@@ -137,19 +194,106 @@
   font-weight: var(--font-weight-medium);
 }
 
-.photo-item.selected {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-primary);
+.tag.horse-tag {
+  background: var(--color-accent);
+  color: var(--color-white);
 }
 
-.photo-item.selected .photo-overlay {
-  opacity: 1;
-  background: rgba(99, 102, 241, 0.2);
+.no-tags {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+  font-size: var(--font-size-sm);
+}
+
+.edit-tags-button {
+  align-self: flex-start;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.edit-tags-button:hover {
+  background-color: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
+}
+
+.photo-location {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xs);
+}
+
+.location-icon {
+  font-size: var(--font-size-sm);
+}
+
+.toggle-details {
+  align-self: flex-start;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-top: var(--spacing-sm);
+}
+
+.toggle-details:hover {
+  background-color: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
+}
+
+.photo-details {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background-color: var(--color-bg-subtle);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+}
+
+.photo-details-label {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-right: var(--spacing-xs);
+}
+
+.photo-item.horse-theme {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+.photo-item.horse-theme:hover {
+  border-color: var(--color-accent-hover);
+  box-shadow: 0 0 0 1px var(--color-accent-hover), var(--shadow-lg);
+}
+
+.file-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-semibold);
 }
 
 /* Loading state */
 .photo-item.loading {
-  background: linear-gradient(90deg, var(--color-gray-200) 25%, var(--color-gray-300) 50%, var(--color-gray-200) 75%);
+  background: linear-gradient(90deg, var(--color-bg-subtle) 25%, var(--color-bg) 50%, var(--color-bg-subtle) 75%);
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
 }
