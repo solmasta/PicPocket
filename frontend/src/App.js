@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
 import './styles/App.css';
 import './styles/components.css';
 import backgroundImage from './assets/faye-pic-pocket.jpg';
@@ -193,39 +194,41 @@ function MainApp() {
   };
 
   return (
-    <div className="app-container">
-      <div
-        className="app-background"
-        style={{ backgroundImage: `url(${backgroundImage})` }}
-        aria-hidden="true"
-      />
-      {googleAuthBridge}
-      <Header
-        user={user}
-        tokenExpired={tokenExpired}
-        onSignOut={signOut}
-        onReconnect={signIn}
-        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-      />
-      <div className="app-body">
-        <Sidebar
-          activeView={activeView}
-          onViewChange={handleViewChange}
-          isOpen={sidebarOpen}
+    <ThemeProvider>
+      <div className="app-container">
+        <div
+          className="app-background"
+          style={{ backgroundImage: `url(${backgroundImage})` }}
+          aria-hidden="true"
         />
-        {sidebarOpen && (
-          <div
-            className="sidebar-backdrop"
-            onClick={() => setSidebarOpen(false)}
-            aria-hidden="true"
+        {googleAuthBridge}
+        <Header
+          user={user}
+          tokenExpired={tokenExpired}
+          onSignOut={signOut}
+          onReconnect={signIn}
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        />
+        <div className="app-body">
+          <Sidebar
+            activeView={activeView}
+            onViewChange={handleViewChange}
+            isOpen={sidebarOpen}
           />
-        )}
-        <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} role="main">
-          {renderView()}
-        </main>
+          {sidebarOpen && (
+            <div
+              className="sidebar-backdrop"
+              onClick={() => setSidebarOpen(false)}
+              aria-hidden="true"
+            />
+          )}
+          <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} role="main">
+            {renderView()}
+          </main>
+        </div>
+        <Footer />
       </div>
-      <Footer />
-    </div>
+    </ThemeProvider>
   );
 }
 
