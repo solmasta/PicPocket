@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useTheme } from '../../context/ThemeContext';
 import './Header.css';
 import logo from '../../assets/pic-pocket-logo.png';
 
 function Header({ user, tokenExpired, onSignOut, onReconnect, onToggleSidebar }) {
   const [avatarFailed, setAvatarFailed] = useState(false);
+  const { isDarkMode, toggleTheme } = useTheme();
 
   return (
     <header className="app-header">
@@ -22,6 +24,14 @@ function Header({ user, tokenExpired, onSignOut, onReconnect, onToggleSidebar })
       </div>
 
       <div className="header-right">
+        <button 
+          className="theme-toggle"
+          onClick={toggleTheme}
+          aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {isDarkMode ? '☀️' : '🌙'}
+        </button>
+        
         {user && (
           <div className="user-menu">
             {user.picture && !avatarFailed ? (
