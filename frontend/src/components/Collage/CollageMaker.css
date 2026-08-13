@@ -1,29 +1,47 @@
 .collage-maker {
-  padding: 1.5rem;
+  padding: var(--spacing-lg);
+  max-width: var(--max-width-container);
+  margin: 0 auto;
+  font-family: var(--font-family-primary);
 }
 
-.collage-maker h2 {
-  font-size: 1.5rem;
-  margin: 0 0 1.5rem;
-  color: #333;
+.collage-maker-header {
+  margin-bottom: var(--spacing-2xl);
+  text-align: center;
+}
+
+.collage-maker-title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-sm);
+}
+
+.collage-maker-subtitle {
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-lg);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .collage-layout {
   display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 2rem;
+  grid-template-columns: 350px 1fr;
+  gap: var(--spacing-xl);
   align-items: start;
 }
 
 .collage-config {
-  background: #fff;
-  border: 1px solid #e8e8f0;
-  border-radius: 14px;
-  padding: 1.25rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-base);
 }
 
 .config-section {
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--spacing-lg);
 }
 
 .config-section:last-child {
@@ -32,54 +50,65 @@
 
 .config-label {
   display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #555;
-  margin-bottom: 0.5rem;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--spacing-xs);
 }
 
 .collage-title-input {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  color: #333;
+  padding: var(--spacing-sm) var(--spacing-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background-color: var(--color-bg-surface);
+  transition: all var(--transition-fast);
   box-sizing: border-box;
+}
+
+.collage-title-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .layout-options {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
+  gap: var(--spacing-xs);
 }
 
 .layout-btn {
-  background: none;
-  border: 2px solid #e8e8f0;
-  border-radius: 8px;
-  padding: 0.5rem;
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-base);
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: all var(--transition-fast);
   text-align: center;
-  font-size: 0.7rem;
-  color: #666;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
 }
 
 .layout-btn:hover {
-  border-color: #c4c0ff;
+  border-color: var(--color-primary-light);
+  background-color: var(--color-bg-subtle);
 }
 
 .layout-btn.active {
-  border-color: #6c63ff;
-  color: #6c63ff;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background-color: var(--color-primary-light);
 }
 
 .layout-preview {
   display: grid;
   gap: 2px;
-  margin-bottom: 0.35rem;
-  height: 36px;
+  margin-bottom: var(--spacing-xs);
+  height: 40px;
   grid-template-columns: repeat(2, 1fr);
 }
 
@@ -91,69 +120,83 @@
 .layout-preview[data-layout="feature-right"] { grid-template-columns: 1fr 2fr; }
 
 .layout-preview-cell {
-  background: #e0e0e8;
-  border-radius: 3px;
+  background: var(--color-gray-300);
+  border-radius: var(--border-radius-xs);
 }
 
 .config-hint {
-  font-size: 0.75rem;
-  color: #aaa;
-  margin: 0 0 0.5rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin: var(--spacing-xs) 0 0;
 }
 
 .photo-picker {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.4rem;
+  gap: var(--spacing-xs);
   max-height: 300px;
   overflow-y: auto;
+  padding: var(--spacing-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--color-bg-subtle);
 }
 
 .picker-photo {
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: var(--border-radius-xs);
   cursor: pointer;
-  transition: transform 0.15s, opacity 0.15s;
+  transition: all var(--transition-fast);
   border: 2px solid transparent;
 }
 
 .picker-photo:hover {
   transform: scale(1.05);
-  border-color: #6c63ff;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.picker-photo.selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary);
 }
 
 .no-photos-hint {
-  font-size: 0.8rem;
-  color: #aaa;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
   grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--spacing-lg);
 }
 
 /* Canvas area */
 .collage-canvas-wrap {
-  background: #fff;
-  border: 1px solid #e8e8f0;
-  border-radius: 14px;
-  padding: 1.25rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-base);
 }
 
 .collage-title-display {
   text-align: center;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 1rem;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin-bottom: var(--spacing-lg);
 }
 
 .collage-canvas {
   display: grid;
-  gap: 6px;
+  gap: var(--spacing-xs);
   grid-template-columns: repeat(var(--cols, 2), 1fr);
   grid-template-rows: repeat(var(--rows, 2), 160px);
-  background: #f0f0f0;
-  border-radius: 10px;
+  background: var(--color-bg-subtle);
+  border-radius: var(--border-radius-sm);
   overflow: hidden;
+  margin-bottom: var(--spacing-base);
 }
 
 .collage-canvas[data-layout="feature-left"] {
@@ -177,7 +220,9 @@
 .collage-slot {
   position: relative;
   overflow: hidden;
-  background: #e8e8f0;
+  background: var(--color-bg-subtle);
+  border-radius: var(--border-radius-xs);
+  border: 1px dashed var(--color-border);
 }
 
 .slot-image {
@@ -189,19 +234,25 @@
 
 .slot-remove {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
   background: rgba(0, 0, 0, 0.5);
-  color: #fff;
+  color: var(--color-white);
   border: none;
-  border-radius: 50%;
+  border-radius: var(--border-radius-full);
   width: 24px;
   height: 24px;
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.slot-remove:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: scale(1.1);
 }
 
 .slot-placeholder {
@@ -210,67 +261,148 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #bbb;
-  gap: 0.25rem;
-  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-xs);
   cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.slot-placeholder:hover {
+  background-color: var(--color-bg);
 }
 
 .slot-placeholder span:first-child {
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
 }
 
 .collage-progress {
   text-align: center;
-  font-size: 0.8rem;
-  color: #888;
-  margin-top: 0.75rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-base);
 }
 
 .collage-actions {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 1rem;
+  gap: var(--spacing-base);
+  margin-top: var(--spacing-lg);
 }
 
 .download-btn,
 .clear-btn {
   flex: 1;
-  padding: 0.75rem;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  padding: var(--spacing-base);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   border: none;
-  transition: background 0.2s;
+  transition: all var(--transition-fast);
 }
 
 .download-btn {
-  background: #6c63ff;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: var(--shadow-sm);
 }
 
 .download-btn:hover:not(:disabled) {
-  background: #5a52d5;
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-base);
 }
 
 .clear-btn {
-  background: #f0f0f7;
-  color: #666;
+  background: var(--color-bg-subtle);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
 
 .clear-btn:hover:not(:disabled) {
-  background: #e0e0ee;
+  background: var(--color-bg);
+  border-color: var(--color-border-strong);
 }
 
 .download-btn:disabled,
 .clear-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
+/* Responsive adjustments */
 @media (max-width: 900px) {
   .collage-layout {
     grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
   }
+
+  .collage-config {
+    order: 2;
+  }
+
+  .collage-canvas-wrap {
+    order: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .collage-maker {
+    padding: var(--spacing-base);
+  }
+
+  .layout-options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .photo-picker {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .collage-actions {
+    flex-direction: column;
+  }
+}
+
+/* Dark mode adjustments */
+.dark-theme .collage-config,
+.dark-theme .collage-canvas-wrap {
+  background: var(--color-gray-800);
+  border-color: var(--color-border);
+}
+
+.dark-theme .layout-btn {
+  background: var(--color-gray-700);
+  border-color: var(--color-gray-600);
+  color: var(--color-gray-300);
+}
+
+.dark-theme .layout-btn:hover {
+  border-color: var(--color-primary-light);
+  background-color: var(--color-gray-600);
+}
+
+.dark-theme .layout-btn.active {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background-color: var(--color-primary-dark);
+}
+
+.dark-theme .layout-preview-cell {
+  background: var(--color-gray-600);
+}
+
+.dark-theme .photo-picker {
+  background-color: var(--color-gray-700);
+  border-color: var(--color-border);
+}
+
+.dark-theme .collage-slot {
+  background: var(--color-gray-700);
+  border-color: var(--color-gray-600);
+}
+
+.dark-theme .slot-placeholder {
+  color: var(--color-gray-400);
 }
