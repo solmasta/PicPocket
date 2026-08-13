@@ -1,7 +1,9 @@
 .location-tag {
-  border: 1px solid #e0e0e0;
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-base) var(--spacing-lg);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-xs);
 }
 
 .location-toggle-row {
@@ -11,9 +13,9 @@
 }
 
 .location-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #555;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
 }
 
 .toggle-switch {
@@ -33,9 +35,9 @@
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background: #e0e0e0;
+  background: var(--color-gray-300);
   border-radius: 24px;
-  transition: background 0.2s;
+  transition: background var(--transition-fast);
 }
 
 .toggle-slider::before {
@@ -45,13 +47,14 @@
   height: 18px;
   left: 3px;
   top: 3px;
-  background: #fff;
+  background: var(--color-white);
   border-radius: 50%;
-  transition: transform 0.2s;
+  transition: transform var(--transition-fast);
+  box-shadow: var(--shadow-xs);
 }
 
 .toggle-switch input:checked + .toggle-slider {
-  background: #6c63ff;
+  background: var(--color-primary);
 }
 
 .toggle-switch input:checked + .toggle-slider::before {
@@ -59,33 +62,33 @@
 }
 
 .location-status {
-  font-size: 0.8rem;
-  color: #888;
-  margin: 0.5rem 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: var(--spacing-xs) 0 0;
 }
 
 .location-error {
-  font-size: 0.8rem;
-  color: #dc2626;
-  margin: 0.5rem 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+  margin: var(--spacing-xs) 0 0;
 }
 
 .location-preview {
-  margin-top: 0.5rem;
-  background: #f0eeff;
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
+  margin-top: var(--spacing-xs);
+  background: var(--color-primary-light);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
 }
 
 .location-name {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #555;
-  margin: 0 0 0.2rem;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-3xs);
 }
 
 .location-coords {
-  font-size: 0.75rem;
-  color: #888;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
   margin: 0;
 }
