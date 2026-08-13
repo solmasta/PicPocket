@@ -1,101 +1,126 @@
 .album-sharing {
-  padding: 1.5rem;
+  padding: var(--spacing-lg);
+  font-family: var(--font-family-primary);
+  max-width: var(--max-width-container);
+  margin: 0 auto;
 }
 
 .album-sharing h2 {
-  font-size: 1.5rem;
-  margin: 0 0 1.5rem;
-  color: #333;
+  font-size: var(--font-size-2xl);
+  margin: 0 0 var(--spacing-lg);
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
 }
 
 .sharing-layout {
   display: grid;
   grid-template-columns: 340px 1fr;
-  gap: 2rem;
+  gap: var(--spacing-xl);
   align-items: start;
 }
 
 .create-album-panel,
 .albums-list-panel {
-  background: #fff;
-  border: 1px solid #e8e8f0;
-  border-radius: 14px;
-  padding: 1.25rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .create-album-panel h3,
 .albums-list-panel h3 {
-  font-size: 1.05rem;
-  margin: 0 0 1.25rem;
-  color: #333;
+  font-size: var(--font-size-lg);
+  margin: 0 0 var(--spacing-lg);
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
 }
 
 .form-field {
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-base);
 }
 
 .form-field label {
   display: block;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #555;
-  margin-bottom: 0.5rem;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--spacing-xs);
 }
 
 .text-input {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  color: #333;
+  padding: var(--spacing-sm) var(--spacing-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
   box-sizing: border-box;
+  background: var(--color-bg-subtle);
+  transition: all var(--transition-fast);
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .privacy-options {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--spacing-xs);
 }
 
 .privacy-btn {
   flex: 1;
-  padding: 0.5rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background: none;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  background: var(--color-bg-subtle);
   cursor: pointer;
-  font-size: 0.85rem;
-  color: #666;
-  transition: all 0.15s;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  transition: all var(--transition-fast);
+  font-weight: var(--font-weight-medium);
+}
+
+.privacy-btn:hover {
+  background: var(--color-bg-surface);
+  border-color: var(--color-border-strong);
 }
 
 .privacy-btn.active {
-  background: #ebe9ff;
-  border-color: #6c63ff;
-  color: #6c63ff;
-  font-weight: 600;
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
 }
 
 .photo-picker-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.4rem;
+  gap: var(--spacing-xs);
   max-height: 220px;
   overflow-y: auto;
+  padding: var(--spacing-xs);
 }
 
 .picker-thumb {
   position: relative;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
   overflow: hidden;
   border: 2px solid transparent;
-  transition: border-color 0.15s;
+  transition: all var(--transition-fast);
   aspect-ratio: 1;
 }
 
+.picker-thumb:hover {
+  border-color: var(--color-primary-light);
+}
+
 .picker-thumb.selected {
-  border-color: #6c63ff;
+  border-color: var(--color-primary);
 }
 
 .picker-thumb img {
@@ -109,12 +134,12 @@
   position: absolute;
   top: 3px;
   right: 3px;
-  background: #6c63ff;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-white);
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  font-size: 0.65rem;
+  font-size: var(--font-size-xs);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -122,31 +147,38 @@
 
 .empty-hint {
   grid-column: 1 / -1;
-  font-size: 0.8rem;
-  color: #aaa;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  text-align: center;
+  padding: var(--spacing-base);
 }
 
 .create-album-btn {
   width: 100%;
-  padding: 0.75rem;
-  background: #6c63ff;
-  color: #fff;
+  padding: var(--spacing-base);
+  background: var(--color-primary);
+  color: var(--color-white);
   border: none;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  font-weight: 600;
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: background 0.2s;
-  margin-top: 0.5rem;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
+  margin-top: var(--spacing-xs);
 }
 
 .create-album-btn:hover:not(:disabled) {
-  background: #5a52d5;
+  background: var(--color-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .create-album-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Albums list */
@@ -154,9 +186,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  padding: 2rem;
-  color: #aaa;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xl);
+  color: var(--color-text-tertiary);
   text-align: center;
 }
 
@@ -167,28 +199,36 @@
 .albums-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--spacing-sm);
 }
 
 .album-card {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
-  border: 1px solid #e8e8f0;
-  border-radius: 10px;
-  padding: 0.75rem;
+  gap: var(--spacing-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-base);
+  background: var(--color-bg-surface);
+  transition: all var(--transition-fast);
+}
+
+.album-card:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-xs);
 }
 
 .album-cover {
   width: 72px;
   height: 54px;
-  border-radius: 8px;
+  border-radius: var(--border-radius-md);
   overflow: hidden;
-  background: #f0f0f0;
+  background: var(--color-bg-subtle);
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: var(--shadow-xs);
 }
 
 .album-cover img {
@@ -198,7 +238,8 @@
 }
 
 .album-placeholder {
-  font-size: 1.5rem;
+  font-size: var(--font-size-xl);
+  color: var(--color-text-secondary);
 }
 
 .album-info {
@@ -207,133 +248,171 @@
 }
 
 .album-name {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 0.2rem;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-3xs);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .album-meta {
-  font-size: 0.78rem;
-  color: #888;
-  margin: 0 0 0.15rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-3xs);
 }
 
 .album-date {
-  font-size: 0.75rem;
-  color: #aaa;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
   margin: 0;
 }
 
 .privacy-badge {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .privacy-badge.public {
-  color: #22c55e;
+  color: var(--color-success);
 }
 
 .privacy-badge.private {
-  color: #888;
+  color: var(--color-text-tertiary);
 }
 
 .album-actions {
   display: flex;
-  gap: 0.35rem;
+  gap: var(--spacing-3xs);
   flex-shrink: 0;
 }
 
 .album-action-btn {
-  background: none;
-  border: 1px solid #e8e8f0;
-  border-radius: 8px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
   width: 34px;
   height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 0.95rem;
-  transition: background 0.15s;
+  font-size: var(--font-size-base);
+  transition: all var(--transition-fast);
 }
 
 .album-action-btn:hover {
-  background: #f0f0f7;
+  background: var(--color-bg-surface);
+  border-color: var(--color-border-strong);
 }
 
 .album-action-btn.delete:hover {
-  background: #fee2e2;
+  background: var(--color-danger);
+  color: var(--color-white);
+  border-color: var(--color-danger);
 }
 
 /* Share popup */
 .share-popup {
-  margin-top: 1.25rem;
-  background: #f7f7fc;
-  border: 1px solid #e8e8f0;
-  border-radius: 12px;
-  padding: 1rem;
+  margin-top: var(--spacing-lg);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-base);
 }
 
 .share-popup-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--spacing-sm);
 }
 
 .share-popup-header h4 {
   margin: 0;
-  font-size: 0.9rem;
-  color: #333;
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
 }
 
 .share-popup-header button {
   background: none;
   border: none;
   cursor: pointer;
-  color: #aaa;
-  font-size: 1rem;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-lg);
+  transition: all var(--transition-fast);
+}
+
+.share-popup-header button:hover {
+  color: var(--color-danger);
 }
 
 .share-link-row {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-xs);
 }
 
 .share-link-input {
   flex: 1;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  color: #666;
-  background: #fff;
+  padding: var(--spacing-sm) var(--spacing-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background: var(--color-bg-surface);
 }
 
 .copy-btn {
-  background: #6c63ff;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-white);
   border: none;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-sm) var(--spacing-base);
+  font-size: var(--font-size-sm);
   cursor: pointer;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.copy-btn:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
 }
 
 .share-note {
-  font-size: 0.75rem;
-  color: #888;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
   margin: 0;
 }
 
 @media (max-width: 900px) {
   .sharing-layout {
     grid-template-columns: 1fr;
+  }
+  
+  .album-sharing {
+    padding: var(--spacing-base);
+  }
+  
+  .photo-picker-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .photo-picker-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .album-card {
+    gap: var(--spacing-sm);
+  }
+  
+  .album-cover {
+    width: 60px;
+    height: 45px;
   }
 }
