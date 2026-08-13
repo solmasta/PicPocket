@@ -16,11 +16,13 @@
   text-decoration: none;
   background-color: var(--color-primary);
   color: var(--color-primary-contrast);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn:hover {
   background-color: var(--color-primary-hover);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-base);
 }
 
 .btn:active {
@@ -37,11 +39,13 @@
   background-color: var(--color-bg-subtle);
   color: var(--color-text);
   border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-secondary:hover {
   background-color: var(--color-bg);
   border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-base);
 }
 
 .btn-success {
@@ -71,6 +75,16 @@
   background-color: var(--color-warning-hover);
 }
 
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn-outline:hover {
+  background-color: var(--color-primary-light);
+}
+
 .btn-icon {
   padding: var(--spacing-sm);
   border-radius: var(--border-radius-full);
@@ -88,6 +102,10 @@
 .btn-lg {
   padding: var(--spacing-base) var(--spacing-lg);
   font-size: var(--font-size-lg);
+}
+
+.btn-block {
+  width: 100%;
 }
 
 /* Cards */
