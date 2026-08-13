@@ -1,103 +1,257 @@
 .tag-search {
-  padding: 1.5rem;
+  padding: var(--spacing-lg);
+  max-width: var(--max-width-container);
+  margin: 0 auto;
+  font-family: var(--font-family-primary);
 }
 
-.tag-search h2 {
-  font-size: 1.5rem;
-  margin: 0 0 1.5rem;
-  color: #333;
+.tag-search-header {
+  margin-bottom: var(--spacing-xl);
+  text-align: center;
+}
+
+.tag-search-title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-sm);
+}
+
+.tag-search-description {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  margin: 0 0 var(--spacing-lg);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.search-bar-container {
+  max-width: 500px;
+  margin: 0 auto var(--spacing-xl);
 }
 
 .search-bar {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  background: #fff;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 0.5rem 1rem;
-  margin-bottom: 1.25rem;
-  transition: border-color 0.2s;
+  gap: var(--spacing-sm);
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius-full);
+  padding: var(--spacing-sm) var(--spacing-base);
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
 .search-bar:focus-within {
-  border-color: #6c63ff;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .search-icon {
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-tertiary);
 }
 
 .search-input {
   flex: 1;
   border: none;
   outline: none;
-  font-size: 0.95rem;
-  color: #333;
+  font-size: var(--font-size-base);
+  color: var(--color-text);
   background: transparent;
+  font-family: var(--font-family-primary);
+}
+
+.search-input::placeholder {
+  color: var(--color-text-tertiary);
 }
 
 .clear-search {
   background: none;
   border: none;
-  color: #aaa;
+  color: var(--color-text-tertiary);
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: var(--font-size-lg);
+  border-radius: var(--border-radius-full);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.clear-search:hover {
+  color: var(--color-text);
+  background: var(--color-bg-subtle);
 }
 
 .tag-cloud {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1.25rem;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-xl);
+  justify-content: center;
 }
 
 .tag-cloud-item {
-  background: #f0f0f7;
-  color: #666;
-  border: 1px solid #e0e0e0;
-  border-radius: 20px;
-  padding: 0.35rem 0.875rem;
-  font-size: 0.82rem;
+  background: var(--color-bg-subtle);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-full);
+  padding: var(--spacing-xs) var(--spacing-base);
+  font-size: var(--font-size-sm);
   cursor: pointer;
-  transition: all 0.15s;
-  font-weight: 500;
+  transition: all var(--transition-fast);
+  font-weight: var(--font-weight-medium);
 }
 
 .tag-cloud-item:hover {
-  background: #ebe9ff;
-  border-color: #6c63ff;
-  color: #6c63ff;
+  background: var(--color-bg);
+  border-color: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 .tag-cloud-item.active {
-  background: #6c63ff;
-  border-color: #6c63ff;
-  color: #fff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-white);
 }
 
 .search-results-header {
-  font-size: 0.85rem;
-  color: #888;
-  margin-bottom: 1rem;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-base);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.search-results-count {
+  font-weight: var(--font-weight-semibold);
 }
 
 .no-results {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  padding: 3rem;
-  color: #aaa;
-  font-size: 0.95rem;
+  gap: var(--spacing-base);
+  padding: var(--spacing-3xl);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-base);
+  text-align: center;
+  background: var(--color-bg-surface);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
-.no-results span {
-  font-size: 2.5rem;
+.no-results-icon {
+  font-size: var(--font-size-5xl);
+  color: var(--color-gray-300);
+}
+
+.no-results-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-sm);
 }
 
 .search-results-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: var(--spacing-base);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tag-search {
+    padding: var(--spacing-base);
+  }
+
+  .search-bar-container {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .tag-cloud {
+    gap: var(--spacing-xxs);
+  }
+
+  .tag-cloud-item {
+    padding: var(--spacing-xxs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+  }
+
+  .search-results-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .search-results-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .no-results {
+    padding: var(--spacing-xl);
+  }
+}
+
+/* Dark mode adjustments */
+.dark-theme .search-bar {
+  background: var(--color-gray-800);
+  border-color: var(--color-border);
+}
+
+.dark-theme .search-icon {
+  color: var(--color-gray-400);
+}
+
+.dark-theme .search-input {
+  color: var(--color-text-inverse);
+}
+
+.dark-theme .clear-search {
+  color: var(--color-gray-400);
+}
+
+.dark-theme .clear-search:hover {
+  color: var(--color-text-inverse);
+  background: var(--color-gray-700);
+}
+
+.dark-theme .tag-cloud-item {
+  background: var(--color-gray-700);
+  border-color: var(--color-border);
+  color: var(--color-gray-300);
+}
+
+.dark-theme .tag-cloud-item:hover {
+  background: var(--color-gray-600);
+  border-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.dark-theme .tag-cloud-item.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.dark-theme .search-results-header {
+  color: var(--color-gray-400);
+}
+
+.dark-theme .no-results {
+  background: var(--color-gray-800);
+  color: var(--color-gray-400);
+}
+
+.dark-theme .no-results-icon {
+  color: var(--color-gray-600);
+}
+
+.dark-theme .no-results-title {
+  color: var(--color-text-inverse);
 }
