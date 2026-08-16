@@ -15,175 +15,75 @@
   z-index: 0;
   pointer-events: none;
   background-size: cover;
-  background-position: top center;
-  background-attachment: fixed;
-  opacity: 0.03;
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 20%),
-    radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 20%);
-}
-
-.app-container > .app-header,
-.app-container > .app-body,
-.app-container > .app-footer {
-  position: relative;
-  z-index: 1;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.15;
+  filter: blur(2px);
 }
 
 .app-body {
   display: flex;
   flex: 1;
   margin-top: var(--header-height);
-  min-height: calc(100vh - var(--header-height));
+  transition: margin-left var(--transition-base);
 }
 
 .main-content {
   flex: 1;
-  padding: var(--spacing-xl);
-  margin-left: var(--sidebar-width);
-  transition: margin-left var(--transition-base), padding var(--transition-base);
-  max-width: 100%;
-  width: 100%;
+  padding: var(--spacing-lg);
+  padding-top: var(--spacing-base);
+  transition: padding var(--transition-base);
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
 }
 
-.main-content.sidebar-collapsed {
-  margin-left: 0;
+.main-content.sidebar-open {
+  padding-left: calc(var(--sidebar-width) + var(--spacing-lg));
 }
 
-.main-content.full-width {
-  margin-left: 0;
+.main-content.sidebar-closed {
+  padding-left: var(--spacing-lg);
 }
 
 /* Responsive adjustments */
-@media (max-width: 1024px) {
-  .main-content {
-    padding: var(--spacing-lg);
-  }
-}
-
 @media (max-width: 768px) {
-  .main-content {
-    padding: var(--spacing-base);
-    margin-left: 0;
+  .app-body {
+    margin-top: var(--header-height-mobile);
   }
   
-  .app-body {
-    margin-top: var(--header-height);
+  .main-content {
+    padding: var(--spacing-base);
+    padding-top: var(--spacing-sm);
+  }
+  
+  .main-content.sidebar-open,
+  .main-content.sidebar-closed {
+    padding-left: var(--spacing-base);
   }
 }
 
-/* Focus styles */
+/* Focus styles for accessibility */
 *:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
-  border-radius: var(--border-radius-xs);
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
   background: var(--color-bg-subtle);
-  border-radius: var(--border-radius-full);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-gray-400);
-  border-radius: var(--border-radius-full);
-  border: 2px solid var(--color-bg-subtle);
+  background: var(--color-border);
+  border-radius: var(--border-radius-sm);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gray-500);
-}
-
-/* Utility classes */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.text-left {
-  text-align: left;
-}
-
-.text-right {
-  text-align: right;
-}
-
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.flex-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.gap-sm {
-  gap: var(--spacing-sm);
-}
-
-.gap-base {
-  gap: var(--spacing-base);
-}
-
-.gap-lg {
-  gap: var(--spacing-lg);
-}
-
-/* Dark mode specific adjustments */
-.dark-theme .app-background {
-  opacity: 0.02;
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 20%),
-    radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 20%);
-}
-
-.dark-theme ::-webkit-scrollbar-track {
-  background: var(--color-bg-subtle);
-}
-
-.dark-theme ::-webkit-scrollbar-thumb {
-  background: var(--color-gray-600);
-}
-
-.dark-theme ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gray-500);
-}
-
-/* Animation classes */
-.fade-in {
-  animation: fadeIn var(--transition-base) ease-in;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.slide-in {
-  animation: slideIn var(--transition-base) ease-out;
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
+  background: var(--color-primary);
 }
