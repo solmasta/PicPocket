@@ -201,11 +201,16 @@ function PhotoUpload({ onUpload, onBackupComplete, user, storageConnections }) {
 
   return (
     <div className="photo-upload">
-      <h2>Upload Photos</h2>
+      <div className="upload-header">
+        <h1 className="upload-title">Upload Photos</h1>
+        <p className="upload-description">
+          Add your photos to PicPocket with optional tags, location, and cloud backup.
+        </p>
+      </div>
 
       {/* Drop Zone */}
       <div
-        className={`drop-zone ${isDragging ? 'dragging' : ''}`}
+        className={`upload-dropzone ${isDragging ? 'active' : ''}`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -220,59 +225,58 @@ function PhotoUpload({ onUpload, onBackupComplete, user, storageConnections }) {
           className="file-input-hidden"
           aria-label="Select photos to upload"
         />
-        <div className="drop-zone-content">
-          <span className="drop-icon">📤</span>
-          <p className="drop-text">
-            {isDragging ? 'Drop photos here!' : 'Click or drag photos here to upload'}
-          </p>
-          <p className="drop-hint">Supports JPG, PNG, GIF, WebP · Max 20 MB per file</p>
-          <button 
-            className="horse-tag-button"
-            onClick={(e) => {
-              e.stopPropagation();
-              addHorseTag();
-            }}
-            type="button"
-          >
-            🐴 Add Horse Tag
-          </button>
-        </div>
+        <span className="upload-icon">📤</span>
+        <p className="upload-text">
+          {isDragging ? 'Drop photos here!' : 'Click or drag photos here to upload'}
+        </p>
+        <p className="upload-subtext">Supports JPG, PNG, GIF, WebP · Max 20 MB per file</p>
+        <button 
+          className="upload-button"
+          onClick={(e) => {
+            e.stopPropagation();
+            addHorseTag();
+          }}
+          type="button"
+        >
+          🐴 Add Horse Tag
+        </button>
       </div>
 
       {/* Selected files preview */}
       {selectedFiles.length > 0 && (
-        <div className="selected-files">
-          <h3>Selected ({selectedFiles.length})</h3>
-          <div className="file-list">
+        <div className="upload-preview">
+          <h2 className="preview-title">Selected Photos ({selectedFiles.length})</h2>
+          <div className="preview-grid">
             {selectedFiles.map((file, index) => {
               const progress = uploadProgress[file.name];
               return (
-                <div key={`${file.name}-${index}`} className="file-item">
+                <div key={`${file.name}-${index}`} className="preview-item">
                   <img
                     src={URL.createObjectURL(file)}
                     alt={file.name}
-                    className="file-preview"
+                    className="preview-image"
                   />
-                  <div className="file-details">
-                    <span className="file-name">{file.name}</span>
-                    <span className="file-size">{formatSize(file.size)}</span>
-                    {progress !== undefined && progress > 0 && (
-                      <div className="progress-bar-wrap">
-                        <div
-                          className={`progress-bar ${progress === -1 ? 'error' : ''}`}
-                          style={{ width: `${progress === -1 ? 100 : progress}%` }}
-                        />
-                      </div>
-                    )}
-                  </div>
                   {!uploading && (
                     <button
-                      className="remove-file-btn"
+                      className="preview-remove"
                       onClick={() => removeFile(index)}
                       aria-label={`Remove ${file.name}`}
                     >
                       ✕
                     </button>
+                  )}
+                  {progress !== undefined && progress > 0 && progress < 100 && (
+                    <div className="upload-progress">
+                      <div className="progress-bar">
+                        <div
+                          className="progress-fill"
+                          style={{ width: `${progress === -1 ? 100 : progress}%` }}
+                        />
+                      </div>
+                      <div className="progress-text">
+                        {progress === -1 ? 'Error' : `${Math.round(progress)}%`}
+                      </div>
+                    </div>
                   )}
                 </div>
               );
@@ -283,33 +287,37 @@ function PhotoUpload({ onUpload, onBackupComplete, user, storageConnections }) {
 
       {/* Errors */}
       {errors.length > 0 && (
-        <div className="upload-errors" role="alert">
-          {errors.map((err, i) => (
-            <p key={i} className="upload-error">
-              ⚠️ {err}
-            </p>
-          ))}
+        <div className="alert alert-danger" role="alert">
+          <span className="alert-icon">⚠️</span>
+          <div className="alert-content">
+            <h3 className="alert-title">Upload Errors</h3>
+            {errors.map((err, i) => (
+              <p key={i} className="alert-message">
+                {err}
+              </p>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Upload Options */}
-      <div className="upload-options">
-        <h3>Upload Options</h3>
+      {/* Upload Form */}
+      <div className="upload-form">
+        <h2 className="form-title">Upload Options</h2>
 
         {/* Tags */}
-        <div className="option-section">
-          <label className="option-label">Tags</label>
+        <div className="form-group">
+          <label className="form-label">Tags</label>
           <TagManager tags={tags} onChange={setTags} />
         </div>
 
         {/* Location */}
-        <div className="option-section">
+        <div className="form-group">
           <LocationTag enabled={locationEnabled} onToggle={setLocationEnabled} />
         </div>
 
         {/* Cloud Backup */}
-        <div className="option-section">
-          <label className="option-label">Cloud Backup</label>
+        <div className="form-group">
+          <label className="form-label">Cloud Backup</label>
           <div className="backup-options">
             <label className={`checkbox-label ${!hasDriveAccess ? 'checkbox-label--disabled' : ''}`}>
               <input
@@ -348,29 +356,42 @@ function PhotoUpload({ onUpload, onBackupComplete, user, storageConnections }) {
               Backup to Dropbox
             </label>
           </div>
-          {(!hasDriveAccess || !hasPhotosAccess) && (
+          {(!hasDriveAccess || !hasPhotosAccess || !hasOneDriveAccess || !hasDropboxAccess) && (
             <p className="option-hint">
-              Sign in with Google and grant Drive/Photos access in Settings to enable Google backup.
-            </p>
-          )}
-          {(!hasOneDriveAccess || !hasDropboxAccess) && (
-            <p className="option-hint">
-              Connect OneDrive/Dropbox in Settings to enable backup there too.
+              Connect your cloud storage services in Settings to enable additional backup options.
             </p>
           )}
         </div>
-      </div>
 
-      <button
-        className="upload-btn"
-        onClick={handleUpload}
-        disabled={selectedFiles.length === 0 || uploading}
-        aria-busy={uploading}
-      >
-        {uploading
-          ? `Uploading ${selectedFiles.length} photo(s)...`
-          : `Upload ${selectedFiles.length} Photo(s)`}
-      </button>
+        <div className="form-actions">
+          <button
+            className="submit-button"
+            onClick={handleUpload}
+            disabled={selectedFiles.length === 0 || uploading}
+            aria-busy={uploading}
+          >
+            {uploading ? (
+              <>
+                <span className="button-spinner"></span>
+                Uploading {selectedFiles.length} photo(s)...
+              </>
+            ) : (
+              `Upload ${selectedFiles.length} Photo(s)`
+            )}
+          </button>
+          <button
+            className="cancel-button"
+            onClick={() => {
+              setSelectedFiles([]);
+              setTags([]);
+              setErrors([]);
+            }}
+            disabled={uploading}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
