@@ -10,68 +10,50 @@
 html, body {
   /* Stops the browser's native pull-to-refresh gesture from reloading (and
      re-authenticating) the whole app when someone overscrolls at the top
-     of a scrollable view — the app handles its own refresh behavior */
+     of a scrollable view — the app handles its own refreshes */
   overscroll-behavior-y: contain;
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: var(--font-family-primary);
-  font-size: var(--font-size-base);
-  line-height: 1.6;
-  color: var(--color-text);
-  background-color: var(--color-bg);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  
+  /* Prevents pinch-to-zoom on mobile devices */
+  touch-action: manipulation;
 }
 
 body {
-  /* Prevents horizontal scrolling on the whole page */
-  overflow-x: hidden;
+  margin: 0;
+  font-family: var(--font-family-primary);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.5;
+  transition: background-color var(--transition-base), color var(--transition-base);
 }
 
-#root {
-  height: 100%;
+/* Ensure images are responsive by default */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
-/* Typography */
+/* Typography resets */
 h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 var(--spacing-base) 0;
   font-weight: var(--font-weight-bold);
-  line-height: 1.3;
-  margin-top: 0;
-  margin-bottom: var(--spacing-base);
+  line-height: 1.2;
   color: var(--color-text);
 }
 
-h1 {
-  font-size: var(--font-size-4xl);
-}
-
-h2 {
-  font-size: var(--font-size-3xl);
-}
-
-h3 {
-  font-size: var(--font-size-2xl);
-}
-
-h4 {
-  font-size: var(--font-size-xl);
-}
-
-h5 {
-  font-size: var(--font-size-lg);
-}
-
-h6 {
-  font-size: var(--font-size-base);
-}
+h1 { font-size: var(--font-size-4xl); }
+h2 { font-size: var(--font-size-3xl); }
+h3 { font-size: var(--font-size-2xl); }
+h4 { font-size: var(--font-size-xl); }
+h5 { font-size: var(--font-size-lg); }
+h6 { font-size: var(--font-size-base); }
 
 p {
-  margin-top: 0;
-  margin-bottom: var(--spacing-base);
+  margin: 0 0 var(--spacing-base) 0;
+  color: var(--color-text);
 }
 
-/* Links */
+/* Link styling */
 a {
   color: var(--color-primary);
   text-decoration: none;
@@ -83,28 +65,35 @@ a:hover {
   text-decoration: underline;
 }
 
-/* Buttons */
-button {
-  font-family: var(--font-family-primary);
-  font-size: var(--font-size-base);
-  border: none;
-  cursor: pointer;
-  transition: all var(--transition-fast);
+a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--border-radius-xs);
 }
 
-/* Forms */
-input, textarea, select {
-  font-family: var(--font-family-primary);
-  font-size: var(--font-size-base);
+/* List styling */
+ul, ol {
+  margin: 0 0 var(--spacing-base) 0;
+  padding-left: var(--spacing-lg);
 }
 
-/* Images */
-img {
-  max-width: 100%;
-  height: auto;
+li {
+  margin-bottom: var(--spacing-xs);
 }
 
 /* Utility classes */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 .text-center {
   text-align: center;
 }
@@ -117,96 +106,78 @@ img {
   text-align: right;
 }
 
-.text-primary {
-  color: var(--color-primary);
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.text-secondary {
-  color: var(--color-text-secondary);
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.text-success {
-  color: var(--color-success);
+.gap-sm {
+  gap: var(--spacing-sm);
 }
 
-.text-warning {
-  color: var(--color-warning);
+.gap-base {
+  gap: var(--spacing-base);
 }
 
-.text-danger {
-  color: var(--color-danger);
+.gap-lg {
+  gap: var(--spacing-lg);
 }
 
-.bg-primary {
-  background-color: var(--color-primary);
-}
-
-.bg-secondary {
-  background-color: var(--color-bg-subtle);
-}
-
-.bg-success {
-  background-color: var(--color-success);
-}
-
-.bg-warning {
-  background-color: var(--color-warning);
-}
-
-.bg-danger {
-  background-color: var(--color-danger);
-}
-
-/* Spacing utilities */
-.m-0 {
-  margin: 0;
-}
-
-.mt-0 {
-  margin-top: 0;
-}
-
-.mb-0 {
-  margin-bottom: 0;
-}
-
-.p-0 {
-  padding: 0;
-}
-
-.pt-0 {
-  padding-top: 0;
-}
-
-.pb-0 {
-  padding-bottom: 0;
-}
-
-/* Hidden elements */
-.hidden {
-  display: none !important;
-}
-
-.invisible {
-  visibility: hidden !important;
-}
-
-/* Responsive utilities */
-@media (max-width: 768px) {
-  .hidden-mobile {
-    display: none !important;
-  }
-}
-
-@media (min-width: 769px) {
-  .hidden-desktop {
-    display: none !important;
-  }
-}
-
-/* Focus styles */
+/* Focus visible styling */
 *:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
   border-radius: var(--border-radius-xs);
+}
+
+/* Selection styling */
+::selection {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-subtle);
+  border-radius: var(--border-radius-full);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gray-400);
+  border-radius: var(--border-radius-full);
+  border: 2px solid var(--color-bg-subtle);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-500);
+}
+
+/* Print styling */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .app-header,
+  .sidebar {
+    display: none !important;
+  }
+  
+  .main-content {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
 }
