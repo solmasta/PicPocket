@@ -1,4 +1,4 @@
-.collage-maker {
+.filter-panel {
   max-width: 1200px;
   margin: 0 auto;
   padding: var(--spacing-lg);
@@ -6,14 +6,14 @@
   animation: fadeIn var(--transition-base) ease-in;
 }
 
-.collage-header {
+.filter-header {
   text-align: center;
   margin-bottom: var(--spacing-2xl);
   padding-bottom: var(--spacing-base);
   border-bottom: 1px solid var(--color-border);
 }
 
-.collage-title {
+.filter-title {
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-text);
@@ -24,14 +24,14 @@
   -webkit-text-fill-color: transparent;
 }
 
-.collage-description {
+.filter-description {
   font-size: var(--font-size-base);
   color: var(--color-text-secondary);
   margin: 0 auto var(--spacing-lg);
   max-width: 600px;
 }
 
-.collage-controls {
+.filter-controls {
   background: var(--color-bg-surface);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-lg);
@@ -47,44 +47,55 @@
   margin: 0 0 var(--spacing-lg);
 }
 
-.control-group {
+.filter-group {
+  margin-bottom: var(--spacing-xl);
+}
+
+.filter-group:last-child {
+  margin-bottom: 0;
+}
+
+.filter-group-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-base);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.filter-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-base);
+}
+
+.filter-option {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
-}
-
-.control-item {
-  flex: 1;
-  min-width: 200px;
-}
-
-.control-label {
-  display: block;
-  margin-bottom: var(--spacing-xs);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text);
-}
-
-.control-input {
-  width: 100%;
+  align-items: center;
+  gap: var(--spacing-sm);
   padding: var(--spacing-sm);
-  border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
-  background: var(--color-bg-input);
-  color: var(--color-text);
-  font-family: var(--font-family-primary);
-  font-size: var(--font-size-base);
+  cursor: pointer;
   transition: all var(--transition-fast);
+  border: 1px solid var(--color-border);
 }
 
-.control-input:focus {
-  outline: none;
+.filter-option:hover {
+  background: var(--color-bg-hover);
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
-.collage-preview {
+.filter-option.active {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+}
+
+.filter-option input {
+  margin: 0;
+}
+
+.filter-preview {
   background: var(--color-bg-surface);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-lg);
@@ -101,24 +112,25 @@
   margin: 0 0 var(--spacing-lg);
 }
 
-.collage-canvas-container {
+.preview-image-container {
   display: flex;
   justify-content: center;
   margin-bottom: var(--spacing-lg);
 }
 
-.collage-canvas {
+.preview-image {
   max-width: 100%;
   height: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
   box-shadow: var(--shadow-md);
+  max-height: 500px;
 }
 
-.canvas-placeholder {
+.preview-placeholder {
   width: 100%;
-  max-width: 600px;
-  height: 400px;
+  max-width: 500px;
+  height: 300px;
   background: var(--color-bg-subtle);
   border: 1px dashed var(--color-border);
   border-radius: var(--border-radius-md);
@@ -137,7 +149,7 @@
   flex-wrap: wrap;
 }
 
-.action-button {
+.apply-button {
   background: var(--color-primary);
   color: var(--color-primary-contrast);
   border: none;
@@ -153,98 +165,53 @@
   box-shadow: var(--shadow-sm);
 }
 
-.action-button:hover {
+.apply-button:hover {
   background: var(--color-primary-hover);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
-.action-button:disabled {
+.apply-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-.action-button.secondary {
+.reset-button {
   background: var(--color-bg-subtle);
   color: var(--color-text);
   border: 1px solid var(--color-border);
-}
-
-.action-button.secondary:hover {
-  background: var(--color-bg-hover);
-}
-
-.action-button.success {
-  background: var(--color-success);
-  color: var(--color-success-contrast);
-}
-
-.action-button.success:hover {
-  background: var(--color-success-hover);
-}
-
-.collage-templates {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--spacing-base);
-  margin-top: var(--spacing-lg);
-}
-
-.template-item {
-  border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
-  overflow: hidden;
+  padding: var(--spacing-base) var(--spacing-2xl);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: all var(--transition-fast);
-}
-
-.template-item:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-primary);
-}
-
-.template-item.active {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-
-.template-preview {
-  height: 120px;
-  background: var(--color-bg-subtle);
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-lg);
+  gap: var(--spacing-xs);
 }
 
-.template-name {
-  padding: var(--spacing-sm);
-  text-align: center;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  background: var(--color-bg-surface);
+.reset-button:hover {
+  background: var(--color-bg-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .collage-maker {
+  .filter-panel {
     padding: var(--spacing-base);
   }
   
-  .collage-title {
+  .filter-title {
     font-size: var(--font-size-2xl);
   }
   
-  .control-group {
-    flex-direction: column;
-    gap: var(--spacing-base);
-  }
-  
-  .control-item {
-    min-width: 100%;
+  .filter-options {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--spacing-sm);
   }
   
   .action-buttons {
@@ -252,22 +219,23 @@
     width: 100%;
   }
   
-  .action-button {
+  .apply-button,
+  .reset-button {
     width: 100%;
     justify-content: center;
   }
   
-  .canvas-placeholder {
-    height: 300px;
+  .preview-placeholder {
+    height: 200px;
   }
 }
 
 @media (max-width: 480px) {
-  .collage-templates {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  .filter-options {
+    grid-template-columns: 1fr;
   }
   
-  .canvas-placeholder {
-    height: 200px;
+  .preview-placeholder {
+    height: 150px;
   }
 }

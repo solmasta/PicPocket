@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './TagManager.css';
 
-function TagManager({ tags, onChange }) {
+function TagManager({ tags, onChange, horseTag }) {
   const [inputValue, setInputValue] = useState('');
 
   const addTag = () => {
@@ -28,9 +28,12 @@ function TagManager({ tags, onChange }) {
 
   return (
     <div className="tag-manager">
-      <div className="tag-input-wrap">
+      <div className="tag-input-container">
         {tags.map((tag) => (
-          <span key={tag} className="tag-chip">
+          <span 
+            key={tag} 
+            className={`tag ${tag === horseTag ? 'horse-tag' : ''}`}
+          >
             #{tag}
             <button
               className="tag-remove"
@@ -47,12 +50,10 @@ function TagManager({ tags, onChange }) {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          onBlur={addTag}
-          placeholder={tags.length === 0 ? 'Add tags (press Enter)' : ''}
+          placeholder={tags.length === 0 ? 'Add tags (press Enter or comma)' : ''}
           aria-label="Add tag"
         />
       </div>
-      <p className="tag-hint">Press Enter or comma to add a tag</p>
     </div>
   );
 }
