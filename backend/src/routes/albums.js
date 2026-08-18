@@ -43,16 +43,51 @@ export async function handleAlbums(request) {
         }
         
       case 'POST':
-        // Create new album
+        if (request.params && request.params.id) {
+          // Add photo to album (POST /api/albums/:id/photos)
+          const { photoId } = await request.json();
+
+          if (!photoId) {
+            return json({ error: 'Photo ID is required' }, 400);
+          }
+
+          // Check if photo exists and belongs to user
+          const photo = await DB.prepare(
+            "SELECT id FROM photos WHERE id = ? AND userId = ?"
+          ).bind(photoId, user.id).first();
+
+          if (!photo) {
+            return json({ error: 'Photo not found' }, 404);
+          }
+
+          // Check if album exists and belongs to user
+          const album = await DB.prepare(
+            "SELECT id FROM albums WHERE id = ? AND userId = ?"
+          ).bind(request.params.id, user.id).first();
+
+          if (!album) {
+            return json({ error: 'Album not found' }, 404);
+          }
+
+          // Add photo to album
+          await DB.prepare(`
+            INSERT OR IGNORE INTO album_photos (albumId, photoId)
+            VALUES (?, ?)
+          `).bind(request.params.id, photoId).run();
+
+          return json({ message: 'Photo added to album successfully' });
+        }
+
+        // Create new album (POST /api/albums)
         const { name, description } = await request.json();
-        
+
         if (!name) {
           return json({ error: 'Album name is required' }, 400);
         }
-        
+
         const albumId = crypto.randomUUID();
         const createdAt = new Date().toISOString();
-        
+
         await DB.prepare(`
           INSERT INTO albums (id, userId, name, description, createdAt)
           VALUES (?, ?, ?, ?, ?)
@@ -63,7 +98,7 @@ export async function handleAlbums(request) {
           description || '',
           createdAt
         ).run();
-        
+
         const newAlbum = {
           id: albumId,
           userId: user.id,
@@ -71,7 +106,7 @@ export async function handleAlbums(request) {
           description: description || '',
           createdAt
         };
-        
+
         return json(newAlbum, 201);
         
       case 'PUT':
@@ -124,45 +159,7 @@ export async function handleAlbums(request) {
         }
         
         return json({ message: 'Album deleted successfully' });
-        
-      case 'POST':
-        // Add photo to album (when URL includes photo ID in body)
-        if (!request.params || !request.params.id) {
-          return json({ error: 'Album ID is required' }, 400);
-        }
-        
-        const { photoId } = await request.json();
-        
-        if (!photoId) {
-          return json({ error: 'Photo ID is required' }, 400);
-        }
-        
-        // Check if photo exists and belongs to user
-        const photo = await DB.prepare(
-          "SELECT id FROM photos WHERE id = ? AND userId = ?"
-        ).bind(photoId, user.id).first();
-        
-        if (!photo) {
-          return json({ error: 'Photo not found' }, 404);
-        }
-        
-        // Check if album exists and belongs to user
-        const album = await DB.prepare(
-          "SELECT id FROM albums WHERE id = ? AND userId = ?"
-        ).bind(request.params.id, user.id).first();
-        
-        if (!album) {
-          return json({ error: 'Album not found' }, 404);
-        }
-        
-        // Add photo to album
-        await DB.prepare(`
-          INSERT OR IGNORE INTO album_photos (albumId, photoId)
-          VALUES (?, ?)
-        `).bind(request.params.id, photoId).run();
-        
-        return json({ message: 'Photo added to album successfully' });
-        
+
       default:
         return json({ error: 'Method not allowed' }, 405);
     }

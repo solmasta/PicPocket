@@ -12,6 +12,10 @@
     "test:backend": "cd backend && npm test",
     "test:frontend": "cd frontend && npm test -- --watchAll=false"
   },
+  "dependencies": {
+    "itty-router": "^4.0.7",
+    "itty-router-extras": "^0.4.3"
+  },
   "devDependencies": {
     "wrangler": "^4.0.0"
   }
