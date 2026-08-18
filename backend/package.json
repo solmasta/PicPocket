@@ -5,9 +5,9 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "test": "jest",
+    "start": "wrangler dev --config ../wrangler.toml",
+    "dev": "wrangler dev --config ../wrangler.toml",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
     "stress-test": "node tests/stress/simple-stress-test.js",
     "migrate": "wrangler d1 execute picpocket --file=migrations/001-initial-schema.sql"
   },

@@ -126,6 +126,23 @@ export async function getAllTags() {
   return db.getAll(STORES.TAGS);
 }
 
+// Local tag-based search suggestions, used for offline-first autocomplete
+// in the search bar (distinct from photoService.searchPhotos, which hits
+// the backend for full search results).
+export async function searchPhotos(query, limit = 10) {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+
+  const db = await getDB();
+  const allTags = await db.getAll(STORES.TAGS);
+
+  return allTags
+    .filter((tag) => tag.name.toLowerCase().includes(q))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit)
+    .map((tag) => ({ id: tag.name, tags: [tag.name], count: tag.count }));
+}
+
 // Storage connection operations (OneDrive, Dropbox, ...)
 export async function saveConnection(provider, data) {
   const db = await getDB();

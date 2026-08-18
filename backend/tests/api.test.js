@@ -1,3 +1,5 @@
+import { jest, describe, beforeEach, test, expect } from '@jest/globals';
+
 // Mock Cloudflare environment
 const mockEnv = {
   DB: {
@@ -6,6 +8,11 @@ const mockEnv = {
     first: jest.fn(),
     all: jest.fn(),
     run: jest.fn()
+  },
+  BUCKET: {
+    put: jest.fn().mockResolvedValue({}),
+    get: jest.fn(),
+    delete: jest.fn()
   }
 };
 
@@ -34,12 +41,14 @@ describe('Photo API', () => {
     };
     
     mockEnv.DB.all.mockResolvedValue(mockResults);
-    
+    mockEnv.DB.first.mockResolvedValue({ total: 1 });
+
     // Import the photos handler
     const { handlePhotos } = await import('../src/routes/photos.js');
-    
+
     const mockRequest = {
       method: 'GET',
+      url: 'http://localhost:8787/api/photos',
       query: { page: '1', limit: '20' },
       env: mockEnv,
       user: { id: 'user1' }
@@ -68,6 +77,7 @@ describe('Photo API', () => {
     
     const mockRequest = {
       method: 'POST',
+      url: 'http://localhost:8787/api/photos',
       formData: async () => mockFormData,
       env: mockEnv,
       user: { id: 'user1' }
@@ -90,6 +100,7 @@ describe('Photo API', () => {
     
     const mockRequest = {
       method: 'DELETE',
+      url: 'http://localhost:8787/api/photos/photo1',
       params: { id: 'photo1' },
       env: mockEnv,
       user: { id: 'user1' }

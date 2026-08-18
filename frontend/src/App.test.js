@@ -50,9 +50,12 @@ test('renders navigation tabs when signed in', () => {
 
   render(<App />);
 
-  expect(screen.getByText(/gallery/i)).not.toBeNull();
-  expect(screen.getByText(/collage maker/i)).not.toBeNull();
-  expect(screen.getByText(/filters/i)).not.toBeNull();
-  expect(screen.getByText(/horse profile/i)).not.toBeNull();
-  expect(screen.getByText(/photo stories/i)).not.toBeNull();
+  // Scope to the nav buttons themselves — "Gallery" also appears in the
+  // empty-gallery placeholder text ("Your gallery is empty"), which would
+  // otherwise make these queries ambiguous.
+  expect(screen.getByRole('button', { name: 'Gallery' })).not.toBeNull();
+  expect(screen.getByRole('button', { name: 'Collage Maker' })).not.toBeNull();
+  expect(screen.getByRole('button', { name: 'Filters' })).not.toBeNull();
+  expect(screen.getByRole('button', { name: 'Horse Profile' })).not.toBeNull();
+  expect(screen.getByRole('button', { name: 'Photo Stories' })).not.toBeNull();
 });

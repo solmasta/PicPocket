@@ -116,12 +116,6 @@ export default function HorseProfile({ user }) {
     }
   }, [profile, avatarSrc, photos, user]);
 
-  const fieldStyle = {
-    display: 'block', marginTop: 4, width: '100%',
-    padding: '8px 10px', border: '1px solid #d1d5db',
-    borderRadius: 6, fontSize: 14,
-  };
-
   if (loading) {
     return (
       <div className="horse-profile-container">

@@ -7,6 +7,9 @@ backend/node_modules/
 frontend/build/
 backend/dist/
 
+# Wrangler local dev state (D1/R2 emulation)
+.wrangler/
+
 # Environment variables
 .env
 frontend/.env

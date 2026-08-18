@@ -256,6 +256,10 @@ function PhotoUpload({ onUpload, onBackupComplete, user, storageConnections }) {
                     alt={file.name}
                     className="preview-image"
                   />
+                  <div className="preview-meta">
+                    <span className="preview-filename">{file.name}</span>
+                    <span className="preview-filesize">{formatSize(file.size)}</span>
+                  </div>
                   {!uploading && (
                     <button
                       className="preview-remove"
@@ -356,9 +360,14 @@ function PhotoUpload({ onUpload, onBackupComplete, user, storageConnections }) {
               Backup to Dropbox
             </label>
           </div>
-          {(!hasDriveAccess || !hasPhotosAccess || !hasOneDriveAccess || !hasDropboxAccess) && (
+          {(!hasDriveAccess || !hasPhotosAccess) && (
             <p className="option-hint">
-              Connect your cloud storage services in Settings to enable additional backup options.
+              Sign in with Google and grant Drive/Photos access to enable these backup options.
+            </p>
+          )}
+          {(!hasOneDriveAccess || !hasDropboxAccess) && (
+            <p className="option-hint">
+              Connect OneDrive/Dropbox in Settings to enable these backup options.
             </p>
           )}
         </div>

@@ -1,6 +1,5 @@
-import { json } from 'itty-router-extras';
-
-export async function verifyAuth(request, env) {
+export async function verifyAuth(request) {
+  const { env } = request;
   const authHeader = request.headers.get('Authorization');
   
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -49,13 +48,12 @@ export async function verifyAuth(request, env) {
   }
 }
 
-export async function authMiddleware(request, env) {
-  const authResult = await verifyAuth(request, env);
-  
+export async function authMiddleware(request) {
+  const authResult = await verifyAuth(request);
+
   if (authResult.error) {
     return authResult.error;
   }
-  
+
   request.user = authResult.user;
-  request.env = env; // Pass env to request for database access
 }

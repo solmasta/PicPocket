@@ -50,8 +50,18 @@ describe('useAuth signOut', () => {
   });
 
   test('does not call the revoke endpoint when there is no access token', async () => {
-    getAuthUser.mockResolvedValue({ id: 'local-user', isLocal: true });
+    getAuthUser.mockResolvedValue({
+      id: 'user-1',
+      name: 'Test User',
+      email: 'test@example.com',
+      isLocal: false,
+    });
     const { result } = renderHook(() => useAuth());
+
+    // Wait for the mount effect to restore the session before signing out
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
 
     await act(async () => {
       await result.current.signOut();

@@ -67,7 +67,7 @@ describe('usePhotos', () => {
   test('should upload a photo and sync to server', async () => {
     const mockFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
     const mockLocalPhoto = {
-      id: 'local_123',
+      id: expect.any(String),
       fileName: 'test.jpg',
       fileType: 'image/jpeg',
       fileSize: 4,
@@ -90,11 +90,17 @@ describe('usePhotos', () => {
       url: 'https://example.com/photos/server_123'
     };
     
+    indexedDB.getAllPhotos.mockResolvedValue([]);
     indexedDB.savePhoto.mockResolvedValue();
     photoService.uploadPhoto.mockResolvedValue(mockServerPhoto);
-    
+
     const { result } = renderHook(() => usePhotos());
-    
+
+    // Wait for the initial local-photos load to settle before uploading
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
     await act(async () => {
       await result.current.uploadPhoto(mockFile);
     });

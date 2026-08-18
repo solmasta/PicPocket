@@ -6,9 +6,13 @@
   "scripts": {
     "build": "cd frontend && npm install && npm run build",
     "start:frontend": "cd frontend && npm start",
-    "start:backend": "cd backend && npm run dev",
+    "start:backend": "wrangler dev",
+    "deploy": "wrangler deploy",
     "install:all": "cd frontend && npm install && cd ../backend && npm install",
     "test:backend": "cd backend && npm test",
     "test:frontend": "cd frontend && npm test -- --watchAll=false"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
   }
 }

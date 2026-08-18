@@ -2,12 +2,13 @@
 // with performance improvements for high-load scenarios
 
 class OptimizedFileStorageService {
-  constructor(env) {
+  // `request` is used to build absolute file URLs against this Worker's
+  // own origin — the R2 binding has no presigned-URL API, so files are
+  // served back through our own authenticated /api/photos/:id/file route.
+  constructor(env, request) {
     this.env = env;
     this.bucket = env.BUCKET;
-    // Cache for signed URLs to reduce repeated signing operations
-    this.urlCache = new Map();
-    this.cacheExpiry = 5 * 60 * 1000; // 5 minutes cache
+    this.origin = request ? new URL(request.url).origin : '';
   }
 
   // Store file in R2 bucket with metadata
@@ -31,14 +32,8 @@ class OptimizedFileStorageService {
         }
       });
       
-      // Invalidate cache for this file
-      this.urlCache.delete(fileId);
-      
-      // Generate signed URL for the stored file
-      const url = await this.createSignedUrl(fileId);
-      
       return {
-        url: url,
+        url: this.getFileUrl(fileId),
         stored: true,
         key: fileId
       };
@@ -52,8 +47,6 @@ class OptimizedFileStorageService {
   async deleteFile(fileId) {
     try {
       await this.bucket.delete(fileId);
-      // Invalidate cache for this file
-      this.urlCache.delete(fileId);
       return { deleted: true };
     } catch (error) {
       console.error('Error deleting file from R2:', error);
@@ -62,100 +55,17 @@ class OptimizedFileStorageService {
     }
   }
 
-  // Get file URL from R2 bucket with caching
-  async getFileUrl(fileId) {
-    try {
-      // Check cache first
-      const cached = this.urlCache.get(fileId);
-      if (cached && Date.now() < cached.expiry) {
-        return cached.url;
-      }
-      
-      // Check if file exists
-      const object = await this.bucket.get(fileId);
-      if (!object) {
-        return null;
-      }
-      
-      // Generate signed URL valid for 1 hour
-      const signedUrl = await this.bucket.createSignedUrl(fileId, 3600);
-      
-      // Cache the URL
-      this.urlCache.set(fileId, {
-        url: signedUrl,
-        expiry: Date.now() + this.cacheExpiry
-      });
-      
-      return signedUrl;
-    } catch (error) {
-      console.error('Error getting file URL from R2:', error);
-      return null;
-    }
+  // Build the URL clients use to fetch the file. R2 bucket bindings don't
+  // support presigned URLs directly, so files are streamed back through
+  // this Worker's own authenticated route instead.
+  getFileUrl(fileId) {
+    return `${this.origin}/api/photos/${fileId}/file`;
   }
 
-  // Create a temporary signed URL for direct access with caching
+  // Kept as an alias so existing callers that expect an (async) signed-URL
+  // step keep working.
   async createSignedUrl(fileId) {
-    try {
-      // Check cache first
-      const cached = this.urlCache.get(fileId);
-      if (cached && Date.now() < cached.expiry) {
-        return cached.url;
-      }
-      
-      // Create signed URL valid for 1 hour (3600 seconds)
-      const signedUrl = await this.bucket.createSignedUrl(fileId, 3600);
-      
-      // Cache the URL
-      this.urlCache.set(fileId, {
-        url: signedUrl,
-        expiry: Date.now() + this.cacheExpiry
-      });
-      
-      return signedUrl;
-    } catch (error) {
-      console.error('Error creating signed URL:', error);
-      throw new Error('Failed to create signed URL: ' + error.message);
-    }
-  }
-
-  // Clear URL cache (useful when files are updated)
-  clearCache() {
-    this.urlCache.clear();
-  }
-
-  // Batch create signed URLs for multiple files
-  async createSignedUrls(fileIds) {
-    try {
-      const urls = {};
-      const uncachedFileIds = [];
-      
-      // Check cache for each file
-      for (const fileId of fileIds) {
-        const cached = this.urlCache.get(fileId);
-        if (cached && Date.now() < cached.expiry) {
-          urls[fileId] = cached.url;
-        } else {
-          uncachedFileIds.push(fileId);
-        }
-      }
-      
-      // For uncached files, we still need to create individual URLs
-      // In a real implementation, you might want to batch these
-      for (const fileId of uncachedFileIds) {
-        try {
-          const signedUrl = await this.createSignedUrl(fileId);
-          urls[fileId] = signedUrl;
-        } catch (error) {
-          console.error(`Error creating signed URL for ${fileId}:`, error);
-          urls[fileId] = null;
-        }
-      }
-      
-      return urls;
-    } catch (error) {
-      console.error('Error creating batch signed URLs:', error);
-      throw new Error('Failed to create batch signed URLs: ' + error.message);
-    }
+    return this.getFileUrl(fileId);
   }
 }
 
