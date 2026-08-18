@@ -5,13 +5,12 @@ import SearchBar from '../Search/SearchBar';
 import './PhotoGallery.css';
 
 function PhotoGallery() {
-  const { 
-    photos, 
-    loading, 
-    error, 
-    hasMore, 
-    fetchServerPhotos, 
-    loadMore, 
+  const {
+    photos,
+    loading,
+    error,
+    hasMore,
+    loadMore,
     refreshPhotos,
     deletePhoto,
     updatePhotoTags

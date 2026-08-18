@@ -10,12 +10,14 @@ function SearchBar({ onSearch, onClear, initialValue = '' }) {
   const searchTimeoutRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Load initial suggestions
+  // Load initial suggestions (initialValue only — subsequent queries
+  // are handled by the debounced call in handleInputChange)
   useEffect(() => {
-    if (query) {
-      loadSuggestions(query);
+    if (initialValue) {
+      loadSuggestions(initialValue);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValue]);
 
   const loadSuggestions = async (searchQuery) => {
     if (!searchQuery.trim()) {
@@ -104,7 +106,13 @@ function SearchBar({ onSearch, onClear, initialValue = '' }) {
         </button>
       )}
 
-      {showSuggestions && suggestions.length > 0 && (
+      {showSuggestions && isLoading && (
+        <div className="search-suggestions search-suggestions-loading">
+          <span className="suggestion-loading">Searching…</span>
+        </div>
+      )}
+
+      {showSuggestions && !isLoading && suggestions.length > 0 && (
         <div className="search-suggestions">
           {suggestions.map((suggestion, index) => (
             <div

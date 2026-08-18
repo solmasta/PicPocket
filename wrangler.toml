@@ -4,6 +4,7 @@ compatibility_date = "2023-05-22"
 
 [vars]
 ENVIRONMENT = "production"
+ALLOWED_ORIGINS = "http://localhost:3000"
 
 [[d1_databases]]
 binding = "DB"
@@ -13,14 +14,9 @@ database_id = "your-actual-database-id-here"
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "picpocket-photos"
-bucket_id = "your-actual-bucket-id-here"
 
 [build]
 command = "npm run build"
-
-[build.upload]
-format = "modules"
-dir = "dist"
 
 [[rules]]
 type = "ESModule"

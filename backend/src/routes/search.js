@@ -1,4 +1,4 @@
-import { json } from 'itty-router-extras';
+import { json } from '../utils/response.js';
 
 export async function handleSearch(request) {
   const { env, user } = request;

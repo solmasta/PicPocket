@@ -1,10 +1,10 @@
-import { json } from 'itty-router-extras';
+import { json } from '../utils/response.js';
 import OptimizedFileStorageService from '../services/optimizedFileStorage.js';
 
 export async function handlePhotos(request) {
   const { env, user } = request;
   const { DB } = env;
-  const fileStorage = new OptimizedFileStorageService(env);
+  const fileStorage = new OptimizedFileStorageService(env, request);
   
   try {
     switch (request.method) {
@@ -209,6 +209,38 @@ export async function handlePhotos(request) {
     }
   } catch (error) {
     console.error('Error handling photos:', error);
+    return json({ error: 'Internal server error' }, 500);
+  }
+}
+
+// Streams the raw photo bytes from R2. This is what photo.url points at,
+// since R2 bucket bindings have no presigned-URL API of their own.
+export async function handlePhotoFile(request) {
+  const { env, user, params } = request;
+  const { DB, BUCKET } = env;
+
+  try {
+    const photo = await DB.prepare(
+      "SELECT id, fileType FROM photos WHERE id = ? AND userId = ?"
+    ).bind(params.id, user.id).first();
+
+    if (!photo) {
+      return json({ error: 'Photo not found' }, 404);
+    }
+
+    const object = await BUCKET.get(params.id);
+    if (!object) {
+      return json({ error: 'Photo file not found' }, 404);
+    }
+
+    return new Response(object.body, {
+      headers: {
+        'Content-Type': object.httpMetadata?.contentType || photo.fileType || 'application/octet-stream',
+        'Cache-Control': 'private, max-age=3600',
+      },
+    });
+  } catch (error) {
+    console.error('Error serving photo file:', error);
     return json({ error: 'Internal server error' }, 500);
   }
 }
