@@ -8,12 +8,12 @@ ENVIRONMENT = "production"
 [[d1_databases]]
 binding = "DB"
 database_name = "picpocket"
-database_id = "your-database-id-here"
+database_id = "your-actual-database-id-here"
 
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "picpocket-photos"
-preview_bucket_name = "picpocket-photos-dev"
+bucket_id = "your-actual-bucket-id-here"
 
 [build]
 command = "npm run build"
