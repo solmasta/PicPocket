@@ -15,6 +15,9 @@ database_id = "0339a2cf-1007-4126-862b-99332f24a785"
 binding = "BUCKET"
 bucket_name = "picpocket-photos"
 
+[ai]
+binding = "AI"
+
 [build]
 command = "npm run build"
 

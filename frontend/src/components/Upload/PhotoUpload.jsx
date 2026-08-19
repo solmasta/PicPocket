@@ -5,6 +5,7 @@ import { uploadToDrive } from '../../services/googleDriveService';
 import { uploadToGooglePhotos } from '../../services/googlePhotosService';
 import { uploadToOneDrive } from '../../services/oneDriveStorageService';
 import { uploadToDropbox } from '../../services/dropboxStorageService';
+import { analyzePhoto } from '../../services/aiService';
 import { getAutoBackupPref } from '../../utils/preferences';
 import './PhotoUpload.css';
 
@@ -98,9 +99,14 @@ function PhotoUpload({ onUpload, onBackupComplete, user, storageConnections }) {
 
         const photo = await onUpload(file, { tags, locationEnabled });
 
-        setUploadProgress((prev) => ({ ...prev, [file.name]: 50 }));
+        setUploadProgress((prev) => ({ ...prev, [file.name]: 40 }));
 
         if (photo) {
+          // Kick off AI auto-tagging/captioning alongside the cloud
+          // backups below — it's independent of them, so there's no
+          // reason to make the upload wait for it twice.
+          const aiPromise = analyzePhoto(file);
+
           // Backup to Google Drive
           if (backupToDrive && hasDriveAccess) {
             try {
@@ -147,15 +153,33 @@ function PhotoUpload({ onUpload, onBackupComplete, user, storageConnections }) {
             }
           }
 
-          // Persist whatever backup status was achieved so it survives a
-          // reload and shows up in the gallery's cloud badge — without
-          // this, the upload* calls above only mutated the in-memory photo
-          // object, never IndexedDB.
+          setUploadProgress((prev) => ({ ...prev, [file.name]: 90 }));
+
+          let aiTags = [];
+          let aiCaption = '';
+          try {
+            ({ tags: aiTags, caption: aiCaption } = await aiPromise);
+          } catch (err) {
+            console.warn('AI analysis failed:', err.message);
+          }
+          if (aiTags.length) {
+            photo.tags = Array.from(new Set([...(photo.tags || []), ...aiTags]));
+          }
+          if (aiCaption) {
+            photo.caption = aiCaption;
+          }
+
+          // Persist whatever backup status and AI results were achieved so
+          // they survive a reload and show up in the gallery — without
+          // this, the calls above only mutated the in-memory photo object,
+          // never IndexedDB.
           if (
             photo.cloudBackup?.googleDrive ||
             photo.cloudBackup?.googlePhotos ||
             photo.cloudBackup?.oneDrive ||
-            photo.cloudBackup?.dropbox
+            photo.cloudBackup?.dropbox ||
+            aiTags.length ||
+            aiCaption
           ) {
             if (onBackupComplete) {
               await onBackupComplete(photo);

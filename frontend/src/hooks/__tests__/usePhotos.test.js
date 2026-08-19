@@ -1,137 +1,96 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { usePhotos } from '../usePhotos';
 
-// Mock the IndexedDB utilities
 jest.mock('../../utils/indexedDB', () => ({
   getAllPhotos: jest.fn(),
   savePhoto: jest.fn(),
-  deletePhoto: jest.fn()
+  deletePhoto: jest.fn(),
 }));
 
-// Mock the photo service
-jest.mock('../../services/photoService', () => ({
-  fetchPhotos: jest.fn(),
-  uploadPhoto: jest.fn(),
-  deletePhoto: jest.fn(),
-  updatePhoto: jest.fn()
+jest.mock('../../utils/imageFilters', () => ({
+  resizeImage: jest.fn(),
+  createThumbnail: jest.fn(),
+}));
+
+jest.mock('../../utils/contentHash', () => ({
+  hashFile: jest.fn(),
 }));
 
 import * as indexedDB from '../../utils/indexedDB';
-import * as photoService from '../../services/photoService';
+import { resizeImage, createThumbnail } from '../../utils/imageFilters';
+import { hashFile } from '../../utils/contentHash';
 
 describe('usePhotos', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  test('should load local photos on mount', async () => {
-    const mockPhotos = [
-      { id: '1', fileName: 'test1.jpg', syncedToServer: true },
-      { id: '2', fileName: 'test2.jpg', syncedToServer: false }
-    ];
-    
-    indexedDB.getAllPhotos.mockResolvedValue(mockPhotos);
-    
-    const { result } = renderHook(() => usePhotos());
-    
-    // Wait for the effect to run
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
-    });
-    
-    expect(result.current.photos).toEqual(mockPhotos);
-    expect(indexedDB.getAllPhotos).toHaveBeenCalled();
-  });
-
-  test('should fetch server photos with pagination', async () => {
-    const mockResponse = {
-      photos: [{ id: '3', fileName: 'test3.jpg' }],
-      page: 1,
-      limit: 20,
-      total: 1
-    };
-    
-    photoService.fetchPhotos.mockResolvedValue(mockResponse);
-    
-    const { result } = renderHook(() => usePhotos());
-    
-    await act(async () => {
-      await result.current.fetchServerPhotos(1);
-    });
-    
-    expect(result.current.photos).toEqual(mockResponse.photos);
-    expect(result.current.total).toBe(1);
-    expect(photoService.fetchPhotos).toHaveBeenCalledWith(1);
-  });
-
-  test('should upload a photo and sync to server', async () => {
-    const mockFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
-    const mockLocalPhoto = {
-      id: expect.any(String),
-      fileName: 'test.jpg',
-      fileType: 'image/jpeg',
-      fileSize: 4,
-      uploadDate: expect.any(String),
-      tags: [],
-      location: null,
-      cloudBackup: {},
-      syncedToServer: false
-    };
-    
-    const mockServerPhoto = {
-      id: 'server_123',
-      fileName: 'test.jpg',
-      fileType: 'image/jpeg',
-      fileSize: 4,
-      uploadDate: expect.any(String),
-      tags: [],
-      location: null,
-      cloudBackup: {},
-      url: 'https://example.com/photos/server_123'
-    };
-    
+    resizeImage.mockResolvedValue('data:image/jpeg;base64,resized');
+    createThumbnail.mockResolvedValue('data:image/jpeg;base64,thumb');
+    hashFile.mockResolvedValue('deadbeef');
     indexedDB.getAllPhotos.mockResolvedValue([]);
     indexedDB.savePhoto.mockResolvedValue();
-    photoService.uploadPhoto.mockResolvedValue(mockServerPhoto);
-
-    const { result } = renderHook(() => usePhotos());
-
-    // Wait for the initial local-photos load to settle before uploading
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
-    });
-
-    await act(async () => {
-      await result.current.uploadPhoto(mockFile);
-    });
-    
-    expect(indexedDB.savePhoto).toHaveBeenCalledWith(mockLocalPhoto);
-    expect(photoService.uploadPhoto).toHaveBeenCalledWith(mockFile, [], null);
-    expect(indexedDB.savePhoto).toHaveBeenCalledWith({ ...mockServerPhoto, syncedToServer: true });
+    indexedDB.deletePhoto.mockResolvedValue();
   });
 
-  test('should delete a photo from both local and server', async () => {
-    const mockPhotos = [
-      { id: '1', fileName: 'test1.jpg', syncedToServer: true }
-    ];
-    
-    indexedDB.getAllPhotos.mockResolvedValue(mockPhotos);
-    indexedDB.deletePhoto.mockResolvedValue();
-    photoService.deletePhoto.mockResolvedValue();
-    
-    const { result } = renderHook(() => usePhotos());
-    
-    // Wait for initial load
+  test('loads local photos on mount, newest first', async () => {
+    const older = { id: '1', fileName: 'old.jpg', uploadDate: '2024-01-01T00:00:00.000Z' };
+    const newer = { id: '2', fileName: 'new.jpg', uploadDate: '2024-06-01T00:00:00.000Z' };
+    indexedDB.getAllPhotos.mockResolvedValue([older, newer]);
+
+    const { result } = renderHook(() => usePhotos({ id: 'user-1' }));
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.photos.map((p) => p.id)).toEqual(['2', '1']);
+  });
+
+  test('addPhoto resizes, thumbnails, hashes, and saves the photo locally', async () => {
+    const { result } = renderHook(() => usePhotos({ id: 'user-1' }));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    const file = new File(['bytes'], 'horse.jpg', { type: 'image/jpeg' });
+
+    let photo;
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      photo = await result.current.addPhoto(file, { tags: ['horse'] });
     });
-    
-    // Delete photo
+
+    expect(resizeImage).toHaveBeenCalledWith(file);
+    expect(hashFile).toHaveBeenCalledWith(file);
+    expect(photo).toMatchObject({
+      fileName: 'horse.jpg',
+      tags: ['horse'],
+      dataUrl: 'data:image/jpeg;base64,resized',
+      thumbnail: 'data:image/jpeg;base64,thumb',
+      contentHash: 'deadbeef',
+      cloudBackup: {},
+    });
+    expect(indexedDB.savePhoto).toHaveBeenCalledWith(expect.objectContaining({ id: photo.id }));
+    expect(result.current.photos[0].id).toBe(photo.id);
+  });
+
+  test('updatePhoto persists changes and merges them into state', async () => {
+    indexedDB.getAllPhotos.mockResolvedValue([{ id: '1', fileName: 'a.jpg', cloudBackup: {} }]);
+    const { result } = renderHook(() => usePhotos({ id: 'user-1' }));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.updatePhoto({ id: '1', fileName: 'a.jpg', cloudBackup: { googleDrive: 'g1' } });
+    });
+
+    expect(indexedDB.savePhoto).toHaveBeenCalledWith(
+      expect.objectContaining({ id: '1', cloudBackup: { googleDrive: 'g1' } })
+    );
+    expect(result.current.photos[0].cloudBackup).toEqual({ googleDrive: 'g1' });
+  });
+
+  test('deletePhoto removes it from IndexedDB and state', async () => {
+    indexedDB.getAllPhotos.mockResolvedValue([{ id: '1', fileName: 'a.jpg' }]);
+    const { result } = renderHook(() => usePhotos({ id: 'user-1' }));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
     await act(async () => {
       await result.current.deletePhoto('1');
     });
-    
-    expect(photoService.deletePhoto).toHaveBeenCalledWith('1');
+
     expect(indexedDB.deletePhoto).toHaveBeenCalledWith('1');
     expect(result.current.photos).toEqual([]);
   });

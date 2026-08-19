@@ -6,6 +6,7 @@ import { handlePhotos, handlePhotoFile } from './routes/photos.js';
 import { handleAuth } from './routes/auth.js';
 import { handleAlbums } from './routes/albums.js';
 import { handleSearch } from './routes/search.js';
+import { handleAnalyzePhoto, handleStorageInsights } from './routes/ai.js';
 
 const router = Router();
 
@@ -30,6 +31,14 @@ router.delete('/api/albums/:id', authMiddleware, withParams, handleAlbums);
 router.post('/api/albums/:id/photos', authMiddleware, withParams, handleAlbums);
 
 router.get('/api/search', authMiddleware, handleSearch);
+
+// Unauthenticated on purpose: PicPocket's photo library lives entirely in
+// the browser's IndexedDB (see usePhotos), never in D1, so there is no
+// user-owned data here for authMiddleware's session check to protect —
+// these are stateless AI proxies over whatever the caller sends in the
+// request body. Size/type limits inside the handlers cap abuse.
+router.post('/api/ai/analyze', handleAnalyzePhoto);
+router.post('/api/ai/storage-insights', handleStorageInsights);
 
 // 404 handler
 router.all('*', () => new Response('Not Found', { status: 404 }));

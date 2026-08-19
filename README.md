@@ -4,13 +4,15 @@ PicPocket is a modern photo management application with offline capabilities and
 
 ## Features
 
-- **Persistent Storage**: Uses Cloudflare D1 database for reliable data storage
-- **Offline Support**: IndexedDB for local caching and offline access
+- **Local-First Library**: Every photo lives in this browser's IndexedDB, so the app works fully offline
 - **Cloud Backup**: Backup photos to Google Drive, Google Photos, OneDrive, and Dropbox
-- **Tagging System**: Organize photos with custom tags
+- **Storage Ledger**: One place to see which drive(s) each photo is actually backed up to, and reconcile against what's really in each cloud account
+- **AI Photo Understanding**: Every upload is auto-tagged and captioned by Cloudflare Workers AI (image classification + image-to-text), so photos are searchable without manual tagging
+- **AI Storage Insights**: Exact-duplicate detection (content-hash based) plus an AI-written summary and recommendations for cleaning up and backing up the library
+- **Tagging System**: Organize photos with custom tags (AI-suggested or manual)
 - **Location Tagging**: Add geolocation data to photos
 - **Album Creation**: Group photos into custom albums
-- **Search Functionality**: Find photos by tags, names, or locations
+- **Search & Filtering**: Find photos by tag, filename, or location, and filter the gallery by which cloud drive backs each one up
 - **Responsive Design**: Works on desktop and mobile devices
 
 ## Architecture Improvements
@@ -103,6 +105,16 @@ PicPocket is a modern photo management application with offline capabilities and
 
 ### Search
 - `GET /api/search` - Search photos
+
+### AI (Cloudflare Workers AI)
+These are unauthenticated, stateless proxies over Workers AI — they don't
+touch D1, since the photo library itself lives client-side in IndexedDB.
+- `POST /api/ai/analyze` - Auto-tag and caption a photo. Body is the raw
+  image bytes (`Content-Type: image/*`); returns `{ tags, caption }`.
+- `POST /api/ai/storage-insights` - Turn precomputed library stats (photo
+  count, backup coverage per drive, duplicate groups, etc.) into a short
+  natural-language summary and recommendations. Falls back to a
+  rule-based summary if the `AI` binding isn't configured.
 
 ## Development
 

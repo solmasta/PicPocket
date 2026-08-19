@@ -1,82 +1,85 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as indexedDB from '../utils/indexedDB';
-import * as photoService from '../services/photoService';
+import { resizeImage, createThumbnail } from '../utils/imageFilters';
+import { getCurrentPosition, reverseGeocode } from '../utils/geolocation';
+import { hashFile } from '../utils/contentHash';
 
-export function usePhotos() {
+// `crypto.randomUUID` is universal in real browsers but isn't always present
+// as a bare global in test environments (jsdom under Jest), so fall back to
+// a simpler unique id rather than referencing `crypto` unguarded.
+function generateId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+// PicPocket's library lives entirely in this browser's IndexedDB — there is
+// no server-side photo store to sync with (see StorageLedger, which treats
+// Google Drive/Photos, OneDrive and Dropbox as separate backup destinations
+// to reconcile against, not a source of truth). This hook is the single
+// place that reads/writes that local library.
+export function usePhotos(user) {
   const [photos, setPhotos] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [total, setTotal] = useState(0);
 
-  // Load photos from IndexedDB on initial load
   useEffect(() => {
-    const loadLocalPhotos = async () => {
+    let cancelled = false;
+    (async () => {
       try {
         setLoading(true);
         const localPhotos = await indexedDB.getAllPhotos();
-        setPhotos(localPhotos);
+        if (!cancelled) {
+          setPhotos(
+            [...localPhotos].sort(
+              (a, b) => new Date(b.uploadDate) - new Date(a.uploadDate)
+            )
+          );
+        }
       } catch (err) {
         console.error('Failed to load local photos:', err);
-        setError('Failed to load local photos');
+        if (!cancelled) setError('Failed to load local photos');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
+    })();
+    return () => {
+      cancelled = true;
     };
-
-    loadLocalPhotos();
   }, []);
 
-  // Fetch photos from server with pagination
-  const fetchServerPhotos = useCallback(async (pageNum = 1) => {
-    try {
-      setLoading(true);
-      const response = await photoService.fetchPhotos(pageNum);
-      
-      if (response.photos) {
-        // Save photos to IndexedDB
-        for (const photo of response.photos) {
-          await indexedDB.savePhoto({ ...photo, syncedToServer: true });
+  // Adds a new photo to the local library. Accepts either the legacy
+  // (tags, location) positional args or an options object
+  // ({ tags, locationEnabled }) — PhotoUpload and StorageLedger both call
+  // this with slightly different shapes.
+  const addPhoto = useCallback(
+    async (file, optionsOrTags = {}, maybeLocation = null) => {
+      const isOptionsObject =
+        optionsOrTags && !Array.isArray(optionsOrTags) && typeof optionsOrTags === 'object';
+      const tags = isOptionsObject ? optionsOrTags.tags || [] : optionsOrTags || [];
+      const locationEnabled = isOptionsObject ? Boolean(optionsOrTags.locationEnabled) : false;
+
+      const [dataUrl, contentHash] = await Promise.all([
+        resizeImage(file),
+        hashFile(file),
+      ]);
+      const thumbnail = await createThumbnail(dataUrl);
+
+      let location = maybeLocation;
+      if (!location && locationEnabled) {
+        try {
+          const position = await getCurrentPosition();
+          const name = await reverseGeocode(position.lat, position.lng);
+          location = { lat: position.lat, lng: position.lng, name };
+        } catch (err) {
+          console.warn('Could not capture location for photo:', err.message);
         }
-        
-        // Update state
-        if (pageNum === 1) {
-          setPhotos(response.photos);
-        } else {
-          setPhotos(prev => [...prev, ...response.photos]);
-        }
-        
-        setHasMore(response.photos.length === response.limit);
-        setTotal(response.total);
-        setPage(pageNum);
       }
-    } catch (err) {
-      console.error('Failed to fetch server photos:', err);
-      setError('Failed to fetch photos from server');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
-  // Load more photos (pagination)
-  const loadMore = useCallback(() => {
-    if (hasMore && !loading) {
-      fetchServerPhotos(page + 1);
-    }
-  }, [page, hasMore, loading, fetchServerPhotos]);
-
-  // Refresh photos from server
-  const refreshPhotos = useCallback(() => {
-    fetchServerPhotos(1);
-  }, [fetchServerPhotos]);
-
-  // Upload a new photo
-  const uploadPhoto = useCallback(async (file, tags = [], location = null) => {
-    try {
-      // Save to IndexedDB first
-      const localPhoto = {
-        id: `local_${Date.now()}`,
+      const photo = {
+        id: generateId(),
+        userId: user?.id,
         fileName: file.name,
         fileType: file.type,
         fileSize: file.size,
@@ -84,87 +87,41 @@ export function usePhotos() {
         tags,
         location,
         cloudBackup: {},
-        syncedToServer: false
+        dataUrl,
+        thumbnail,
+        contentHash,
       };
-      
-      await indexedDB.savePhoto(localPhoto);
-      setPhotos(prev => [localPhoto, ...prev]);
-      
-      // Upload to server
-      const serverPhoto = await photoService.uploadPhoto(file, tags, location);
-      
-      // Update local photo with server data
-      await indexedDB.savePhoto({ ...serverPhoto, syncedToServer: true });
-      
-      // Update UI
-      setPhotos(prev => prev.map(p => 
-        p.id === localPhoto.id ? { ...serverPhoto, syncedToServer: true } : p
-      ));
-      
-      return serverPhoto;
-    } catch (err) {
-      console.error('Failed to upload photo:', err);
-      setError('Failed to upload photo');
-      throw err;
-    }
+
+      await indexedDB.savePhoto(photo);
+      setPhotos((prev) => [photo, ...prev]);
+      return photo;
+    },
+    [user]
+  );
+
+  // Persists a full (or partially-mutated) photo object back to the
+  // library — used for cloud-backup tagging, AI tag/caption suggestions,
+  // and filter edits.
+  const updatePhoto = useCallback(async (updatedPhoto) => {
+    if (!updatedPhoto?.id) return updatedPhoto;
+    await indexedDB.savePhoto(updatedPhoto);
+    setPhotos((prev) =>
+      prev.map((p) => (p.id === updatedPhoto.id ? { ...p, ...updatedPhoto } : p))
+    );
+    return updatedPhoto;
   }, []);
 
-  // Delete a photo
   const deletePhoto = useCallback(async (photoId) => {
-    try {
-      // Delete from server if it was synced
-      const photo = photos.find(p => p.id === photoId);
-      if (photo && photo.syncedToServer) {
-        await photoService.deletePhoto(photoId);
-      }
-      
-      // Delete from IndexedDB
-      await indexedDB.deletePhoto(photoId);
-      
-      // Update UI
-      setPhotos(prev => prev.filter(p => p.id !== photoId));
-    } catch (err) {
-      console.error('Failed to delete photo:', err);
-      setError('Failed to delete photo');
-      throw err;
-    }
-  }, [photos]);
-
-  // Update photo tags
-  const updatePhotoTags = useCallback(async (photoId, tags) => {
-    try {
-      const photo = photos.find(p => p.id === photoId);
-      
-      // Update on server if synced
-      if (photo && photo.syncedToServer) {
-        await photoService.updatePhoto(photoId, { tags });
-      }
-      
-      // Update in IndexedDB
-      await indexedDB.savePhoto({ ...photo, tags });
-      
-      // Update UI
-      setPhotos(prev => prev.map(p => 
-        p.id === photoId ? { ...p, tags } : p
-      ));
-    } catch (err) {
-      console.error('Failed to update photo tags:', err);
-      setError('Failed to update photo tags');
-      throw err;
-    }
-  }, [photos]);
+    await indexedDB.deletePhoto(photoId);
+    setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+  }, []);
 
   return {
     photos,
     loading,
     error,
-    hasMore,
-    total,
-    fetchServerPhotos,
-    loadMore,
-    refreshPhotos,
-    uploadPhoto,
+    addPhoto,
+    updatePhoto,
     deletePhoto,
-    updatePhotoTags
   };
 }
