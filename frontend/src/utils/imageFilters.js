@@ -138,6 +138,48 @@ export function resizeImage(file, maxWidth = 1920, maxHeight = 1080, quality = 0
 }
 
 /**
+ * Resize an image file down to a small Blob, for sending over the network
+ * (e.g. to the AI analyze endpoint) rather than displaying it. Classification
+ * and captioning models don't benefit from full resolution, and the
+ * server-side cost of turning image bytes into the array Workers AI expects
+ * scales with byte count — a stress test showed that shipping a full-size
+ * original (up to 20MB) instead of a small version turns into multi-second
+ * queuing under concurrent uploads, so this keeps the payload in the tens
+ * of KB rather than megabytes.
+ */
+export function resizeImageToBlob(file, maxDimension = 640, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDimension || height > maxDimension) {
+          const ratio = maxDimension / Math.max(width, height);
+          width = Math.max(1, Math.floor(width * ratio));
+          height = Math.max(1, Math.floor(height * ratio));
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => (blob ? resolve(blob) : reject(new Error('Canvas toBlob failed'))),
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
  * Get image dimensions from a File object
  */
 export function getImageDimensions(file) {

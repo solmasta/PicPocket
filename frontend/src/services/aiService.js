@@ -1,4 +1,5 @@
 import api from './api';
+import { resizeImageToBlob } from '../utils/imageFilters';
 
 /**
  * AI service — real photo understanding (auto-tagging, captioning) and
@@ -10,15 +11,20 @@ import api from './api';
 
 /**
  * Analyze a photo with AI: auto-tag it and generate a short caption in one
- * round trip. Sends the raw image bytes (not a base64 data URL) to keep the
- * request small.
+ * round trip. Downsizes to a small JPEG client-side first — classification
+ * and captioning don't need full resolution, and a stress test showed that
+ * sending full-size originals (up to 20MB) makes the server-side
+ * bytes-to-array conversion Workers AI requires expensive enough to queue
+ * up badly under concurrent uploads. Falls back to the original file if
+ * the resize fails (e.g. an unusual format the canvas can't decode).
  * @param {File|Blob} file
  * @returns {Promise<{tags: string[], caption: string}>}
  */
 export async function analyzePhoto(file) {
   try {
-    const response = await api.post('/ai/analyze', file, {
-      headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    const uploadBody = await resizeImageToBlob(file).catch(() => file);
+    const response = await api.post('/ai/analyze', uploadBody, {
+      headers: { 'Content-Type': uploadBody.type || file.type || 'application/octet-stream' },
       timeout: 30000,
     });
     return {

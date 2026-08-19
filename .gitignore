@@ -34,3 +34,7 @@ yarn-error.log*
 coverage/
 frontend/coverage/
 backend/coverage/
+
+# Playwright artifacts
+test-results/
+playwright-report/

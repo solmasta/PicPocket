@@ -1,42 +1,36 @@
 const { test, expect } = require('@playwright/test');
 
+// Signs in through whichever path is actually offered: if Google auth is
+// configured, "Use Pic-Pocket Locally" is one option among others; if it
+// isn't, useAuth skips the gate and lands straight in local mode with no
+// button to click at all. Either way there's no "enter your name, click
+// Continue" step in the current app — that flow doesn't exist.
+async function enterApp(page) {
+  await page.goto('/');
+  const localButton = page.getByRole('button', { name: /use pic-pocket locally/i });
+  const uploadNav = page.getByRole('button', { name: 'Upload', exact: true });
+  await expect(localButton.or(uploadNav)).toBeVisible({ timeout: 15_000 });
+  if (await localButton.isVisible()) {
+    await localButton.click();
+  }
+  await expect(uploadNav).toBeVisible({ timeout: 15_000 });
+}
+
 test.describe('Authentication Flow', () => {
   test('should allow local user sign-in', async ({ page }) => {
-    await page.goto('/');
-    
-    // Check that we're on the splash screen
-    await expect(page.getByText('Pic-Pocket')).toBeVisible();
-    
-    // Click "Use Pic-Pocket Locally" button
-    await page.getByText('Use Pic-Pocket Locally').click();
-    
-    // Wait for and fill in the username
-    await page.waitForSelector('[placeholder="Enter your name"]');
-    await page.fill('[placeholder="Enter your name"]', 'Test User');
-    
-    // Click continue
-    await page.getByText('Continue').click();
-    
-    // Should be redirected to the main app
-    await expect(page.getByText('Test User')).toBeVisible();
-    await expect(page.getByText('Gallery')).toBeVisible();
+    await enterApp(page);
+
+    await expect(page.getByRole('button', { name: 'Gallery', exact: true })).toBeVisible();
+    await expect(page.getByText('Local User')).toBeVisible();
   });
 
-  test('should allow logout', async ({ page }) => {
-    await page.goto('/');
-    
-    // Sign in locally
-    await page.getByText('Use Pic-Pocket Locally').click();
-    await page.fill('[placeholder="Enter your name"]', 'Test User');
-    await page.getByText('Continue').click();
-    
-    // Wait for app to load
-    await page.waitForSelector('text=Gallery');
-    
-    // Click logout button
-    await page.getByLabel('Sign out').click();
-    
-    // Should be back on splash screen
-    await expect(page.getByText('Pic-Pocket')).toBeVisible();
+  test('should allow signing out back to the sign-in screen', async ({ page }) => {
+    await enterApp(page);
+
+    await page.getByRole('button', { name: /^sign out/i }).click();
+
+    // Signing out always returns to the chooser screen, regardless of
+    // whether Google auth is configured for this build.
+    await expect(page.getByRole('button', { name: /use pic-pocket locally/i })).toBeVisible();
   });
 });

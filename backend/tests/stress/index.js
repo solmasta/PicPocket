@@ -1,4 +1,12 @@
-// Stress test suite for PicPocket application
+// k6 load test suite — needs the k6 binary and a running `wrangler dev`
+// (localhost:8787) to do anything, so it isn't part of `npm run stress-test`
+// (see real-load-test.mjs for that). It also targets /api/photos and
+// /api/search, the legacy D1-backed routes: the current frontend's photo
+// library lives entirely in the browser's IndexedDB (see usePhotos.js) and
+// never calls these, and this script's own auth step is a no-op comment
+// ("In a real test, we would authenticate here"), so every request here
+// hits authMiddleware with no token and gets a 401 before touching D1/R2 —
+// useful as a k6-syntax reference, not as a working load test today.
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Counter } from 'k6/metrics';

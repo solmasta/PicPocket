@@ -7,9 +7,14 @@ const CLASSIFICATION_MODEL = '@cf/microsoft/resnet-50';
 const CAPTION_MODEL = '@cf/unum/uform-gen2-qwen-500m';
 const INSIGHTS_MODEL = '@cf/meta/llama-3.1-8b-instruct';
 
-// Comfortably above what a resized/thumbnailed PicPocket photo needs, but
-// still small enough to keep a single Workers AI call fast.
-const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
+// The frontend downsizes to a small JPEG (resizeImageToBlob, ~640px) before
+// calling this endpoint — classification/captioning don't need full
+// resolution, and a stress test found that converting a full-size original
+// (up to 20MB) into the plain number array Workers AI expects is expensive
+// synchronous CPU work that queues up badly under concurrent uploads. This
+// cap is defense-in-depth against a caller that skips that resize (a much
+// higher ceiling would defeat the point), not the expected request size.
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const MIN_CONFIDENCE = 0.15;
 const MAX_TAGS = 6;
 

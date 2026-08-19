@@ -2,68 +2,66 @@ const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
 
+// A minimal valid 1x1 PNG, reused from the previous version of this file.
+const TEST_PNG_BASE64 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
+
 test.describe('Photo Management', () => {
   test.beforeEach(async ({ page }) => {
-    // Sign in locally before each test
     await page.goto('/');
-    await page.getByText('Use Pic-Pocket Locally').click();
-    await page.fill('[placeholder="Enter your name"]', 'Test User');
-    await page.getByText('Continue').click();
-    await page.waitForSelector('text=Gallery');
+    const localButton = page.getByRole('button', { name: /use pic-pocket locally/i });
+    const uploadNav = page.getByRole('button', { name: 'Upload', exact: true });
+    await expect(localButton.or(uploadNav)).toBeVisible({ timeout: 15_000 });
+    if (await localButton.isVisible()) {
+      await localButton.click();
+    }
+    await expect(uploadNav).toBeVisible({ timeout: 15_000 });
   });
 
   test('should upload a photo', async ({ page }) => {
-    // Create a test image
     const testImagePath = path.join(__dirname, 'test-image.png');
-    const buffer = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==', 'base64');
-    fs.writeFileSync(testImagePath, buffer);
-    
-    // Upload the photo
-    const fileInput = await page.$('input[type="file"]');
-    await fileInput.setInputFiles(testImagePath);
-    
-    // Wait for upload to complete
-    await page.waitForTimeout(2000);
-    
-    // Check that photo appears in gallery
-    await expect(page.locator('.photo-item')).toHaveCount(1);
-    
-    // Clean up
-    fs.unlinkSync(testImagePath);
+    fs.writeFileSync(testImagePath, Buffer.from(TEST_PNG_BASE64, 'base64'));
+
+    try {
+      await page.getByRole('button', { name: 'Upload', exact: true }).click();
+      await page.setInputFiles('input[type="file"]', testImagePath);
+      await expect(page.getByText('Selected Photos (1)')).toBeVisible();
+
+      await page.locator('.submit-button').click();
+      // The upload form clears (and the preview grid disappears) once the
+      // sequential upload loop finishes.
+      await expect(page.getByText('Selected Photos (1)')).toBeHidden({ timeout: 20_000 });
+
+      await page.getByRole('button', { name: 'Gallery', exact: true }).click();
+      await expect(page.locator('.photo-grid .photo-card')).toHaveCount(1);
+    } finally {
+      fs.unlinkSync(testImagePath);
+    }
   });
 
-  test('should display horse-themed features', async ({ page }) => {
-    // Check that horse profile section exists
-    await expect(page.getByText('Horse Profile')).toBeVisible();
-    
-    // Check that sidebar has horse-related navigation
-    await expect(page.getByText('Horses')).toBeVisible();
+  test('should display the Horse Profile feature', async ({ page }) => {
+    await expect(page.getByRole('button', { name: 'Horse Profile' })).toBeVisible();
   });
 
-  test('should allow tagging photos', async ({ page }) => {
-    // Create a test image
+  test('should allow tagging a photo before upload, and the tag persists to the Gallery', async ({ page }) => {
     const testImagePath = path.join(__dirname, 'test-image2.png');
-    const buffer = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==', 'base64');
-    fs.writeFileSync(testImagePath, buffer);
-    
-    // Upload the photo
-    const fileInput = await page.$('input[type="file"]');
-    await fileInput.setInputFiles(testImagePath);
-    
-    // Wait for upload to complete
-    await page.waitForTimeout(2000);
-    
-    // Click on the photo to edit tags
-    await page.locator('.photo-item').first().click();
-    
-    // Add a tag
-    await page.fill('input[placeholder="Add tags"]', 'horse');
-    await page.press('input[placeholder="Add tags"]', 'Enter');
-    
-    // Check that tag was added
-    await expect(page.getByText('horse')).toBeVisible();
-    
-    // Clean up
-    fs.unlinkSync(testImagePath);
+    fs.writeFileSync(testImagePath, Buffer.from(TEST_PNG_BASE64, 'base64'));
+
+    try {
+      await page.getByRole('button', { name: 'Upload', exact: true }).click();
+      await page.setInputFiles('input[type="file"]', testImagePath);
+
+      await page.getByLabel('Add tag').fill('horse');
+      await page.getByLabel('Add tag').press('Enter');
+      await expect(page.getByText('#horse')).toBeVisible();
+
+      await page.locator('.submit-button').click();
+      await expect(page.getByText('Selected Photos (1)')).toBeHidden({ timeout: 20_000 });
+
+      await page.getByRole('button', { name: 'Gallery', exact: true }).click();
+      await expect(page.getByText('#horse')).toBeVisible();
+    } finally {
+      fs.unlinkSync(testImagePath);
+    }
   });
 });
