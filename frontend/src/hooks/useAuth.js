@@ -171,6 +171,22 @@ export function useAuth() {
     }
   }, []);
 
+  // Enters (and persists) the local-only identity — used both by the
+  // sign-in screen's "Use Pic-Pocket Locally" option and, for a user who's
+  // already signed in with Google, as a way to drop back to local-only
+  // without losing anything: the photo library lives in IndexedDB
+  // independent of `user`, so switching identity never touches it.
+  const continueLocally = useCallback(async () => {
+    try {
+      await saveAuthUser(LOCAL_USER);
+    } catch (err) {
+      console.error('Failed to persist local session:', err);
+    }
+    setUser(LOCAL_USER);
+    setError(null);
+    setTokenExpired(false);
+  }, []);
+
   const signOut = useCallback(async () => {
     try {
       if (user && !user.isLocal) {
@@ -192,7 +208,10 @@ export function useAuth() {
         setUser(null);
         setTokenExpired(false);
       } else if (user && user.isLocal) {
-        // For local users, just clear the UI state
+        // Clear the persisted local choice too (continueLocally saves it),
+        // so signing out actually returns to the sign-in/chooser screen
+        // instead of silently restoring local mode on next load.
+        await clearAuthUser();
         setUser(null);
       }
     } catch (err) {
@@ -207,6 +226,7 @@ export function useAuth() {
     tokenExpired,
     signIn,
     signOut,
+    continueLocally,
     registerGoogleLogin,
     handleLoginSuccess,
     handleLoginError,
