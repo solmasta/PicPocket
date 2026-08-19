@@ -9,7 +9,7 @@ ALLOWED_ORIGINS = "http://localhost:3000,https://solmasta.github.io"
 [[d1_databases]]
 binding = "DB"
 database_name = "picpocket"
-database_id = "your-actual-database-id-here"
+database_id = "0339a2cf-1007-4126-862b-99332f24a785"
 
 [[r2_buckets]]
 binding = "BUCKET"
