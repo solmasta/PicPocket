@@ -1,87 +1,102 @@
-import axios from 'axios';
-
-const API_BASE = process.env.REACT_APP_API_URL || '/api';
+import api from './api';
 
 /**
- * AI service for auto-tagging and face recognition
- * These calls go through the backend which handles the AI model interactions
+ * AI service — real photo understanding (auto-tagging, captioning) and
+ * storage insights, backed by Cloudflare Workers AI via the worker's
+ * /api/ai/* routes. Every call degrades gracefully: a network hiccup or an
+ * unconfigured AI binding never blocks an upload or breaks the Storage tab,
+ * it just falls back to a locally-computed result.
  */
 
 /**
- * Auto-tag a photo using AI
- * @param {string} imageDataUrl - Base64 image data URL
- * @returns {Promise<string[]>} Array of suggested tags
+ * Analyze a photo with AI: auto-tag it and generate a short caption in one
+ * round trip. Sends the raw image bytes (not a base64 data URL) to keep the
+ * request small.
+ * @param {File|Blob} file
+ * @returns {Promise<{tags: string[], caption: string}>}
  */
-export async function autoTagPhoto(imageDataUrl) {
+export async function analyzePhoto(file) {
   try {
-    const response = await axios.post(
-      `${API_BASE}/ai/autotag`,
-      { imageData: imageDataUrl },
-      { timeout: 30000 }
-    );
-    return response.data.tags || [];
+    const response = await api.post('/ai/analyze', file, {
+      headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      timeout: 30000,
+    });
+    return {
+      tags: Array.isArray(response.data?.tags) ? response.data.tags : [],
+      caption: response.data?.caption || '',
+    };
   } catch (err) {
-    console.error('Auto-tag failed:', err);
-    // Return basic suggestions based on client-side analysis
-    return generateBasicTags();
+    console.warn('AI photo analysis unavailable:', err.message);
+    return { tags: [], caption: '' };
   }
 }
 
 /**
- * Detect faces in a photo
- * @param {string} imageDataUrl - Base64 image data URL
- * @returns {Promise<Array>} Array of detected faces with bounding boxes
+ * Ask the AI for a natural-language summary and recommendations over
+ * precomputed storage-ledger stats (see buildStorageStats in
+ * AIStorageInsights). Falls back to a local rule-based summary if the
+ * backend/AI is unreachable, so the panel still shows something useful
+ * offline.
+ * @param {object} stats
+ * @returns {Promise<{summary: string, recommendations: string[], source: string}>}
  */
-export async function detectFaces(imageDataUrl) {
+export async function getStorageInsights(stats) {
   try {
-    const response = await axios.post(
-      `${API_BASE}/ai/faces`,
-      { imageData: imageDataUrl },
-      { timeout: 30000 }
-    );
-    return response.data.faces || [];
+    const response = await api.post('/ai/storage-insights', stats, { timeout: 20000 });
+    return {
+      summary: response.data?.summary || '',
+      recommendations: Array.isArray(response.data?.recommendations) ? response.data.recommendations : [],
+      source: response.data?.source || 'ai',
+    };
   } catch (err) {
-    console.error('Face detection failed:', err);
-    return [];
+    console.warn('AI storage insights unavailable, using local summary:', err.message);
+    return { ...buildLocalInsights(stats), source: 'offline' };
   }
 }
 
-/**
- * Generate a caption for a photo using AI
- */
-export async function generateCaption(imageDataUrl) {
-  try {
-    const response = await axios.post(
-      `${API_BASE}/ai/caption`,
-      { imageData: imageDataUrl },
-      { timeout: 30000 }
+function formatBytes(bytes) {
+  if (!bytes && bytes !== 0) return 'an unknown amount';
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
+// Mirrors the backend's rule-based fallback (backend/src/routes/ai.js) so
+// the panel degrades the same way whether the AI binding is missing
+// server-side or the request never made it to the server at all.
+function buildLocalInsights(stats = {}) {
+  const {
+    totalPhotos = 0,
+    totalBytes = 0,
+    backedUpNowhere = 0,
+    perProvider = {},
+    duplicateGroups = 0,
+    duplicateWastedBytes = 0,
+  } = stats;
+
+  const recommendations = [];
+  if (duplicateGroups > 0) {
+    recommendations.push(
+      `Clear out ${duplicateGroups} duplicate group${duplicateGroups === 1 ? '' : 's'} to reclaim ${formatBytes(duplicateWastedBytes)}.`
     );
-    return response.data.caption || '';
-  } catch (err) {
-    console.error('Caption generation failed:', err);
-    return '';
   }
-}
+  if (backedUpNowhere > 0) {
+    recommendations.push(
+      `Back up ${backedUpNowhere} photo${backedUpNowhere === 1 ? '' : 's'} that ${backedUpNowhere === 1 ? "isn't" : "aren't"} saved to any cloud drive yet.`
+    );
+  }
+  const connected = Object.values(perProvider).some((count) => count > 0);
+  if (!connected && totalPhotos > 0) {
+    recommendations.push('Connect a cloud drive (Google Drive, Google Photos, OneDrive, or Dropbox) so this library has an off-device backup.');
+  }
+  if (recommendations.length === 0) {
+    recommendations.push('Your library looks well backed up — no action needed right now.');
+  }
 
-/**
- * Basic client-side tag suggestions based on common categories
- */
-function generateBasicTags() {
-  const categories = [
-    'photo',
-    'memory',
-    'moment',
-    'life',
-    'daily',
-  ];
-  const timeOfDay = getTimeOfDayTag();
-  return [...categories.slice(0, 2), timeOfDay].filter(Boolean);
-}
+  const summary =
+    totalPhotos === 0
+      ? "You haven't uploaded any photos yet."
+      : `This device holds ${totalPhotos} photo${totalPhotos === 1 ? '' : 's'} (${formatBytes(totalBytes)}), with ${backedUpNowhere} not backed up anywhere and ${duplicateGroups} duplicate group${duplicateGroups === 1 ? '' : 's'} taking up extra space.`;
 
-function getTimeOfDayTag() {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return 'morning';
-  if (hour >= 12 && hour < 17) return 'afternoon';
-  if (hour >= 17 && hour < 21) return 'evening';
-  return 'night';
+  return { summary, recommendations: recommendations.slice(0, 4) };
 }

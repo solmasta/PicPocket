@@ -1,142 +1,157 @@
-import React, { useState, useCallback } from 'react';
-import { usePhotos } from '../../hooks/usePhotos';
-import PhotoGrid from './PhotoGrid';
+import React, { useMemo, useState } from 'react';
+import PhotoCard from './PhotoCard';
 import SearchBar from '../Search/SearchBar';
+import './PhotoGrid.css';
 import './PhotoGallery.css';
 
-function PhotoGallery() {
-  const {
-    photos,
-    loading,
-    error,
-    hasMore,
-    loadMore,
-    refreshPhotos,
-    deletePhoto,
-    updatePhotoTags
-  } = usePhotos();
-  
+// The whole point of PicPocket is to be one ledger over several cloud
+// drives, so the gallery itself needs to answer "where does this photo
+// actually live?" at a glance — these filters mirror the providers
+// StorageLedger reconciles against.
+const STORAGE_FILTERS = [
+  { key: 'all', label: 'All Photos', icon: '📸' },
+  { key: 'unbacked', label: 'Not Backed Up', icon: '⚠️' },
+  { key: 'googleDrive', label: 'Google Drive', icon: '☁️' },
+  { key: 'googlePhotos', label: 'Google Photos', icon: '🖼️' },
+  { key: 'oneDrive', label: 'OneDrive', icon: '🟦' },
+  { key: 'dropbox', label: 'Dropbox', icon: '🔵' },
+];
+
+function isBackedUpTo(photo, providerKey) {
+  return Boolean(photo.cloudBackup?.[providerKey]);
+}
+
+function isBackedUpAnywhere(photo) {
+  return STORAGE_FILTERS.slice(2).some((f) => isBackedUpTo(photo, f.key));
+}
+
+function PhotoGallery({ photos = [], loading, onDelete, onSelect, onViewChange }) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [filteredPhotos, setFilteredPhotos] = useState([]);
+  const [storageFilter, setStorageFilter] = useState('all');
+  const [viewMode, setViewMode] = useState('grid');
 
-  const handleRefresh = useCallback(() => {
-    refreshPhotos();
-  }, [refreshPhotos]);
-
-  const handleLoadMore = useCallback(() => {
-    loadMore();
-  }, [loadMore]);
-
-  const handleSearch = useCallback(async (query) => {
-    setSearchQuery(query);
-    if (query.trim() === '') {
-      setIsSearching(false);
-      setFilteredPhotos([]);
-      return;
-    }
-    
-    setIsSearching(true);
-    // Filter photos based on tags, filename, or horse-related terms
-    const filtered = photos.filter(photo => {
-      const lowerQuery = query.toLowerCase();
-      const matchesTags = photo.tags?.some(tag => tag.toLowerCase().includes(lowerQuery));
-      const matchesFileName = photo.fileName?.toLowerCase().includes(lowerQuery);
-      const matchesHorseTerms = lowerQuery.includes('horse') || 
-                               lowerQuery.includes('pony') || 
-                               lowerQuery.includes('mare') || 
-                               lowerQuery.includes('stallion') || 
-                               lowerQuery.includes('foal');
-      return matchesTags || matchesFileName || matchesHorseTerms;
+  const storageCounts = useMemo(() => {
+    const counts = { all: photos.length, unbacked: 0 };
+    STORAGE_FILTERS.slice(2).forEach((f) => {
+      counts[f.key] = photos.filter((p) => isBackedUpTo(p, f.key)).length;
     });
-    
-    setFilteredPhotos(filtered);
+    counts.unbacked = photos.filter((p) => !isBackedUpAnywhere(p)).length;
+    return counts;
   }, [photos]);
 
-  const handleDeletePhoto = useCallback(async (photoId) => {
-    try {
-      await deletePhoto(photoId);
-    } catch (err) {
-      console.error('Failed to delete photo:', err);
+  const displayPhotos = useMemo(() => {
+    let result = photos;
+
+    if (storageFilter === 'unbacked') {
+      result = result.filter((p) => !isBackedUpAnywhere(p));
+    } else if (storageFilter !== 'all') {
+      result = result.filter((p) => isBackedUpTo(p, storageFilter));
     }
-  }, [deletePhoto]);
 
-  const handleUpdateTags = useCallback(async (photoId, tags) => {
-    try {
-      await updatePhotoTags(photoId, tags);
-    } catch (err) {
-      console.error('Failed to update tags:', err);
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      result = result.filter(
+        (p) =>
+          (p.tags || []).some((tag) => tag.toLowerCase().includes(q)) ||
+          p.fileName?.toLowerCase().includes(q) ||
+          (p.location?.name || '').toLowerCase().includes(q) ||
+          (p.caption || '').toLowerCase().includes(q)
+      );
     }
-  }, [updatePhotoTags]);
 
-  // Determine which photos to display
-  const displayPhotos = isSearching ? filteredPhotos : photos;
+    return result;
+  }, [photos, storageFilter, searchQuery]);
 
-  if (error) {
-    return (
-      <div className="photo-gallery error">
-        <p>Error: {error}</p>
-        <button onClick={handleRefresh}>Retry</button>
-      </div>
-    );
-  }
+  const handleUploadClick = () => {
+    if (onViewChange) onViewChange('upload');
+  };
 
   return (
     <div className="photo-gallery">
       <div className="gallery-header">
-        <h2>My Photos</h2>
+        <h2 className="gallery-title">My Photos</h2>
         <div className="gallery-controls">
-          <SearchBar onSearch={handleSearch} />
-          <button onClick={handleRefresh} disabled={loading} className="refresh-button">
-            {loading ? 'Refreshing...' : 'Refresh'}
-          </button>
+          <SearchBar onSearch={setSearchQuery} onClear={() => setSearchQuery('')} />
+          <div className="view-toggle" role="group" aria-label="Change view mode">
+            <button
+              type="button"
+              className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+              onClick={() => setViewMode('grid')}
+              aria-pressed={viewMode === 'grid'}
+              title="Grid view"
+            >
+              ▦
+            </button>
+            <button
+              type="button"
+              className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+              onClick={() => setViewMode('list')}
+              aria-pressed={viewMode === 'list'}
+              title="List view"
+            >
+              ☰
+            </button>
+          </div>
         </div>
       </div>
-      
-      {isSearching && searchQuery && (
-        <div className="search-results-info">
-          <p>Found {displayPhotos.length} results for "{searchQuery}"</p>
-          <button onClick={() => handleSearch('')} className="clear-search-button">Clear Search</button>
-        </div>
-      )}
-      
-      <PhotoGrid 
-        photos={displayPhotos} 
-        onDelete={handleDeletePhoto}
-        onUpdateTags={handleUpdateTags}
-      />
-      
-      {!isSearching && hasMore && (
-        <div className="load-more-container">
-          <button 
-            onClick={handleLoadMore} 
-            disabled={loading}
-            className="load-more-button"
+
+      <div className="storage-filter-bar" role="tablist" aria-label="Filter photos by storage location">
+        {STORAGE_FILTERS.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            role="tab"
+            aria-selected={storageFilter === f.key}
+            className={`storage-filter-chip ${storageFilter === f.key ? 'active' : ''}`}
+            onClick={() => setStorageFilter(f.key)}
           >
-            {loading ? 'Loading...' : 'Load More'}
+            <span aria-hidden="true">{f.icon}</span> {f.label}
+            <span className="storage-filter-count">{storageCounts[f.key] ?? 0}</span>
+          </button>
+        ))}
+      </div>
+
+      {searchQuery && (
+        <div className="search-results-info">
+          <p>
+            Found {displayPhotos.length} result{displayPhotos.length !== 1 ? 's' : ''} for "{searchQuery}"
+          </p>
+          <button onClick={() => setSearchQuery('')} className="clear-search-button">
+            Clear Search
           </button>
         </div>
       )}
-      
-      {!isSearching && !hasMore && photos.length > 0 && (
-        <div className="no-more-photos">
-          <p>You've reached the end of your photo collection</p>
-        </div>
-      )}
-      
-      {!isSearching && photos.length === 0 && !loading && (
+
+      {loading && photos.length === 0 && <p className="gallery-loading">Loading your photos…</p>}
+
+      {!loading && photos.length === 0 && (
         <div className="empty-gallery">
           <div className="empty-gallery-content">
             <span className="empty-gallery-icon">📸</span>
             <h3>Your gallery is empty</h3>
             <p>Upload some photos to get started!</p>
-            <button 
-              onClick={() => window.dispatchEvent(new CustomEvent('viewChange', { detail: 'upload' }))}
-              className="upload-photos-button"
-            >
+            <button onClick={handleUploadClick} className="upload-photos-button">
               Upload Photos
             </button>
           </div>
+        </div>
+      )}
+
+      {!loading && photos.length > 0 && displayPhotos.length === 0 && (
+        <div className="empty-gallery">
+          <div className="empty-gallery-content">
+            <span className="empty-gallery-icon">🔍</span>
+            <h3>No photos match this filter</h3>
+            <p>Try a different storage location or search term.</p>
+          </div>
+        </div>
+      )}
+
+      {displayPhotos.length > 0 && (
+        <div className={`photo-grid ${viewMode === 'list' ? 'photo-grid--list' : ''}`}>
+          {displayPhotos.map((photo) => (
+            <PhotoCard key={photo.id} photo={photo} onDelete={onDelete} onSelect={onSelect} viewMode={viewMode} />
+          ))}
         </div>
       )}
     </div>

@@ -22,6 +22,7 @@ import AlbumSharing from './components/Sharing/AlbumSharing';
 import SharedAlbumView from './components/Sharing/SharedAlbumView';
 import HorseProfile from './components/HorseProfile';
 import StorageLedger from './components/Storage/StorageLedger';
+import AIStorageInsights from './components/Storage/AIStorageInsights';
 import Settings from './components/Settings/Settings';
 import { useAuth } from './hooks/useAuth';
 import { usePhotos } from './hooks/usePhotos';
@@ -170,13 +171,16 @@ function MainApp() {
         return <HorseProfile user={user} />;
       case 'storage':
         return (
-          <StorageLedger
-            photos={photos}
-            user={user}
-            onImport={addPhoto}
-            onImportBackupTag={updatePhoto}
-            storageConnections={storageConnections}
-          />
+          <>
+            <AIStorageInsights photos={photos} onDelete={deletePhoto} />
+            <StorageLedger
+              photos={photos}
+              user={user}
+              onImport={addPhoto}
+              onImportBackupTag={updatePhoto}
+              storageConnections={storageConnections}
+            />
+          </>
         );
       case 'settings':
         return <Settings user={user} storageConnections={storageConnections} />;
