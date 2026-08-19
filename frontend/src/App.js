@@ -47,6 +47,7 @@ function MainApp() {
     tokenExpired,
     signOut,
     signIn,
+    continueLocally,
     error,
     registerGoogleLogin,
     handleLoginSuccess,
@@ -127,7 +128,12 @@ function MainApp() {
     return (
       <>
         {googleAuthBridge}
-        <GoogleSignIn signIn={signIn} loading={authLoading} error={error} />
+        <GoogleSignIn
+          signIn={signIn}
+          continueLocally={continueLocally}
+          loading={authLoading}
+          error={error}
+        />
       </>
     );
   }
@@ -183,7 +189,15 @@ function MainApp() {
           </>
         );
       case 'settings':
-        return <Settings user={user} storageConnections={storageConnections} />;
+        return (
+          <Settings
+            user={user}
+            storageConnections={storageConnections}
+            onSignInGoogle={signIn}
+            onContinueLocally={continueLocally}
+            onSignOut={signOut}
+          />
+        );
       default:
         return (
           <PhotoGallery

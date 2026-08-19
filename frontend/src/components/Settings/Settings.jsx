@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { getAutoBackupPref, setAutoBackupPref } from '../../utils/preferences';
+import { isGoogleAuthConfigured } from '../../config/googleAuth';
 import './Settings.css';
 
-export default function Settings({ user, storageConnections }) {
+export default function Settings({ user, storageConnections, onSignInGoogle, onContinueLocally, onSignOut }) {
   const [autoBackup, setAutoBackup] = useState(() => getAutoBackupPref());
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const [exportMessage, setExportMessage] = useState('');
@@ -56,6 +57,54 @@ export default function Settings({ user, storageConnections }) {
   return (
     <div className="settings">
       <h1 className="settings__title">Settings</h1>
+
+      {/* Account — the local library (IndexedDB) is always available no
+          matter which of these is active; this only decides whether Google
+          Drive/Photos backup scopes are attached on top of it. */}
+      <section className="settings__section">
+        <h2 className="settings__section-title">Account</h2>
+        {user?.isLocal ? (
+          <>
+            <div className="settings__status-row">
+              <span className="settings__label">
+                <span className="settings__label-icon">💻</span>
+                Using PicPocket locally on this device
+              </span>
+              <span className="settings__status settings__status--connected">✔ Active</span>
+            </div>
+            {isGoogleAuthConfigured() && (
+              <>
+                <p className="settings__hint">
+                  Your photos stay right here either way — connecting Google just adds Drive/Photos backup.
+                </p>
+                <button className="settings__btn settings__btn--primary" onClick={onSignInGoogle}>
+                  Connect Google Account
+                </button>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="settings__status-row">
+              <span className="settings__label">
+                <span className="settings__label-icon">👤</span>
+                Signed in with Google
+                {user?.email && <span className="settings__account-name">{user.email}</span>}
+              </span>
+              <span className="settings__status settings__status--connected">✔ Active</span>
+            </div>
+            <p className="settings__hint">
+              Your local library stays on this device even if you disconnect Google.
+            </p>
+            <button className="settings__btn" onClick={onContinueLocally}>
+              Switch to Local-Only
+            </button>
+            <button className="settings__btn" onClick={onSignOut}>
+              Sign Out
+            </button>
+          </>
+        )}
+      </section>
 
       {/* Connections */}
       <section className="settings__section">

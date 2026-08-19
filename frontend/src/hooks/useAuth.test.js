@@ -70,4 +70,66 @@ describe('useAuth signOut', () => {
     expect(global.fetch).not.toHaveBeenCalled();
     expect(clearAuthUser).toHaveBeenCalled();
   });
+
+  test('signing out of a local session clears the persisted local choice too', async () => {
+    getAuthUser.mockResolvedValue({ id: 'local-user', isLocal: true, name: 'You' });
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    await act(async () => {
+      await result.current.signOut();
+    });
+
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(clearAuthUser).toHaveBeenCalled();
+    expect(result.current.user).toBeNull();
+  });
+});
+
+describe('useAuth continueLocally', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    getAuthUser.mockResolvedValue(null);
+    saveAuthUser.mockResolvedValue(undefined);
+  });
+
+  test('persists and adopts the local-only identity, independent of any Google session', async () => {
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(result.current.user).toBeNull(); // Google configured, nothing saved yet
+
+    await act(async () => {
+      await result.current.continueLocally();
+    });
+
+    expect(saveAuthUser).toHaveBeenCalledWith(expect.objectContaining({ id: 'local-user', isLocal: true }));
+    expect(result.current.user).toEqual(expect.objectContaining({ id: 'local-user', isLocal: true }));
+  });
+
+  test('a signed-in Google user can drop back to local-only without an error', async () => {
+    getAuthUser.mockResolvedValue({
+      id: 'user-1',
+      name: 'Test User',
+      email: 'test@example.com',
+      isLocal: false,
+      accessToken: 'tok',
+    });
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    await act(async () => {
+      await result.current.continueLocally();
+    });
+
+    expect(result.current.user.isLocal).toBe(true);
+  });
 });

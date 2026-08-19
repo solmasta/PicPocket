@@ -108,3 +108,59 @@ describe('Settings storage connections', () => {
     expect(screen.getByText(/popup blocked/i)).not.toBeNull();
   });
 });
+
+describe('Settings account section', () => {
+  const originalClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+  const noopStorageConnections = {
+    connections: { onedrive: null, dropbox: null },
+    connecting: null,
+    errors: {},
+    connect: jest.fn(),
+    disconnect: jest.fn(),
+    isOneDriveConfigured: false,
+    isDropboxConfigured: false,
+  };
+
+  beforeEach(() => {
+    process.env.REACT_APP_GOOGLE_CLIENT_ID = 'test-client-id.apps.googleusercontent.com';
+  });
+
+  afterEach(() => {
+    process.env.REACT_APP_GOOGLE_CLIENT_ID = originalClientId;
+  });
+
+  test('a local user sees a working "Connect Google Account" button', () => {
+    const onSignInGoogle = jest.fn();
+    render(
+      <Settings
+        user={{ isLocal: true }}
+        storageConnections={noopStorageConnections}
+        onSignInGoogle={onSignInGoogle}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /connect google account/i }));
+    expect(onSignInGoogle).toHaveBeenCalledTimes(1);
+  });
+
+  test('a Google-signed-in user can switch to local-only or sign out', () => {
+    const onContinueLocally = jest.fn();
+    const onSignOut = jest.fn();
+    render(
+      <Settings
+        user={{ isLocal: false, name: 'Test User', email: 'test@example.com' }}
+        storageConnections={noopStorageConnections}
+        onContinueLocally={onContinueLocally}
+        onSignOut={onSignOut}
+      />
+    );
+
+    expect(screen.queryByRole('button', { name: /connect google account/i })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /switch to local-only/i }));
+    expect(onContinueLocally).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole('button', { name: /^sign out$/i }));
+    expect(onSignOut).toHaveBeenCalledTimes(1);
+  });
+});

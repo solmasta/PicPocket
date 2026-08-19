@@ -3,7 +3,7 @@ import './GoogleSignIn.css';
 import logo from '../../assets/pic-pocket-logo.png';
 import barnBackground from '../../assets/faye-pic-pocket.jpg';
 
-function GoogleSignIn({ signIn, loading, error }) {
+function GoogleSignIn({ signIn, continueLocally, loading, error }) {
   return (
     <div
       className="signin-container"
@@ -70,16 +70,12 @@ function GoogleSignIn({ signIn, loading, error }) {
 
         <div className="signin-local-option">
           <p>Or continue locally without Google sign-in:</p>
-          <button
-            className="local-signin-btn"
-            onClick={() => {
-              // For local users, we can just set the user in the auth hook
-              // The useAuth hook will handle the LOCAL_USER case
-              window.location.reload();
-            }}
-          >
+          <button className="local-signin-btn" onClick={continueLocally}>
             Use Pic-Pocket Locally
           </button>
+          <p className="signin-local-hint">
+            You can still connect Google, OneDrive, or Dropbox for backup any time from Settings.
+          </p>
         </div>
 
         <p className="signin-privacy">
