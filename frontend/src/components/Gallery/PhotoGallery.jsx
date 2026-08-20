@@ -1,189 +1,225 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import PhotoCard from '../PhotoCard/PhotoCard';
-import FilterBar from '../FilterBar/FilterBar';
+import { useState, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import { usePhotos } from '../../hooks/usePhotos';
+import PhotoCard from './PhotoCard';
 import './PhotoGallery.css';
 
-const LAZY_LOAD_THRESHOLD = 200;
-const DEBOUNCE_MS = 150;
+const PhotoGallery = ({ onPhotoSelect }) => {
+  const { t } = useTranslation();
+  const { photos, filteredPhotos, isLoading } = usePhotos();
+  const [viewMode, setViewMode] = useState('grid');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [selectedPhotos, setSelectedPhotos] = useState([]);
+  const [showSortMenu, setShowSortMenu] = useState(false);
 
-export const PhotoGallery = ({
-  photos = [],
-  onPhotoClick,
-  onDelete,
-  onFavorite,
-  isLoading = false,
-  showFilters = true,
-  filter = 'all',
-  onFilterChange,
-}) => {
-  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
-  const [isFiltering, setIsFiltering] = useState(false);
-  const containerRef = useRef(null);
-  const observerRef = useRef(null);
-  const lastScrollTop = useRef(0);
+  const displayPhotos = filteredPhotos.length > 0 ? filteredPhotos : photos;
 
-  const filteredPhotos = useMemo(() => {
-    if (filter === 'all') return photos;
-    if (filter === 'favorites') return photos.filter(p => p.isFavorite);
-    if (filter === 'recent') {
-      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-      return photos.filter(p => p.timestamp > weekAgo);
-    }
-    if (filter === 'location') return photos.filter(p => p.location);
-    if (filter === 'no-location') return photos.filter(p => !p.location);
-    return photos;
-  }, [photos, filter]);
-
-  const visiblePhotos = useMemo(() => {
-    return filteredPhotos.slice(visibleRange.start, visibleRange.end);
-  }, [filteredPhotos, visibleRange]);
-
-  useEffect(() => {
-    setVisibleRange({ start: 0, end: 50 });
-  }, [filter]);
-
-  const handleScroll = useCallback(() => {
-    if (!containerRef.current) return;
-
-    const { scrollTop } = containerRef.current;
-    const isScrollingDown = scrollTop > lastScrollTop.current;
-    lastScrollTop.current = scrollTop;
-
-    if (!isScrollingDown) return;
-
-    const { scrollHeight, clientHeight } = containerRef.current;
-    const scrollProgress = scrollTop / (scrollHeight - clientHeight);
-
-    if (scrollProgress > 0.7 && visibleRange.end < filteredPhotos.length) {
-      setVisibleRange(prev => ({
-        start: prev.start,
-        end: Math.min(prev.end + 20, filteredPhotos.length),
-      }));
-    }
-  }, [visibleRange.end, filteredPhotos.length]);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const container = containerRef.current;
-    let ticking = false;
-
-    const debouncedScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
+  const sortedPhotos = useMemo(() => {
+    return [...displayPhotos].sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'date':
+          comparison = new Date(a.createdAt) - new Date(b.createdAt);
+          break;
+        case 'name':
+          comparison = (a.title || '').localeCompare(b.title || '');
+          break;
+        case 'size':
+          comparison = a.size - b.size;
+          break;
+        default:
+          comparison = new Date(a.createdAt) - new Date(b.createdAt);
       }
-    };
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+  }, [displayPhotos, sortBy, sortOrder]);
 
-    container.addEventListener('scroll', debouncedScroll, { passive: true });
-    return () => container.removeEventListener('scroll', debouncedScroll);
-  }, [handleScroll]);
+  const handleSortChange = useCallback((newSortBy, newSortOrder) => {
+    setSortBy(newSortBy);
+    setSortOrder(newSortOrder);
+    setShowSortMenu(false);
+  }, []);
 
-  useEffect(() => {
-    if (!observerRef.current) {
-      observerRef.current = new IntersectionObserver(
-        (entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              const card = entry.target;
-              const index = parseInt(card.dataset.index, 10);
-              
-              if (!card.querySelector('img')?.src) {
-                const photo = filteredPhotos[index];
-                if (photo?.thumbnail) {
-                  const img = document.createElement('img');
-                  img.src = photo.thumbnail;
-                  img.alt = photo.alt || 'Photo';
-                  img.loading = 'lazy';
-                  card.querySelector('.photo-card__image-wrapper')?.appendChild(img);
-                }
-              }
-            }
-          });
-        },
-        { rootMargin: `${LAZY_LOAD_THRESHOLD}px` }
-      );
+  const handleSelectPhoto = useCallback((photo) => {
+    setSelectedPhotos(prev => {
+      const isSelected = prev.some(p => p.id === photo.id);
+      if (isSelected) {
+        return prev.filter(p => p.id !== photo.id);
+      }
+      return [...prev, photo];
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    if (selectedPhotos.length === sortedPhotos.length) {
+      setSelectedPhotos([]);
+    } else {
+      setSelectedPhotos([...sortedPhotos]);
     }
+  }, [selectedPhotos.length, sortedPhotos]);
 
-    const cards = containerRef.current?.querySelectorAll('.photo-card');
-    cards?.forEach(card => observerRef.current.observe(card));
+  const clearSelection = useCallback(() => {
+    setSelectedPhotos([]);
+  }, []);
 
-    return () => {
-      observerRef.current?.disconnect();
-    };
-  }, [visiblePhotos, filteredPhotos]);
+  const sortOptions = [
+    { value: 'date-desc', label: 'Newest First', sortBy: 'date', sortOrder: 'desc' },
+    { value: 'date-asc', label: 'Oldest First', sortBy: 'date', sortOrder: 'asc' },
+    { value: 'name-asc', label: 'Name A-Z', sortBy: 'name', sortOrder: 'asc' },
+    { value: 'name-desc', label: 'Name Z-A', sortBy: 'name', sortOrder: 'desc' },
+    { value: 'size-desc', label: 'Largest First', sortBy: 'size', sortOrder: 'desc' },
+    { value: 'size-asc', label: 'Smallest First', sortBy: 'size', sortOrder: 'asc' },
+  ];
+
+  const currentSortLabel = sortOptions.find(
+    opt => opt.sortBy === sortBy && opt.sortOrder === sortOrder
+  )?.label || 'Newest First';
 
   if (isLoading) {
     return (
-      <div className="photo-gallery photo-gallery--loading">
-        <div className="photo-gallery__spinner" aria-label="Loading photos" />
+      <div className="gallery-loading">
+        <div className="loading-spinner">
+          <span className="spinner-icon">🐴</span>
+        </div>
+        <p>Loading your magical memories...</p>
       </div>
     );
   }
 
-  if (filteredPhotos.length === 0) {
+  if (sortedPhotos.length === 0) {
     return (
-      <div className="photo-gallery photo-gallery--empty">
-        <div className="photo-gallery__empty-state">
-          <svg viewBox="0 0 24 24" className="photo-gallery__empty-icon">
-            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-          </svg>
-          <h3>No photos found</h3>
-          <p>
-            {filter !== 'all'
-              ? `No ${filter} photos to display. Try changing your filter.`
-              : 'Start by adding some photos to your collection.'}
-          </p>
+      <div className="gallery-empty">
+        <div className="empty-illustration">
+          <span className="empty-icon">📷</span>
+          <div className="empty-sparkles">
+            <span className="sparkle">✨</span>
+            <span className="sparkle">✨</span>
+            <span className="sparkle">✨</span>
+          </div>
         </div>
+        <h3>No photos yet!</h3>
+        <p>Start adding your magical moments</p>
+        <a href="/upload" className="empty-cta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17,8 12,3 7,8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Add Photos
+        </a>
       </div>
     );
   }
 
   return (
-    <div className="photo-gallery" ref={containerRef}>
-      {showFilters && (
-        <FilterBar
-          currentFilter={filter}
-          onFilterChange={onFilterChange}
-          counts={{
-            all: photos.length,
-            favorites: photos.filter(p => p.isFavorite).length,
-            recent: photos.filter(p => p.timestamp > Date.now() - 7 * 24 * 60 * 60 * 1000).length,
-            location: photos.filter(p => p.location).length,
-          }}
-        />
-      )}
+    <div className="photo-gallery">
+      {/* Toolbar */}
+      <div className="gallery-toolbar">
+        <div className="toolbar-left">
+          <span className="photo-count">
+            {selectedPhotos.length > 0 ? (
+              <>{selectedPhotos.length} selected <button onClick={clearSelection}>Clear</button></>
+            ) : (
+              <>{sortedPhotos.length} magical moments</>
+            )}
+          </span>
+        </div>
 
-      <div className="photo-gallery__grid" role="list" aria-label="Photo gallery">
-        {visiblePhotos.map((photo, index) => (
+        <div className="toolbar-right">
+          {/* Select All */}
+          <button
+            className={`toolbar-btn select-all ${selectedPhotos.length === sortedPhotos.length ? 'active' : ''}`}
+            onClick={handleSelectAll}
+            aria-label="Select all photos"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <polyline points="9,11 12,14 22,4"/>
+            </svg>
+          </button>
+
+          {/* Sort */}
+          <div className="sort-dropdown">
+            <button
+              className="toolbar-btn sort-btn"
+              onClick={() => setShowSortMenu(!showSortMenu)}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 6h18M6 12h12M9 18h6"/>
+              </svg>
+              <span>{currentSortLabel}</span>
+              <svg className="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="6,9 12,15 18,9"/>
+              </svg>
+            </button>
+            
+            {showSortMenu && (
+              <div className="sort-menu">
+                {sortOptions.map(option => (
+                  <button
+                    key={option.value}
+                    className={`sort-option ${sortBy === option.sortBy && sortOrder === option.sortOrder ? 'active' : ''}`}
+                    onClick={() => handleSortChange(option.sortBy, option.sortOrder)}
+                  >
+                    {option.label}
+                    {sortBy === option.sortBy && sortOrder === option.sortOrder && (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="20,6 9,17 4,12"/>
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="view-toggle">
+            <button
+              className={`toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+              onClick={() => setViewMode('grid')}
+              aria-label="Grid view"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+              </svg>
+            </button>
+            <button
+              className={`toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+              onClick={() => setViewMode('list')}
+              aria-label="List view"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="8" y1="6" x2="21" y2="6"/>
+                <line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/>
+                <line x1="3" y1="6" x2="3.01" y2="6"/>
+                <line x1="3" y1="12" x2="3.01" y2="12"/>
+                <line x1="3" y1="18" x2="3.01" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Photo Grid */}
+      <div className={`photo-grid ${viewMode}`}>
+        {sortedPhotos.map(photo => (
           <PhotoCard
             key={photo.id}
             photo={photo}
-            index={index}
-            onClick={() => onPhotoClick?.(photo)}
-            onDelete={() => onDelete?.(photo.id)}
-            onFavorite={() => onFavorite?.(photo.id)}
-            isLazy
+            onSelect={handleSelectPhoto}
+            isSelected={selectedPhotos.some(p => p.id === photo.id)}
+            viewMode={viewMode}
           />
         ))}
       </div>
-
-      {visibleRange.end < filteredPhotos.length && (
-        <div className="photo-gallery__load-more">
-          <button
-            onClick={() => setVisibleRange(prev => ({
-              ...prev,
-              end: Math.min(prev.end + 20, filteredPhotos.length),
-            }))}
-            className="btn btn--secondary"
-          >
-            Load More ({filteredPhotos.length - visibleRange.end} remaining)
-          </button>
-        </div>
-      )}
     </div>
   );
 };
