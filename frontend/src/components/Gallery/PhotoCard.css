@@ -1,279 +1,371 @@
-/* PhotoCard Styles */
+/* PhotoCard Styles - Warm Horse Theme for Faye */
+
 .photo-card {
   position: relative;
-  background: var(--color-bg-surface);
+  background: var(--color-white);
   border-radius: var(--border-radius-xl);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-base);
   cursor: pointer;
-  aspect-ratio: 1;
+  transition: all var(--transition-base);
+  border: 2px solid transparent;
 }
 
 .photo-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
+  border-color: var(--color-horse-tan);
 }
 
-.photo-card:hover .photo-card__overlay {
-  opacity: 1;
+.photo-card.selected {
+  border-color: var(--color-accent);
+  box-shadow: var(--glow-accent);
 }
 
-.photo-card__image-container {
-  position: relative;
-  width: 100%;
+.photo-card-inner {
+  display: flex;
+  flex-direction: column;
   height: 100%;
 }
 
-.photo-card__image {
+/* Image Container */
+.photo-image-container {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--color-horse-light);
+}
+
+.photo-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform var(--transition-base);
+  transition: transform var(--transition-slow);
 }
 
-.photo-card:hover .photo-card__image {
+.photo-card:hover .photo-image {
   transform: scale(1.05);
 }
 
-.photo-card__loading {
+.photo-image.loading {
+  opacity: 0;
+}
+
+.photo-skeleton {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--color-bg-subtle);
-  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  background: linear-gradient(135deg, var(--color-horse-light) 0%, var(--color-horse-cream) 100%);
 }
 
-@keyframes skeleton-pulse {
-  0%, 100% {
-    background: var(--color-bg-subtle);
-  }
-  50% {
-    background: var(--color-bg-hover);
-  }
-}
-
-.photo-card__loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--color-bg-hover);
-  border-top-color: var(--color-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-.photo-card__overlay {
+.skeleton-shimmer {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.4) 0%,
-    transparent 30%,
-    transparent 70%,
-    rgba(0, 0, 0, 0.6) 100%
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
   );
+  animation: shimmer 1.5s infinite;
+}
+
+.skeleton-icon {
+  font-size: 2rem;
+  z-index: 1;
+}
+
+/* Overlay */
+.photo-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.6) 100%);
   opacity: 0;
   transition: opacity var(--transition-base);
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  align-items: flex-start;
+  justify-content: flex-end;
   padding: var(--spacing-sm);
 }
 
-.photo-card__badges {
+.photo-overlay.visible {
+  opacity: 1;
+}
+
+.overlay-actions {
   display: flex;
-  flex-wrap: wrap;
   gap: var(--spacing-xs);
 }
 
-.photo-card__badge {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-bg-surface);
-  border-radius: var(--border-radius-full);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
+.action-btn {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--border-radius-full);
+  background: var(--color-white);
+  color: var(--color-horse-primary);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-md);
 }
 
-.photo-card__badge--favorite {
-  background: var(--color-danger);
-  color: white;
+.action-btn:hover {
+  transform: scale(1.1);
+  background: var(--color-horse-primary);
+  color: var(--color-white);
 }
 
-.photo-card__badge--favorite svg {
-  fill: currentColor;
+.action-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
-.photo-card__badge--location {
-  background: var(--color-success-bg);
-  color: var(--color-success);
+.action-btn.favorite.active {
+  background: var(--color-accent);
+  color: var(--color-gray-900);
+  animation: heartBeat 1s ease;
 }
 
-.photo-card__actions {
+/* Checkbox */
+.photo-checkbox {
+  position: absolute;
+  top: var(--spacing-sm);
+  left: var(--spacing-sm);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--border-radius-sm);
+  background: var(--color-white);
+  border: 2px solid var(--color-horse-tan);
   display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-xs);
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.photo-card:hover .photo-checkbox,
+.photo-card.selected .photo-checkbox {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.photo-card.selected .photo-checkbox {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.photo-checkbox input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.photo-checkbox svg {
+  width: 16px;
+  height: 16px;
+  color: var(--color-white);
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
 
-.photo-card:hover .photo-card__actions {
+.photo-card.selected .photo-checkbox svg {
   opacity: 1;
 }
 
-.photo-card__action-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
+/* Favorite Badge */
+.favorite-badge {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  width: 28px;
+  height: 28px;
+  background: var(--color-accent);
   border-radius: var(--border-radius-full);
-  background: var(--color-bg-surface);
-  color: var(--color-text);
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--font-size-base);
-  transition: all var(--transition-fast);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  box-shadow: var(--shadow-md);
+  animation: bounce 1s ease infinite;
 }
 
-.photo-card__action-btn:hover {
-  transform: scale(1.1);
+.favorite-badge svg {
+  width: 16px;
+  height: 16px;
+  color: var(--color-gray-900);
 }
 
-.photo-card__action-btn--favorite:hover {
-  background: var(--color-danger);
-  color: white;
-}
-
-.photo-card__action-btn--favorite.active {
-  background: var(--color-danger);
-  color: white;
-}
-
-.photo-card__action-btn--delete:hover {
-  background: var(--color-danger);
-  color: white;
-}
-
-.photo-card__confirm-delete {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--color-bg-surface);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-base);
-  box-shadow: var(--shadow-lg);
-  z-index: 10;
-  text-align: center;
-  animation: confirm-pop 0.2s ease-out;
-}
-
-@keyframes confirm-pop {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.8);
-  }
-  100% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-
-.photo-card__confirm-text {
-  font-size: var(--font-size-sm);
-  margin-bottom: var(--spacing-sm);
-  color: var(--color-text);
-}
-
-.photo-card__confirm-actions {
+/* Info Section */
+.photo-info {
+  padding: var(--spacing-md);
   display: flex;
+  flex-direction: column;
   gap: var(--spacing-xs);
-  justify-content: center;
 }
 
-.photo-card__confirm-btn {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border: none;
-  border-radius: var(--border-radius-md);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.photo-card__confirm-btn--yes {
-  background: var(--color-danger);
-  color: white;
-}
-
-.photo-card__confirm-btn--yes:hover {
-  background: var(--color-danger-hover);
-}
-
-.photo-card__confirm-btn--no {
-  background: var(--color-bg-subtle);
+.photo-title {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
 }
 
-.photo-card__confirm-btn--no:hover {
-  background: var(--color-bg-hover);
+.photo-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
-.photo-card__info {
-  padding: var(--spacing-sm);
+.photo-date {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
 }
 
-.photo-card__date {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
+.photo-date::before {
+  content: '📅';
+  font-size: 0.75rem;
 }
 
-.photo-card__tags {
+.photo-size {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.photo-size::before {
+  content: '📦';
+  font-size: 0.75rem;
+}
+
+/* Tags */
+.photo-tags {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-xs);
   margin-top: var(--spacing-xs);
 }
 
-.photo-card__tag {
-  font-size: var(--font-size-xs);
-  color: var(--color-primary);
-  background: var(--color-primary-light);
-  padding: 2px var(--spacing-xs);
+.photo-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: linear-gradient(135deg, var(--color-horse-light) 0%, var(--color-horse-cream) 100%);
+  border: 1px solid var(--color-horse-tan);
   border-radius: var(--border-radius-full);
+  font-size: var(--font-size-xs);
+  color: var(--color-horse-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.photo-tag.more {
+  background: var(--color-horse-primary);
+  color: var(--color-white);
+  border-color: var(--color-horse-primary);
+}
+
+/* Menu Dropdown */
+.photo-menu {
+  position: absolute;
+  bottom: calc(100% + var(--spacing-sm));
+  right: var(--spacing-sm);
+  min-width: 180px;
+  background: var(--color-white);
+  border: 2px solid var(--color-horse-tan);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  z-index: var(--z-dropdown);
+  animation: slideUp 0.2s ease;
+}
+
+.dark-theme .photo-menu {
+  background: var(--color-bg-surface);
+  border-color: var(--color-horse-primary);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-md);
+  background: none;
+  border: none;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.menu-item:hover {
+  background: var(--color-horse-cream);
+  color: var(--color-horse-primary);
+}
+
+.menu-item svg {
+  width: 18px;
+  height: 18px;
+}
+
+.menu-item.danger {
+  color: var(--color-danger);
+}
+
+.menu-item.danger:hover {
+  background: var(--color-danger-bg);
+}
+
+.menu-divider {
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* List View */
+.photo-card.list {
+  flex-direction: row;
+}
+
+.photo-card.list .photo-image-container {
+  width: 80px;
+  height: 80px;
+  aspect-ratio: auto;
+  flex-shrink: 0;
+}
+
+.photo-card.list .photo-info {
+  flex: 1;
+  justify-content: center;
+}
+
+/* Large View */
+.photo-card.large .photo-image-container {
+  aspect-ratio: auto;
+  min-height: 300px;
 }
 
 /* Responsive */
-@media (max-width: 768px) {
-  .photo-card {
-    border-radius: var(--border-radius-lg);
+@media (max-width: var(--breakpoint-sm)) {
+  .photo-info {
+    padding: var(--spacing-sm);
   }
-
-  .photo-card__action-btn {
-    width: 32px;
-    height: 32px;
-  }
-
-  .photo-card__overlay {
-    opacity: 1;
-  }
-
-  .photo-card__actions {
-    opacity: 1;
+  
+  .photo-tags {
+    display: none;
   }
 }
