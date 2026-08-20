@@ -49,163 +49,208 @@
   margin-bottom: var(--space-4);
 }
 
-/* ============================================
-   Cloud Providers Grid
-   ============================================ */
-.settings__providers {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: var(--space-4);
-}
-
-.settings__provider {
-  padding: var(--space-4);
-  border: 2px solid rgba(139, 69, 19, 0.1);
-  border-radius: var(--radius-md);
-  text-align: center;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  background: var(--color-surface);
-}
-
-.settings__provider:hover {
-  border-color: var(--color-primary);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-}
-
-.settings__provider--active {
-  border-color: var(--color-accent);
-  background: var(--gradient-warm);
-}
-
-.settings__provider-icon {
-  width: 48px;
-  height: 48px;
-  margin: 0 auto var(--space-2);
-  background: var(--color-background-alt);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-}
-
-.settings__provider-name {
-  font-weight: 600;
-  color: var(--color-text);
+.settings__description {
+  color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
-}
-
-.settings__provider-status {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  margin-top: var(--space-1);
+  margin-bottom: var(--space-4);
+  line-height: 1.6;
 }
 
 /* ============================================
-   Toggle Switch
+   Status Row
    ============================================ */
-.settings__toggle {
+.settings__status-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: var(--space-3) 0;
-  border-bottom: 1px solid rgba(139, 69, 19, 0.05);
+  border-bottom: 1px solid rgba(139, 69, 19, 0.08);
 }
 
-.settings__toggle:last-child {
+.settings__status-row:last-child {
   border-bottom: none;
 }
 
-.settings__toggle-label {
-  font-size: var(--font-size-sm);
+.settings__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   color: var(--color-text);
+  font-size: var(--font-size-sm);
 }
 
-.settings__toggle-desc {
+.settings__label-icon {
+  font-size: 1.2rem;
+}
+
+.settings__account-name {
+  margin-left: var(--space-2);
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
-  margin-top: var(--space-1);
+  background: var(--color-background-alt);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
 }
 
-.settings__switch {
-  position: relative;
-  width: 48px;
-  height: 28px;
-  background: var(--color-background-alt);
-  border-radius: var(--radius-full);
+.settings__status {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.settings__status--connected {
+  color: var(--color-success);
+}
+
+.settings__status--warning {
+  color: var(--color-warning);
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+.settings__btn {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border: 1px solid rgba(139, 69, 19, 0.15);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
-.settings__switch--active {
-  background: var(--gradient-accent);
+.settings__btn:hover {
+  background: var(--color-background-alt);
+  border-color: var(--color-primary);
 }
 
-.settings__switch-knob {
-  position: absolute;
-  top: 4px;
-  left: 4px;
+.settings__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings__btn--primary {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.settings__btn--primary:hover {
+  background: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.settings__btn--sm {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-xs);
+}
+
+/* ============================================
+   Hint Text
+   ============================================ */
+.settings__hint {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-4);
+  line-height: 1.6;
+}
+
+/* ============================================
+   Divider
+   ============================================ */
+.settings__divider {
+  border: none;
+  border-top: 1px solid rgba(139, 69, 19, 0.1);
+  margin: var(--space-4) 0;
+}
+
+/* ============================================
+   Checkbox Row
+   ============================================ */
+.settings__checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  cursor: pointer;
+}
+
+.settings__checkbox-input {
   width: 20px;
   height: 20px;
-  background: white;
-  border-radius: 50%;
-  box-shadow: var(--shadow-sm);
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+/* ============================================
+   Connect Error
+   ============================================ */
+.settings__connect-error {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(178, 34, 34, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+/* ============================================
+   Cloud Storage Grid
+   ============================================ */
+.settings__cloud-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.settings__cloud-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: linear-gradient(135deg, rgba(255, 248, 240, 0.8), rgba(255, 235, 205, 0.4));
+  border: 2px solid rgba(139, 69, 19, 0.1);
+  border-radius: var(--radius-lg);
   transition: all var(--transition-fast);
 }
 
-.settings__switch--active .settings__switch-knob {
-  left: 24px;
+.settings__cloud-card:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-/* ============================================
-   Storage Bar
-   ============================================ */
-.settings__storage {
-  margin-top: var(--space-4);
-}
-
-.settings__storage-bar {
-  height: 12px;
-  background: var(--color-background-alt);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.settings__storage-fill {
-  height: 100%;
-  background: var(--gradient-primary);
-  border-radius: var(--radius-full);
-  transition: width var(--transition-slow);
-}
-
-.settings__storage-text {
+.settings__cloud-icon {
+  width: 56px;
+  height: 56px;
+  background: white;
+  border-radius: var(--radius-md);
   display: flex;
-  justify-content: space-between;
-  margin-top: var(--space-2);
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.settings__cloud-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.settings__cloud-name {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+}
+
+.settings__cloud-status {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
-}
-
-/* ============================================
-   Danger Zone
-   ============================================ */
-.settings__danger {
-  border: 2px solid rgba(178, 34, 34, 0.2);
-}
-
-.settings__danger .settings__section-title {
-  color: var(--color-error);
-}
-
-.settings__btn--danger {
-  background: var(--color-error);
-  color: white;
-}
-
-.settings__btn--danger:hover {
-  background: #8B0000;
 }
 
 /* ============================================
@@ -220,7 +265,23 @@
     padding: var(--space-4);
   }
   
-  .settings__providers {
-    grid-template-columns: repeat(2, 1fr);
+  .settings__cloud-card {
+    flex-wrap: wrap;
+  }
+  
+  .settings__cloud-card .settings__btn {
+    width: 100%;
+    margin-top: var(--space-2);
+  }
+}
+
+@media (max-width: 480px) {
+  .settings__cloud-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .settings__cloud-info {
+    align-items: center;
   }
 }
