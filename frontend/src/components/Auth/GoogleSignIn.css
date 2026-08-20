@@ -1,155 +1,125 @@
-/* GoogleSignIn Styles */
-.google-sign-in {
-  padding: var(--spacing-xl);
-  max-width: 500px;
-  margin: 0 auto;
-  text-align: center;
-}
+/* GoogleSignIn Styles - Warm Horse Theme for Faye */
 
-.google-sign-in__features {
+.google-signin {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-base);
-  margin-bottom: var(--spacing-xl);
-  text-align: left;
-}
-
-.google-sign-in__feature {
-  display: flex;
   align-items: center;
-  gap: var(--spacing-base);
-  font-size: var(--font-size-base);
-  color: var(--color-text);
+  gap: var(--spacing-md);
+  width: 100%;
 }
 
-.google-sign-in__feature-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--border-radius-lg);
-  background: linear-gradient(135deg, var(--color-primary-light), var(--color-secondary-light));
+.google-btn {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--spacing-md);
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-xl);
+  background: linear-gradient(135deg, var(--color-horse-primary) 0%, var(--color-horse-secondary) 100%);
+  color: var(--color-white);
+  border: 3px solid var(--color-accent);
+  border-radius: var(--border-radius-xl);
+  font-family: var(--font-family-primary);
   font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.google-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  transition: left var(--transition-slow);
+}
+
+.google-btn:hover::before {
+  left: 100%;
+}
+
+.google-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    var(--shadow-xl),
+    0 0 30px rgba(255, 215, 0, 0.3);
+}
+
+.google-btn:active {
+  transform: translateY(-1px);
+}
+
+.google-btn:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.google-icon {
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
 }
 
-.google-sign-in__continue {
-  margin-bottom: var(--spacing-xl);
+.btn-text {
+  white-space: nowrap;
 }
 
-.google-sign-in__continue-btn {
-  width: 100%;
-  padding: var(--spacing-base) var(--spacing-xl);
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-  color: var(--color-primary-contrast);
-  border: none;
-  border-radius: var(--border-radius-lg);
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  font-family: var(--font-family-primary);
+.btn-loader {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-base);
 }
 
-.google-sign-in__continue-btn:hover {
-  background: linear-gradient(135deg, var(--color-primary-hover), var(--color-secondary-hover));
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+.loader-horse {
+  font-size: 1.5rem;
+  animation: bounce 0.5s ease-in-out infinite;
 }
 
-.google-sign-in__continue-btn:active {
-  transform: translateY(0);
-}
-
-.google-sign-in__or-divider {
+/* Error */
+.signin-error {
   display: flex;
   align-items: center;
-  gap: var(--spacing-base);
-  margin: var(--spacing-xl) 0;
-  color: var(--color-text-muted);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--border-radius-lg);
+  color: var(--color-danger);
   font-size: var(--font-size-sm);
 }
 
-.google-sign-in__or-divider::before,
-.google-sign-in__or-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--color-border);
+.error-icon {
+  font-size: 1rem;
 }
 
-.google-sign-in__local-btn {
-  width: 100%;
-  padding: var(--spacing-base);
-  background: var(--color-bg-surface);
-  color: var(--color-text);
-  border: 2px solid var(--color-border);
-  border-radius: var(--border-radius-lg);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  font-family: var(--font-family-primary);
-}
-
-.google-sign-in__local-btn:hover {
-  background: var(--color-bg-hover);
-  border-color: var(--color-primary);
-  transform: translateY(-2px);
-}
-
-.google-sign-in__sign-in-btn {
-  width: 100%;
-  padding: var(--spacing-base) var(--spacing-xl);
-  background: var(--color-bg-surface);
-  color: var(--color-text);
-  border: 2px solid var(--color-border);
-  border-radius: var(--border-radius-lg);
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  font-family: var(--font-family-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-base);
-  margin-bottom: var(--spacing-base);
-}
-
-.google-sign-in__sign-in-btn:hover {
-  background: var(--color-bg-hover);
-  border-color: var(--color-primary);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.google-sign-in__sign-in-btn:active {
-  transform: translateY(0);
-}
-
-.google-sign-in__icon {
-  width: 24px;
-  height: 24px;
+/* Note */
+.signin-note {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
 }
 
 /* Responsive */
-@media (max-width: 480px) {
-  .google-sign-in {
-    padding: var(--spacing-base);
+@media (max-width: var(--breakpoint-sm)) {
+  .google-btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: var(--font-size-base);
   }
-
-  .google-sign-in__features {
-    gap: var(--spacing-sm);
-  }
-
-  .google-sign-in__feature-icon {
-    width: 36px;
-    height: 36px;
+  
+  .google-icon {
+    width: 20px;
+    height: 20px;
   }
 }
