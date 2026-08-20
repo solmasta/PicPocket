@@ -1,5 +1,5 @@
 import { useState, memo } from 'react';
-import { useTranslation } from 'react-i18invoke';
+import { useTranslation } from 'react-i18next';
 import { usePhotos } from '../../hooks/usePhotos';
 import './PhotoCard.css';
 
