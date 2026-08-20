@@ -1,234 +1,166 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { saveAuthUser, getAuthUser, clearAuthUser } from '../utils/indexedDB';
-import { isGoogleAuthConfigured } from '../config/googleAuth';
+import { useState, useEffect, useCallback } from 'react';
+import { googleLogout, useGoogleLogin } from '@react-oauth/google';
+import api from '../services/api';
+import { ApiError } from '../services/api';
 
-// Start trying to renew the access token this far ahead of its actual
-// expiry, so a silent renewal has time to land before anything notices.
-const REFRESH_MARGIN_MS = 5 * 60 * 1000;
-// How long to wait for a silent (no-UI) renewal attempt before giving up
-// and surfacing the "Reconnect" button instead.
-const SILENT_RECONNECT_TIMEOUT_MS = 4000;
+const TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 minutes before expiry
 
-// Anonymous, device-local identity used when the person hasn't signed in
-// with Google (or Google sign-in isn't configured at all). Photo storage,
-// gallery, filters, etc. all key off `user.id`, so this just needs to be
-// stable for the lifetime of this browser's IndexedDB.
-const LOCAL_USER = {
-  id: 'local-user',
-  isLocal: true,
-  name: 'You',
-  email: null,
-  picture: null,
-};
-
-export function useAuth() {
+export const useAuth = () => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [tokenExpired, setTokenExpired] = useState(false);
-  // Holds the trigger function returned by @react-oauth/google's
-  // useGoogleLogin, supplied by <GoogleAuthBridge> via registerGoogleLogin.
-  const googleLoginRef = useRef(null);
-  // Tracks whether the in-flight Google request is a background silent
-  // renewal (vs. an explicit click), so a failed silent attempt can stay
-  // quiet instead of showing the user a "sign-in failed" error.
-  const silentAttemptRef = useRef(false);
 
-  // Restore session from IndexedDB on mount. The signed-in identity is kept
-  // even once its Google access token has expired — the token is only ever
-  // needed for Drive/Photos backup calls, not for using the app itself, so
-  // reopening the app (including after the browser's pull-to-refresh reload)
-  // should never boot someone back to the sign-in screen.
-  useEffect(() => {
-    async function restoreSession() {
-      try {
-        if (!isGoogleAuthConfigured()) {
-          // No Google Client ID — use a stable local identity so the rest
-          // of the app (gallery, upload, filters…) works without sign-in.
-          setUser(LOCAL_USER);
-          setLoading(false);
-          return;
-        }
-        const savedUser = await getAuthUser();
-        if (savedUser) {
-          // The renewal effect below checks expiry (and attempts a silent
-          // renewal) as soon as `user` is set, so it isn't computed here —
-          // just restore the identity.
-          setUser(savedUser);
-        } else {
-          // No saved user, but Google auth is configured
-          // User needs to sign in
-          setUser(null);
-        }
-      } catch (err) {
-        console.error('Failed to restore auth session:', err);
-      } finally {
-        setLoading(false);
-      }
+  const checkAuthStatus = useCallback(async () => {
+    const token = localStorage.getItem('auth_token');
+    const expiry = localStorage.getItem('token_expiry');
+
+    if (!token || !expiry) {
+      setIsAuthenticated(false);
+      setIsLoading(false);
+      return false;
     }
 
-    restoreSession();
-  }, []);
-
-  // Keep the session alive without ever prompting: a little before the
-  // access token is due to expire, ask Google for a fresh one with no UI
-  // (prompt: ''), which succeeds silently as long as the browser still has
-  // an active Google session — no backend, no popup, no click required.
-  // Only if that doesn't resolve in time does the "Reconnect" button show
-  // up, as a one-tap fallback (e.g. the user signed out of Google
-  // elsewhere, or the browser blocks the silent request).
-  useEffect(() => {
-    if (!user || !user.expiresAt) return undefined;
-
-    let cancelled = false;
-    let fallbackTimer = null;
-
-    const tick = () => {
-      const dueForRefresh = Date.now() >= user.expiresAt - REFRESH_MARGIN_MS;
-      if (!dueForRefresh) {
-        setTokenExpired(false);
-        return;
-      }
-      if (!googleLoginRef.current) {
-        setTokenExpired(true);
-        return;
-      }
-
-      silentAttemptRef.current = true;
-      googleLoginRef.current()({ prompt: '' });
-
-      fallbackTimer = setTimeout(() => {
-        if (!cancelled) setTokenExpired(Date.now() >= user.expiresAt);
-      }, SILENT_RECONNECT_TIMEOUT_MS);
-    };
-
-    tick();
-    const interval = setInterval(tick, 60 * 1000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-      if (fallbackTimer) clearTimeout(fallbackTimer);
+    if (Date.now() >= parseInt(expiry, 10)) {
+      await handleRefreshToken();
+      return isAuthenticated;
     }
-  }, [user]);
 
-  // Called by <GoogleAuthBridge> once useGoogleLogin is ready.
-  // getLogin is a zero-arg factory that returns the current googleLogin fn.
-  const registerGoogleLogin = useCallback((getLogin) => {
-    googleLoginRef.current = getLogin;
-  }, []);
-
-  const handleLoginSuccess = useCallback(async (tokenResponse) => {
     try {
-      setError(null);
-      // Fetch user profile using the access token
-      const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: 'Bearer ' + tokenResponse.access_token },
+      const response = await api.get('/api/auth/status');
+      setUser(response.user);
+      setIsAuthenticated(true);
+      setIsLoading(false);
+      return true;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        await handleRefreshToken();
+      } else {
+        console.error('Auth check failed:', err);
+        clearAuth();
+      }
+      setIsLoading(false);
+      return false;
+    }
+  }, []);
+
+  const handleRefreshToken = useCallback(async () => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    
+    if (!refreshToken) {
+      clearAuth();
+      return false;
+    }
+
+    try {
+      const response = await api.post('/api/auth/refresh', {
+        refreshToken,
       });
 
-      if (!profileRes.ok) {
-        throw new Error('Failed to fetch user profile');
+      if (response.token) {
+        localStorage.setItem('auth_token', response.token);
+        localStorage.setItem('token_expiry', response.expiresAt);
+        setIsAuthenticated(true);
+        return true;
       }
-
-      const profile = await profileRes.json();
-      const userData = {
-        id: profile.sub,
-        name: profile.name,
-        email: profile.email,
-        picture: profile.picture,
-        accessToken: tokenResponse.access_token,
-        expiresAt: Date.now() + (tokenResponse.expires_in || 3600) * 1000,
-        scope: tokenResponse.scope,
-      };
-
-      await saveAuthUser(userData);
-      setUser(userData);
-      setTokenExpired(false);
-      silentAttemptRef.current = false;
     } catch (err) {
-      setError(err.message);
-      console.error('Login error:', err);
+      if (err instanceof ApiError && err.status === 401) {
+        clearAuth();
+      }
+      console.error('Token refresh failed:', err);
+      return false;
     }
   }, []);
 
-  const handleLoginError = useCallback((err) => {
-    if (silentAttemptRef.current) {
-      // A background renewal attempt failing is expected sometimes (no
-      // active Google session, third-party cookies blocked, etc.) — the
-      // "Reconnect" fallback covers it, so don't alarm the user over it.
-      silentAttemptRef.current = false;
-      console.warn('Silent Google reconnect failed:', err);
-      return;
-    }
-    setError('Google sign-in failed. Please try again.');
-    console.error('Google OAuth error:', err);
+  const clearAuth = useCallback(() => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('token_expiry');
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsAuthenticated(false);
   }, []);
 
-  const signIn = useCallback(() => {
-    setError(null);
-    silentAttemptRef.current = false;
-    if (googleLoginRef.current) {
-      googleLoginRef.current()();
-    }
-  }, []);
+  const login = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsLoading(true);
+      setError(null);
 
-  // Enters (and persists) the local-only identity — used both by the
-  // sign-in screen's "Use Pic-Pocket Locally" option and, for a user who's
-  // already signed in with Google, as a way to drop back to local-only
-  // without losing anything: the photo library lives in IndexedDB
-  // independent of `user`, so switching identity never touches it.
-  const continueLocally = useCallback(async () => {
-    try {
-      await saveAuthUser(LOCAL_USER);
-    } catch (err) {
-      console.error('Failed to persist local session:', err);
-    }
-    setUser(LOCAL_USER);
-    setError(null);
-    setTokenExpired(false);
-  }, []);
+      try {
+        const response = await api.post('/api/auth/google', {
+          token: tokenResponse.access_token,
+        });
 
-  const signOut = useCallback(async () => {
-    try {
-      if (user && !user.isLocal) {
-        if (user.accessToken) {
-          // Best-effort: tell Google to revoke the grant so Drive/Photos
-          // access actually ends here, instead of the access token (and the
-          // silent-renewal flow above) remaining usable until it happens to
-          // expire on its own after "signing out".
-          try {
-            await fetch(
-              `https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(user.accessToken)}`,
-              { method: 'POST' }
-            );
-          } catch (revokeErr) {
-            console.warn('Failed to revoke Google token:', revokeErr);
-          }
+        if (response.token) {
+          localStorage.setItem('auth_token', response.token);
+          localStorage.setItem('refresh_token', response.refreshToken);
+          localStorage.setItem('token_expiry', response.expiresAt);
+          localStorage.setItem('user', JSON.stringify(response.user));
+          setUser(response.user);
+          setIsAuthenticated(true);
         }
-        await clearAuthUser();
-        setUser(null);
-        setTokenExpired(false);
-      } else if (user && user.isLocal) {
-        // Clear the persisted local choice too (continueLocally saves it),
-        // so signing out actually returns to the sign-in/chooser screen
-        // instead of silently restoring local mode on next load.
-        await clearAuthUser();
-        setUser(null);
+      } catch (err) {
+        console.error('Login failed:', err);
+        setError(err.message || 'Login failed. Please try again.');
+        clearAuth();
+      } finally {
+        setIsLoading(false);
       }
+    },
+    onError: (errorResponse) => {
+      console.error('Google login error:', errorResponse);
+      setError('Google sign-in failed. Please try again.');
+      setIsLoading(false);
+    },
+  });
+
+  const logout = useCallback(async () => {
+    setIsLoading(true);
+    
+    try {
+      await api.post('/api/auth/logout');
     } catch (err) {
-      console.error('Sign out error:', err);
+      console.warn('Logout API call failed, clearing local auth anyway:', err);
+    } finally {
+      try {
+        googleLogout();
+      } catch (err) {
+        console.warn('Google logout failed:', err);
+      }
+      clearAuth();
+      setIsLoading(false);
     }
-  }, [user]);
+  }, [clearAuth]);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, [checkAuthStatus]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !localStorage.getItem('token_expiry')) return;
+
+    const expiryTime = parseInt(localStorage.getItem('token_expiry'), 10);
+    const timeUntilRefresh = expiryTime - Date.now() - TOKEN_REFRESH_THRESHOLD;
+
+    if (timeUntilRefresh > 0) {
+      const refreshTimer = setTimeout(() => {
+        handleRefreshToken();
+      }, timeUntilRefresh);
+
+      return () => clearTimeout(refreshTimer);
+    }
+  }, [isAuthenticated, handleRefreshToken]);
 
   return {
     user,
-    loading,
+    isAuthenticated,
+    isLoading,
     error,
-    tokenExpired,
-    signIn,
-    signOut,
-    continueLocally,
-    registerGoogleLogin,
-    handleLoginSuccess,
-    handleLoginError,
+    login,
+    logout,
+    clearAuth,
+    refreshToken: handleRefreshToken,
   };
-}
+};
+
+export default useAuth;
