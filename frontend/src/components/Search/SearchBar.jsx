@@ -10,13 +10,10 @@ function SearchBar({ onSearch, onClear, initialValue = '' }) {
   const searchTimeoutRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Load initial suggestions (initialValue only — subsequent queries
-  // are handled by the debounced call in handleInputChange)
   useEffect(() => {
     if (initialValue) {
       loadSuggestions(initialValue);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValue]);
 
   const loadSuggestions = async (searchQuery) => {
@@ -42,12 +39,10 @@ function SearchBar({ onSearch, onClear, initialValue = '' }) {
     setQuery(value);
     setShowSuggestions(true);
 
-    // Clear previous timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    // Set new timeout
     if (value.trim()) {
       searchTimeoutRef.current = setTimeout(() => {
         loadSuggestions(value);
@@ -83,32 +78,40 @@ function SearchBar({ onSearch, onClear, initialValue = '' }) {
 
   return (
     <div className="search-bar-container">
-      <input
-        ref={inputRef}
-        type="text"
-        className="search-bar"
-        value={query}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-        onFocus={() => setShowSuggestions(true)}
-        placeholder="Search by tags, location, or filename..."
-        aria-label="Search photos"
-      />
-      <span className="search-bar-icon">🔍</span>
-      
-      {query && (
-        <button
-          className="clear-search"
-          onClick={handleClear}
-          aria-label="Clear search"
-        >
-          ✕
-        </button>
-      )}
+      <div className="search-bar-wrapper">
+        <svg className="search-bar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          ref={inputRef}
+          type="text"
+          className="search-bar"
+          value={query}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setShowSuggestions(true)}
+          placeholder="Search by tags, location, or filename..."
+          aria-label="Search photos"
+        />
+        {query && (
+          <button
+            className="search-bar-clear"
+            onClick={handleClear}
+            aria-label="Clear search"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
+      </div>
 
       {showSuggestions && isLoading && (
-        <div className="search-suggestions search-suggestions-loading">
-          <span className="suggestion-loading">Searching…</span>
+        <div className="search-suggestions search-suggestions--loading">
+          <div className="search-suggestions__spinner" />
+          <span>Searching…</span>
         </div>
       )}
 
@@ -119,11 +122,18 @@ function SearchBar({ onSearch, onClear, initialValue = '' }) {
               key={`${suggestion.id}-${index}`}
               className="suggestion-item"
               onClick={() => handleSuggestionClick(suggestion)}
+              role="option"
             >
-              <span className="suggestion-text">
-                {suggestion.tags.join(', ')}
-              </span>
-              <span className="suggestion-count">
+              <div className="suggestion-item__content">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                  <line x1="7" y1="7" x2="7.01" y2="7" />
+                </svg>
+                <span className="suggestion-item__text">
+                  {suggestion.tags.join(', ')}
+                </span>
+              </div>
+              <span className="suggestion-item__count">
                 {suggestion.count || 1}
               </span>
             </div>
