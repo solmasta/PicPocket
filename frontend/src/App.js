@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
+import { ErrorProvider } from './context/ErrorContext';
+import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import './styles/App.css';
 import './styles/components.css';
 import backgroundImage from './assets/faye-pic-pocket.jpg';
@@ -29,13 +31,28 @@ import { usePhotos } from './hooks/usePhotos';
 import { useStorageConnections } from './hooks/useStorageConnections';
 import { isGoogleAuthConfigured } from './config/googleAuth';
 
+const ErrorFallback = ({ error, retry }) => (
+  <div className="error-fallback">
+    <div className="error-fallback__content">
+      <h2>Something went wrong</h2>
+      <p>{error?.message || 'An unexpected error occurred'}</p>
+      <div className="error-fallback__actions">
+        <button onClick={retry} className="btn btn--primary">Try Again</button>
+        <button onClick={() => window.location.reload()} className="btn btn--secondary">Reload Page</button>
+      </div>
+    </div>
+  </div>
+);
+
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/album/:token" element={<SharedAlbumView />} />
-        <Route path="*" element={<MainApp />} />
-      </Routes>
+      <ErrorProvider>
+        <Routes>
+          <Route path="/album/:token" element={<SharedAlbumView />} />
+          <Route path="*" element={<MainApp />} />
+        </Routes>
+      </ErrorProvider>
     </BrowserRouter>
   );
 }
@@ -58,13 +75,6 @@ function MainApp() {
   const [activeView, setActiveView] = useState('gallery');
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768);
-  // Tracks which side of the mobile/desktop breakpoint we were last on, so a
-  // resize (window shrink, device rotation) that crosses it can reset the
-  // sidebar to that breakpoint's default open/closed state — without this,
-  // sidebarOpen is only ever set at mount and a later resize leaves it stuck
-  // (e.g. a desktop-open sidebar staying open, full-width, after shrinking
-  // to a mobile viewport). Resizes that stay within the same breakpoint
-  // don't touch it, so a manual toggle via the hamburger isn't fought.
   const isDesktopRef = useRef(window.innerWidth > 768);
   useEffect(() => {
     const handleResize = () => {
@@ -78,9 +88,6 @@ function MainApp() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Keep the splash screen up for a beat even when auth resolves instantly,
-  // so the artwork actually has time to register before the app appears.
-  // Skipped under test, where nothing is waiting out a real timer.
   const [minSplashElapsed, setMinSplashElapsed] = useState(
     () => process.env.NODE_ENV === 'test'
   );
@@ -104,9 +111,6 @@ function MainApp() {
     setActiveView('filters');
   };
 
-  // Registers the Google OAuth login trigger with useAuth so signIn() has
-  // something to call. Mounted whenever a Client ID is configured (matches
-  // the GoogleOAuthProvider gate in index.js).
   const googleAuthBridge = isGoogleAuthConfigured() ? (
     <GoogleAuthBridge
       onSuccess={handleLoginSuccess}
@@ -117,16 +121,16 @@ function MainApp() {
 
   if (authLoading || !minSplashElapsed) {
     return (
-      <>
+      <ErrorBoundary fallback={ErrorFallback}>
         {googleAuthBridge}
         <Splash />
-      </>
+      </ErrorBoundary>
     );
   }
 
   if (!user) {
     return (
-      <>
+      <ErrorBoundary fallback={ErrorFallback}>
         {googleAuthBridge}
         <GoogleSignIn
           signIn={signIn}
@@ -134,7 +138,7 @@ function MainApp() {
           loading={authLoading}
           error={error}
         />
-      </>
+      </ErrorBoundary>
     );
   }
 
@@ -241,7 +245,9 @@ function MainApp() {
             />
           )}
           <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} role="main">
-            {renderView()}
+            <ErrorBoundary fallback={ErrorFallback}>
+              {renderView()}
+            </ErrorBoundary>
           </main>
         </div>
         <Footer />
