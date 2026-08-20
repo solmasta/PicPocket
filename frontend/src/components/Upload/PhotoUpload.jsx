@@ -4,427 +4,325 @@ import LocationTag from '../Location/LocationTag';
 import { uploadToDrive } from '../../services/googleDriveService';
 import { uploadToGooglePhotos } from '../../services/googlePhotosService';
 import { uploadToOneDrive } from '../../services/oneDriveStorageService';
-import { uploadToDropbox } from '../../services/dropboxStorageService';
-import { analyzePhoto } from '../../services/aiService';
-import { getAutoBackupPref } from '../../utils/preferences';
+import { uploadToDropbox } from '../../services/dropboxService';
+import { saveToIndexedDB, getAllPhotos } from '../../utils/indexedDB';
 import './PhotoUpload.css';
 
-const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic'];
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
-
-function PhotoUpload({ onUpload, onBackupComplete, user, storageConnections }) {
-  const scope = user?.scope || '';
-  const hasDriveAccess = Boolean(user?.accessToken) && scope.includes('drive.file');
-  const hasPhotosAccess = Boolean(user?.accessToken) && scope.includes('photoslibrary');
-  const oneDriveConnection = storageConnections?.connections?.onedrive || null;
-  const dropboxConnection = storageConnections?.connections?.dropbox || null;
-  const hasOneDriveAccess = Boolean(oneDriveConnection?.accessToken);
-  const hasDropboxAccess = Boolean(dropboxConnection?.accessToken);
-
+function PhotoUpload({ onUploadComplete, onError }) {
+  const [dragActive, setDragActive] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const [tags, setTags] = useState([]);
-  const [locationEnabled, setLocationEnabled] = useState(false);
-  const [backupToDrive, setBackupToDrive] = useState(() => getAutoBackupPref());
-  const [backupToPhotos, setBackupToPhotos] = useState(() => getAutoBackupPref());
-  const [backupToOneDrive, setBackupToOneDrive] = useState(() => getAutoBackupPref());
-  const [backupToDropbox, setBackupToDropbox] = useState(() => getAutoBackupPref());
-  const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
-  const [errors, setErrors] = useState([]);
-  const [isDragging, setIsDragging] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('idle');
+  const [tags, setTags] = useState([]);
+  const [location, setLocation] = useState(null);
   const fileInputRef = useRef(null);
 
-  const validateFile = (file) => {
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      return `${file.name}: Unsupported file type`;
+  const handleDrag = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
     }
-    if (file.size > MAX_FILE_SIZE) {
-      return `${file.name}: File too large (max 20 MB)`;
-    }
-    return null;
-  };
-
-  const handleFilesSelected = useCallback((files) => {
-    const fileArray = Array.from(files);
-    const newErrors = [];
-    const validFiles = [];
-
-    fileArray.forEach((file) => {
-      const error = validateFile(file);
-      if (error) {
-        newErrors.push(error);
-      } else {
-        validFiles.push(file);
-      }
-    });
-
-    setErrors(newErrors);
-    setSelectedFiles((prev) => {
-      const existingNames = new Set(prev.map((f) => f.name));
-      return [...prev, ...validFiles.filter((f) => !existingNames.has(f.name))];
-    });
   }, []);
 
-  const handleFileInput = (e) => handleFilesSelected(e.target.files);
-
-  const handleDrop = (e) => {
+  const handleDrop = useCallback((e) => {
     e.preventDefault();
-    setIsDragging(false);
-    handleFilesSelected(e.dataTransfer.files);
+    e.stopPropagation();
+    setDragActive(false);
+    const files = Array.from(e.dataTransfer?.files || []);
+    processFiles(files);
+  }, []);
+
+  const handleFileSelect = useCallback((e) => {
+    const files = Array.from(e.target?.files || []);
+    processFiles(files);
+  }, []);
+
+  const processFiles = (files) => {
+    const imageFiles = files.filter((file) => file.type.startsWith('image/'));
+    if (imageFiles.length === 0) {
+      onError?.('Please select image files only');
+      return;
+    }
+    setSelectedFiles(imageFiles);
+    setUploadStatus('preview');
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
+  const readFileAsDataURL = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
-  const handleDragLeave = () => setIsDragging(false);
-
-  const removeFile = (index) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  const generateThumbnail = (dataUrl, maxSize = 400) => {
+    return new Promise((resolve) => {
+      const img = document.createElement('img');
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ratio = Math.min(maxSize / img.width, maxSize / img.height);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.src = dataUrl;
+    });
   };
 
   const handleUpload = async () => {
     if (selectedFiles.length === 0) return;
 
-    setUploading(true);
-    setErrors([]);
-    const newProgress = {};
-    selectedFiles.forEach((f) => (newProgress[f.name] = 0));
-    setUploadProgress(newProgress);
+    setUploadStatus('uploading');
+    const results = [];
+    const existingPhotos = await getAllPhotos();
+    const existingIds = new Set(existingPhotos.map((p) => p.id));
 
-    for (const file of selectedFiles) {
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const file = selectedFiles[i];
+      const fileId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
       try {
-        setUploadProgress((prev) => ({ ...prev, [file.name]: 10 }));
+        setUploadProgress((prev) => ({
+          ...prev,
+          [file.name]: { progress: 0, status: 'reading' },
+        }));
 
-        const photo = await onUpload(file, { tags, locationEnabled });
+        const dataUrl = await readFileAsDataURL(file);
+        const thumbnail = await generateThumbnail(dataUrl);
 
-        setUploadProgress((prev) => ({ ...prev, [file.name]: 40 }));
+        setUploadProgress((prev) => ({
+          ...prev,
+          [file.name]: { progress: 50, status: 'saving' },
+        }));
 
-        if (photo) {
-          // Kick off AI auto-tagging/captioning alongside the cloud
-          // backups below — it's independent of them, so there's no
-          // reason to make the upload wait for it twice.
-          const aiPromise = analyzePhoto(file);
+        const photo = {
+          id: fileId,
+          fileName: file.name,
+          fileSize: file.size,
+          mimeType: file.type,
+          dataUrl,
+          thumbnail,
+          dateAdded: new Date().toISOString(),
+          tags,
+          location,
+          cloudBackup: {},
+        };
 
-          // Backup to Google Drive
-          if (backupToDrive && hasDriveAccess) {
-            try {
-              const driveFile = await uploadToDrive(user.accessToken, file, file.name);
-              photo.cloudBackup = { ...photo.cloudBackup, googleDrive: driveFile.id };
-              setUploadProgress((prev) => ({ ...prev, [file.name]: 75 }));
-            } catch (err) {
-              console.warn('Drive backup failed:', err.message);
-              setErrors((prev) => [...prev, `${file.name}: Google Drive backup failed (${err.message})`]);
-            }
-          }
+        await saveToIndexedDB(photo);
+        results.push(photo);
 
-          // Backup to Google Photos
-          if (backupToPhotos && hasPhotosAccess) {
-            try {
-              const gPhoto = await uploadToGooglePhotos(user.accessToken, file);
-              photo.cloudBackup = { ...photo.cloudBackup, googlePhotos: gPhoto?.id };
-              setUploadProgress((prev) => ({ ...prev, [file.name]: 95 }));
-            } catch (err) {
-              console.warn('Google Photos backup failed:', err.message);
-              setErrors((prev) => [...prev, `${file.name}: Google Photos backup failed (${err.message})`]);
-            }
-          }
+        setUploadProgress((prev) => ({
+          ...prev,
+          [file.name]: { progress: 100, status: 'complete' },
+        }));
 
-          // Backup to OneDrive
-          if (backupToOneDrive && hasOneDriveAccess) {
-            try {
-              const oneDriveFile = await uploadToOneDrive(oneDriveConnection.accessToken, file, file.name);
-              photo.cloudBackup = { ...photo.cloudBackup, oneDrive: oneDriveFile.id };
-            } catch (err) {
-              console.warn('OneDrive backup failed:', err.message);
-              setErrors((prev) => [...prev, `${file.name}: OneDrive backup failed (${err.message})`]);
-            }
-          }
-
-          // Backup to Dropbox
-          if (backupToDropbox && hasDropboxAccess) {
-            try {
-              const dropboxFile = await uploadToDropbox(dropboxConnection.accessToken, file, file.name);
-              photo.cloudBackup = { ...photo.cloudBackup, dropbox: dropboxFile.path_lower || dropboxFile.id };
-            } catch (err) {
-              console.warn('Dropbox backup failed:', err.message);
-              setErrors((prev) => [...prev, `${file.name}: Dropbox backup failed (${err.message})`]);
-            }
-          }
-
-          setUploadProgress((prev) => ({ ...prev, [file.name]: 90 }));
-
-          let aiTags = [];
-          let aiCaption = '';
-          try {
-            ({ tags: aiTags, caption: aiCaption } = await aiPromise);
-          } catch (err) {
-            console.warn('AI analysis failed:', err.message);
-          }
-          if (aiTags.length) {
-            photo.tags = Array.from(new Set([...(photo.tags || []), ...aiTags]));
-          }
-          if (aiCaption) {
-            photo.caption = aiCaption;
-          }
-
-          // Persist whatever backup status and AI results were achieved so
-          // they survive a reload and show up in the gallery — without
-          // this, the calls above only mutated the in-memory photo object,
-          // never IndexedDB.
-          if (
-            photo.cloudBackup?.googleDrive ||
-            photo.cloudBackup?.googlePhotos ||
-            photo.cloudBackup?.oneDrive ||
-            photo.cloudBackup?.dropbox ||
-            aiTags.length ||
-            aiCaption
-          ) {
-            if (onBackupComplete) {
-              await onBackupComplete(photo);
-            }
-          }
+        try {
+          await uploadToDrive(photo);
+          photo.cloudBackup = { ...photo.cloudBackup, googleDrive: true };
+          await saveToIndexedDB(photo);
+        } catch (err) {
+          console.warn('Google Drive upload failed:', err);
         }
 
-        setUploadProgress((prev) => ({ ...prev, [file.name]: 100 }));
+        try {
+          await uploadToGooglePhotos(photo);
+          photo.cloudBackup = { ...photo.cloudBackup, googlePhotos: true };
+          await saveToIndexedDB(photo);
+        } catch (err) {
+          console.warn('Google Photos upload failed:', err);
+        }
+
+        try {
+          await uploadToOneDrive(photo);
+          photo.cloudBackup = { ...photo.cloudBackup, oneDrive: true };
+          await saveToIndexedDB(photo);
+        } catch (err) {
+          console.warn('OneDrive upload failed:', err);
+        }
+
+        try {
+          await uploadToDropbox(photo);
+          photo.cloudBackup = { ...photo.cloudBackup, dropbox: true };
+          await saveToIndexedDB(photo);
+        } catch (err) {
+          console.warn('Dropbox upload failed:', err);
+        }
       } catch (err) {
-        setErrors((prev) => [...prev, `${file.name}: ${err.message}`]);
-        setUploadProgress((prev) => ({ ...prev, [file.name]: -1 }));
+        console.error(`Failed to process ${file.name}:`, err);
+        setUploadProgress((prev) => ({
+          ...prev,
+          [file.name]: { progress: 0, status: 'error', error: err.message },
+        }));
       }
     }
 
-    setUploading(false);
-    setSelectedFiles([]);
-    setTags([]);
-    setUploadProgress({});
+    setUploadStatus('complete');
+    onUploadComplete?.(results);
   };
 
-  const formatSize = (bytes) => {
+  const handleReset = () => {
+    setSelectedFiles([]);
+    setTags([]);
+    setLocation(null);
+    setUploadProgress({});
+    setUploadStatus('idle');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  // Auto-add horse tag if user has horse profile
-  const addHorseTag = useCallback(async () => {
-    if (!user) return;
-    
-    try {
-      const { getHorseProfile } = await import('../../utils/indexedDB');
-      const horseProfile = await getHorseProfile(user.id);
-      if (horseProfile && horseProfile.fields && horseProfile.fields.name) {
-        const horseName = horseProfile.fields.name.toLowerCase();
-        if (!tags.includes(horseName)) {
-          setTags(prev => [...prev, horseName]);
-        }
-      }
-    } catch (err) {
-      console.log('No horse profile found or error loading profile');
-    }
-  }, [user, tags]);
-
-  return (
-    <div className="photo-upload">
-      <div className="upload-header">
-        <h1 className="upload-title">Upload Photos</h1>
-        <p className="upload-description">
-          Add your photos to PicPocket with optional tags, location, and cloud backup.
-        </p>
+  if (uploadStatus === 'idle') {
+    return (
+      <div className="photo-upload">
+        <div className="photo-upload__dropzone-container">
+          <div
+            className={`photo-upload__dropzone ${dragActive ? 'drag-active' : ''}`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileSelect}
+              className="photo-upload__input"
+            />
+            <div className="photo-upload__dropzone-icon">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            </div>
+            <h3 className="photo-upload__dropzone-title">Drop photos here</h3>
+            <p className="photo-upload__dropzone-text">or click to browse</p>
+            <p className="photo-upload__dropzone-hint">Supports JPG, PNG, GIF, WebP</p>
+          </div>
+        </div>
       </div>
+    );
+  }
 
-      {/* Drop Zone */}
-      <div
-        className={`upload-dropzone ${isDragging ? 'active' : ''}`}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept={ACCEPTED_TYPES.join(',')}
-          onChange={handleFileInput}
-          className="file-input-hidden"
-          aria-label="Select photos to upload"
-        />
-        <span className="upload-icon">📤</span>
-        <p className="upload-text">
-          {isDragging ? 'Drop photos here!' : 'Click or drag photos here to upload'}
-        </p>
-        <p className="upload-subtext">Supports JPG, PNG, GIF, WebP · Max 20 MB per file</p>
-        <button 
-          className="upload-button"
-          onClick={(e) => {
-            e.stopPropagation();
-            addHorseTag();
-          }}
-          type="button"
-        >
-          🐴 Add Horse Tag
+  if (uploadStatus === 'preview') {
+    return (
+      <div className="photo-upload photo-upload--preview">
+        <div className="photo-upload__preview-header">
+          <h2>Selected Files ({selectedFiles.length})</h2>
+          <button className="photo-upload__reset-btn" onClick={handleReset}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            Clear all
+          </button>
+        </div>
+
+        <div className="photo-upload__file-list">
+          {selectedFiles.map((file, index) => (
+            <div key={index} className="photo-upload__file-item">
+              <div className="photo-upload__file-info">
+                <span className="photo-upload__file-name">{file.name}</span>
+                <span className="photo-upload__file-size">{formatFileSize(file.size)}</span>
+              </div>
+              <button
+                className="photo-upload__file-remove"
+                onClick={() => removeFile(index)}
+                aria-label="Remove file"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div className="photo-upload__options">
+          <div className="photo-upload__option-group">
+            <label className="photo-upload__label">Tags</label>
+            <TagManager tags={tags} onChange={setTags} />
+          </div>
+          <div className="photo-upload__option-group">
+            <label className="photo-upload__label">Location</label>
+            <LocationTag location={location} onChange={setLocation} />
+          </div>
+        </div>
+
+        <button className="photo-upload__submit-btn" onClick={handleUpload}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          Upload {selectedFiles.length} {selectedFiles.length === 1 ? 'photo' : 'photos'}
         </button>
       </div>
+    );
+  }
 
-      {/* Selected files preview */}
-      {selectedFiles.length > 0 && (
-        <div className="upload-preview">
-          <h2 className="preview-title">Selected Photos ({selectedFiles.length})</h2>
-          <div className="preview-grid">
-            {selectedFiles.map((file, index) => {
-              const progress = uploadProgress[file.name];
-              return (
-                <div key={`${file.name}-${index}`} className="preview-item">
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={file.name}
-                    className="preview-image"
-                  />
-                  <div className="preview-meta">
-                    <span className="preview-filename">{file.name}</span>
-                    <span className="preview-filesize">{formatSize(file.size)}</span>
-                  </div>
-                  {!uploading && (
-                    <button
-                      className="preview-remove"
-                      onClick={() => removeFile(index)}
-                      aria-label={`Remove ${file.name}`}
-                    >
-                      ✕
-                    </button>
-                  )}
-                  {progress !== undefined && progress > 0 && progress < 100 && (
-                    <div className="upload-progress">
-                      <div className="progress-bar">
-                        <div
-                          className="progress-fill"
-                          style={{ width: `${progress === -1 ? 100 : progress}%` }}
-                        />
-                      </div>
-                      <div className="progress-text">
-                        {progress === -1 ? 'Error' : `${Math.round(progress)}%`}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Errors */}
-      {errors.length > 0 && (
-        <div className="alert alert-danger" role="alert">
-          <span className="alert-icon">⚠️</span>
-          <div className="alert-content">
-            <h3 className="alert-title">Upload Errors</h3>
-            {errors.map((err, i) => (
-              <p key={i} className="alert-message">
-                {err}
-              </p>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Upload Form */}
-      <div className="upload-form">
-        <h2 className="form-title">Upload Options</h2>
-
-        {/* Tags */}
-        <div className="form-group">
-          <label className="form-label">Tags</label>
-          <TagManager tags={tags} onChange={setTags} />
-        </div>
-
-        {/* Location */}
-        <div className="form-group">
-          <LocationTag enabled={locationEnabled} onToggle={setLocationEnabled} />
-        </div>
-
-        {/* Cloud Backup */}
-        <div className="form-group">
-          <label className="form-label">Cloud Backup</label>
-          <div className="backup-options">
-            <label className={`checkbox-label ${!hasDriveAccess ? 'checkbox-label--disabled' : ''}`}>
-              <input
-                type="checkbox"
-                checked={hasDriveAccess && backupToDrive}
-                disabled={!hasDriveAccess}
-                onChange={(e) => setBackupToDrive(e.target.checked)}
-              />
-              Backup to Google Drive
-            </label>
-            <label className={`checkbox-label ${!hasPhotosAccess ? 'checkbox-label--disabled' : ''}`}>
-              <input
-                type="checkbox"
-                checked={hasPhotosAccess && backupToPhotos}
-                disabled={!hasPhotosAccess}
-                onChange={(e) => setBackupToPhotos(e.target.checked)}
-              />
-              Backup to Google Photos
-            </label>
-            <label className={`checkbox-label ${!hasOneDriveAccess ? 'checkbox-label--disabled' : ''}`}>
-              <input
-                type="checkbox"
-                checked={hasOneDriveAccess && backupToOneDrive}
-                disabled={!hasOneDriveAccess}
-                onChange={(e) => setBackupToOneDrive(e.target.checked)}
-              />
-              Backup to OneDrive
-            </label>
-            <label className={`checkbox-label ${!hasDropboxAccess ? 'checkbox-label--disabled' : ''}`}>
-              <input
-                type="checkbox"
-                checked={hasDropboxAccess && backupToDropbox}
-                disabled={!hasDropboxAccess}
-                onChange={(e) => setBackupToDropbox(e.target.checked)}
-              />
-              Backup to Dropbox
-            </label>
-          </div>
-          {(!hasDriveAccess || !hasPhotosAccess) && (
-            <p className="option-hint">
-              Sign in with Google and grant Drive/Photos access to enable these backup options.
-            </p>
-          )}
-          {(!hasOneDriveAccess || !hasDropboxAccess) && (
-            <p className="option-hint">
-              Connect OneDrive/Dropbox in Settings to enable these backup options.
-            </p>
-          )}
-        </div>
-
-        <div className="form-actions">
-          <button
-            className="submit-button"
-            onClick={handleUpload}
-            disabled={selectedFiles.length === 0 || uploading}
-            aria-busy={uploading}
-          >
-            {uploading ? (
-              <>
-                <span className="button-spinner"></span>
-                Uploading {selectedFiles.length} photo(s)...
-              </>
-            ) : (
-              `Upload ${selectedFiles.length} Photo(s)`
-            )}
-          </button>
-          <button
-            className="cancel-button"
-            onClick={() => {
-              setSelectedFiles([]);
-              setTags([]);
-              setErrors([]);
-            }}
-            disabled={uploading}
-          >
-            Cancel
-          </button>
+  if (uploadStatus === 'uploading') {
+    return (
+      <div className="photo-upload photo-upload--uploading">
+        <h2>Uploading...</h2>
+        <div className="photo-upload__progress-list">
+          {selectedFiles.map((file) => (
+            <div key={file.name} className="photo-upload__progress-item">
+              <div className="photo-upload__progress-info">
+                <span className="photo-upload__progress-name">{file.name}</span>
+                <span className="photo-upload__progress-status">
+                  {uploadProgress[file.name]?.status === 'complete' ? 'Complete' : 'Processing...'}
+                </span>
+              </div>
+              <div className="photo-upload__progress-bar">
+                <div
+                  className="photo-upload__progress-fill"
+                  style={{ width: `${uploadProgress[file.name]?.progress || 0}%` }}
+                />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="photo-upload photo-upload--complete">
+      <div className="photo-upload__success-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
+      </div>
+      <h2>Upload Complete!</h2>
+      <p>{selectedFiles.length} {selectedFiles.length === 1 ? 'photo' : 'photos'} uploaded successfully</p>
+      <button className="photo-upload__submit-btn" onClick={handleReset}>
+        Upload More
+      </button>
     </div>
   );
 }
