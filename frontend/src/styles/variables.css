@@ -1,157 +1,218 @@
-/* ============================================
-   Design System Variables
-   Modern, clean aesthetic for PicPocket
-   ============================================ */
+/* Global CSS Variables - Horse Themed for Faye */
 
 :root {
-  /* === Color Palette === */
-  
-  /* Primary - Indigo */
-  --color-primary: #6366f1;
-  --color-primary-hover: #4f46e5;
-  --color-primary-light: #e0e7ff;
-  --color-primary-dark: #4338ca;
+  /* Primary Horse Theme - Warm & Elegant */
+  --color-primary: #8B4513;           /* Saddle Brown */
+  --color-primary-hover: #6B3410;     /* Darker Brown */
+  --color-primary-light: #DEB887;     /* Burlywood */
+  --color-primary-dark: #5C2D0E;      /* Deep Brown */
   --color-primary-contrast: #ffffff;
   
-  /* Secondary - Violet */
-  --color-secondary: #8b5cf6;
-  --color-secondary-hover: #7c3aed;
-  --color-secondary-light: #ede9fe;
-  --color-secondary-dark: #6d28d9;
+  --color-secondary: #D2691E;         /* Chocolate */
+  --color-secondary-hover: #B8540E;  /* Darker Chocolate */
+  --color-secondary-light: #F4A460;   /* Sandy Brown */
+  --color-secondary-dark: #8B0000;    /* Dark Red */
   --color-secondary-contrast: #ffffff;
   
-  /* Success - Emerald */
-  --color-success: #10b981;
-  --color-success-light: #d1fae5;
-  --color-success-dark: #059669;
+  --color-accent: #FFD700;            /* Gold - for sparkles! */
+  --color-accent-hover: #FFC107;      /* Darker Gold */
+  --color-accent-light: #FFF8DC;      /* Cornsilk */
+  --color-accent-dark: #DAA520;       /* Goldenrod */
+  --color-accent-contrast: #1f1f1f;
   
-  /* Warning - Amber */
-  --color-warning: #f59e0b;
-  --color-warning-light: #fef3c7;
-  --color-warning-dark: #d97706;
+  /* Success - Forest Green */
+  --color-success: #228B22;
+  --color-success-hover: #006400;
+  --color-success-light: #90EE90;
+  --color-success-dark: #004d00;
+  --color-success-contrast: #ffffff;
   
-  /* Error - Rose */
-  --color-error: #ef4444;
-  --color-error-light: #fee2e2;
-  --color-error-dark: #dc2626;
+  /* Danger - Barn Red */
+  --color-danger: #8B0000;
+  --color-danger-hover: #6B0000;
+  --color-danger-light: #FFB6C1;
+  --color-danger-dark: #4A0000;
+  --color-danger-contrast: #ffffff;
   
-  /* Neutral - Slate */
-  --color-bg: #f8fafc;
-  --color-surface: #ffffff;
-  --color-surface-elevated: #ffffff;
-  --color-surface-hover: #f1f5f9;
-  --color-surface-active: #e2e8f0;
-  --color-border: #e2e8f0;
-  --color-border-strong: #cbd5e1;
+  /* Warning - Hay Gold */
+  --color-warning: #DAA520;
+  --color-warning-hover: #B8860B;
+  --color-warning-light: #FFE4B5;
+  --color-warning-dark: #8B6914;
+  --color-warning-contrast: #1f1f1f;
   
-  /* Text */
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-tertiary: #94a3b8;
-  --color-text-inverse: #ffffff;
+  /* Info - Sky Blue */
+  --color-info: #4169E1;
+  --color-info-hover: #2A4BA8;
+  --color-info-light: #B0C4DE;
+  --color-info-dark: #1E3A7D;
+  --color-info-contrast: #ffffff;
   
-  /* Shadows */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+  /* Horse Theme Palette */
+  --color-horse-primary: #8B4513;     /* Saddle Brown */
+  --color-horse-secondary: #D2691E;   /* Chocolate */
+  --color-horse-accent: #FFD700;       /* Gold */
+  --color-horse-light: #F5DEB3;       /* Wheat */
+  --color-horse-bg: #FFF8F0;           /* Warm cream */
+  --color-horse-cream: #FFFAF5;        /* Soft cream */
+  --color-horse-tan: #C4A77D;          /* Tan */
+  --color-horse-contrast: #ffffff;
   
-  /* === Typography === */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  /* Grayscale */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-gray-50: #faf9f7;
+  --color-gray-100: #f5f3f0;
+  --color-gray-200: #e8e4df;
+  --color-gray-300: #d4cdc4;
+  --color-gray-400: #a8a093;
+  --color-gray-500: #7c7468;
+  --color-gray-600: #5c564d;
+  --color-gray-700: #403d37;
+  --color-gray-800: #262420;
+  --color-gray-900: #1a1816;
   
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
-  --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
-  --text-4xl: 2.25rem;
+  /* Theme Colors - Warm & Cozy */
+  --color-bg: var(--color-horse-bg);
+  --color-bg-subtle: var(--color-gray-100);
+  --color-bg-surface: var(--color-white);
+  --color-bg-hover: var(--color-gray-100);
+  --color-bg-input: var(--color-white);
+  --color-text: var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-600);
+  --color-border: var(--color-gray-300);
   
-  --leading-none: 1;
-  --leading-tight: 1.25;
-  --leading-normal: 1.5;
-  --leading-relaxed: 1.625;
+  /* Status Backgrounds */
+  --color-success-bg: #f0fdf4;
+  --color-success-border: #bbf7d0;
+  --color-danger-bg: #fef2f2;
+  --color-danger-border: #fecaca;
+  --color-warning-bg: #fffbeb;
+  --color-warning-border: #fde68a;
+  --color-info-bg: #eff6ff;
+  --color-info-border: #bfdbfe;
   
-  --tracking-tight: -0.025em;
-  --tracking-normal: 0;
-  --tracking-wide: 0.025em;
+  /* Typography - Friendly & Readable */
+  --font-family-primary: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-display: 'Baloo 2', 'Nunito', cursive;
+  --font-family-mono: 'SF Mono', Monaco, 'Courier New', monospace;
   
-  /* === Spacing === */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
-  --space-20: 5rem;
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+  --font-size-4xl: 2.25rem;   /* 36px */
+  --font-size-5xl: 3rem;      /* 48px */
   
-  /* === Border Radius === */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  --radius-full: 9999px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
   
-  /* === Transitions === */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Spacing System */
+  --spacing-xs: 0.25rem;      /* 4px */
+  --spacing-sm: 0.5rem;       /* 8px */
+  --spacing-base: 1rem;       /* 16px */
+  --spacing-md: 1.5rem;       /* 24px */
+  --spacing-lg: 2rem;         /* 32px */
+  --spacing-xl: 3rem;         /* 48px */
+  --spacing-2xl: 4rem;        /* 64px */
+  
+  /* Borders - Soft & Rounded */
+  --border-radius-xs: 0.25rem;   /* 4px */
+  --border-radius-sm: 0.5rem;    /* 8px */
+  --border-radius-md: 0.75rem;   /* 12px */
+  --border-radius-lg: 1rem;      /* 16px */
+  --border-radius-xl: 1.5rem;    /* 24px */
+  --border-radius-2xl: 2rem;     /* 32px */
+  --border-radius-full: 9999px;
+  
+  /* Shadows - Soft & Warm */
+  --shadow-xs: 0 1px 2px rgba(139, 69, 19, 0.05);
+  --shadow-sm: 0 2px 4px rgba(139, 69, 19, 0.08);
+  --shadow-base: 0 4px 12px rgba(139, 69, 19, 0.1);
+  --shadow-md: 0 8px 24px rgba(139, 69, 19, 0.12);
+  --shadow-lg: 0 16px 48px rgba(139, 69, 19, 0.15);
+  --shadow-xl: 0 24px 64px rgba(139, 69, 19, 0.2);
+  --shadow-inner: inset 0 2px 4px rgba(139, 69, 19, 0.05);
+  
+  /* Glow Effects - Golden Sparkle */
+  --glow-primary: 0 0 20px rgba(139, 69, 19, 0.3);
+  --glow-accent: 0 0 20px rgba(255, 215, 0, 0.4);
+  --glow-soft: 0 0 30px rgba(255, 215, 0, 0.2);
+  
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 300ms ease;
+  --transition-slow: 500ms ease;
   --transition-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
   
-  /* === Z-Index Scale === */
-  --z-base: 0;
-  --z-dropdown: 100;
-  --z-sticky: 200;
-  --z-modal: 300;
-  --z-toast: 400;
-  --z-tooltip: 500;
+  /* Layout */
+  --header-height: 72px;
+  --sidebar-width: 260px;
+  --max-width-container: 1400px;
   
-  /* === Layout === */
-  --sidebar-width: 280px;
-  --sidebar-collapsed: 72px;
-  --header-height: 64px;
-  --content-max-width: 1400px;
+  /* Z-Index */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal: 1050;
+  --z-popover: 1070;
+  --z-tooltip: 1080;
   
-  /* === Component-specific === */
-  --input-height: 44px;
-  --button-height: 44px;
-  --card-padding: var(--space-5);
-  --gap-sm: var(--space-2);
-  --gap-md: var(--space-4);
-  --gap-lg: var(--space-6);
+  /* Breakpoints */
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1200px;
+  --breakpoint-xxl: 1400px;
 }
 
-/* === Dark Mode === */
-[data-theme="dark"] {
-  --color-bg: #0f172a;
-  --color-surface: #1e293b;
-  --color-surface-elevated: #334155;
-  --color-surface-hover: #334155;
-  --color-surface-active: #475569;
-  --color-border: #334155;
-  --color-border-strong: #475569;
+/* Dark Theme - Cozy Night */
+.dark-theme {
+  --color-bg: #1a1612;
+  --color-bg-subtle: #262017;
+  --color-bg-surface: #2d261f;
+  --color-bg-hover: #3a322a;
+  --color-bg-input: #3a322a;
+  --color-text: #f5f0e8;
+  --color-text-secondary: #b8a99a;
+  --color-border: #4a423a;
   
-  --color-text-primary: #f8fafc;
-  --color-text-secondary: #cbd5e1;
-  --color-text-tertiary: #64748b;
+  --color-horse-bg: #1a1612;
+  --color-horse-cream: #2d261f;
+  --color-horse-tan: #5c5045;
   
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  /* Status Backgrounds - Dark */
+  --color-success-bg: #064e3b;
+  --color-success-border: #047857;
+  --color-danger-bg: #4a1010;
+  --color-danger-border: #8b0000;
+  --color-warning-bg: #4a3a00;
+  --color-warning-border: #b8860b;
+  --color-info-bg: #1e3a8a;
+  --color-info-border: #1d4ed8;
+  
+  /* Shadows - Dark */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-base: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.35);
 }
 
-/* === Reduced Motion === */
+/* High Contrast Theme */
+@media (prefers-contrast: high) {
+  :root {
+    --color-text: var(--color-black);
+    --color-text-secondary: var(--color-gray-800);
+    --color-border: var(--color-black);
+  }
+}
+
+/* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   :root {
     --transition-fast: 0ms;
