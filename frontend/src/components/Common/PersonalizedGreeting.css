@@ -1,0 +1,117 @@
+/* Personalized Greeting - Warm Welcome for Faye */
+.personalized-greeting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: linear-gradient(
+    135deg,
+    var(--color-horse-primary) 0%,
+    var(--color-horse-secondary) 50%,
+    var(--color-horse-accent) 100%
+  );
+  border-radius: var(--border-radius-xl);
+  color: white;
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.personalized-greeting.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.greeting-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.greeting-emoji {
+  font-size: 2.5rem;
+  animation: emojiBounce 2s ease-in-out infinite;
+}
+
+@keyframes emojiBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.greeting-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.greeting-time {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.greeting-message {
+  font-size: var(--font-size-base);
+  opacity: 0.9;
+}
+
+.greeting-stats {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background: rgba(255, 255, 255, 0.2);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-full);
+}
+
+.stat-icon {
+  font-size: 1.25rem;
+}
+
+.stat-value {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.stat-label {
+  font-size: var(--font-size-sm);
+  opacity: 0.9;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .personalized-greeting {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    padding: var(--spacing-base);
+  }
+
+  .greeting-emoji {
+    font-size: 2rem;
+  }
+
+  .greeting-time {
+    font-size: var(--font-size-lg);
+  }
+
+  .greeting-message {
+    font-size: var(--font-size-sm);
+  }
+
+  .greeting-stats {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
