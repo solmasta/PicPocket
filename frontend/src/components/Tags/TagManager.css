@@ -1,119 +1,186 @@
-.tag-manager {
+/* ============================================
+   TagManager Component Styles
+   Pic-Pocket for Faye 🐴
+   ============================================ */
+
+.tags {
+  padding: var(--space-6);
+}
+
+.tags__card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.tags__header {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-xs);
   align-items: center;
-  background: var(--color-bg-input);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-sm);
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+
+.tags__title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tags__count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-weight: 400;
+  margin-left: var(--space-2);
+}
+
+.tags__input-wrapper {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.tags__input {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid rgba(139, 69, 19, 0.1);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
   transition: all var(--transition-fast);
 }
 
-.tag-manager:focus-within {
+.tags__input:focus {
+  outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-light);
+  box-shadow: var(--shadow-sm);
 }
 
-.tag-input-container {
+.tags__add-btn {
+  padding: var(--space-3) var(--space-6);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--gradient-primary);
+  color: var(--color-text-inverse);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tags__add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ============================================
+   Tags List
+   ============================================ */
+.tags__list {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-xs);
-  align-items: center;
-  flex: 1;
+  gap: var(--space-3);
 }
 
-.tag-input {
-  flex: 1;
-  min-width: 120px;
+.tags__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--gradient-warm);
+  border: 1px solid rgba(139, 69, 19, 0.1);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  transition: all var(--transition-fast);
+  animation: slideUp 0.3s ease;
+}
+
+.tags__item:hover {
+  background: var(--color-surface-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.tags__item-icon {
+  color: var(--color-primary);
+}
+
+.tags__item-name {
+  font-weight: 500;
+}
+
+.tags__item-count {
+  background: var(--color-accent);
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+}
+
+.tags__item-remove {
+  width: 20px;
+  height: 20px;
   border: none;
   background: transparent;
-  color: var(--color-text);
-  font-family: var(--font-family-primary);
-  font-size: var(--font-size-base);
-  padding: var(--spacing-xs) 0;
-}
-
-.tag-input:focus {
-  outline: none;
-}
-
-.tag {
-  display: inline-flex;
-  align-items: center;
-  background: var(--color-primary);
-  color: var(--color-primary-contrast);
-  border-radius: var(--border-radius-full);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-}
-
-.tag.horse-tag {
-  background: var(--color-horse-primary);
-}
-
-.tag-remove {
-  background: none;
-  border: none;
-  color: var(--color-primary-contrast);
-  margin-left: var(--spacing-xs);
+  color: var(--color-text-muted);
   cursor: pointer;
-  font-size: var(--font-size-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
-  border-radius: var(--border-radius-full);
+  border-radius: var(--radius-full);
   transition: all var(--transition-fast);
 }
 
-.tag-remove:hover {
-  background: rgba(255, 255, 255, 0.2);
+.tags__item-remove:hover {
+  background: var(--color-error);
+  color: white;
 }
 
-.suggestions-container {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-md);
-  box-shadow: var(--shadow-md);
-  z-index: var(--z-dropdown);
-  max-height: 200px;
-  overflow-y: auto;
-  margin-top: var(--spacing-xs);
+/* ============================================
+   Empty State
+   ============================================ */
+.tags__empty {
+  text-align: center;
+  padding: var(--space-10);
+  color: var(--color-text-muted);
 }
 
-.suggestion-item {
-  padding: var(--spacing-sm) var(--spacing-base);
-  cursor: pointer;
-  transition: all var(--transition-fast);
+.tags__empty-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-4);
+  opacity: 0.5;
 }
 
-.suggestion-item:hover {
-  background: var(--color-bg-hover);
+.tags__empty-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
 }
 
-.suggestion-item.active {
-  background: var(--color-primary-light);
-}
-
-/* Responsive adjustments */
+/* ============================================
+   Mobile Responsive
+   ============================================ */
 @media (max-width: 768px) {
-  .tag-manager {
-    padding: var(--spacing-xs);
+  .tags {
+    padding: var(--space-4);
   }
   
-  .tag {
-    font-size: var(--font-size-xs);
-    padding: var(--spacing-xs);
+  .tags__input-wrapper {
+    flex-direction: column;
   }
   
-  .tag-input {
-    min-width: 80px;
+  .tags__add-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
