@@ -11,8 +11,8 @@ function GoogleSignIn({ signIn, continueLocally, loading, error }) {
     >
       <div className="signin-card">
         <div className="signin-logo">
-          <img src={logo} alt="Pic-Pocket mascot logo" className="signin-logo-img" />
-          <h1 className="signin-app-name">Pic-Pocket</h1>
+          <img src={logo} alt="PicPocket" className="signin-logo-img" />
+          <h1 className="signin-app-name">PicPocket</h1>
           <p className="signin-tagline">Your smart photo storage companion</p>
         </div>
 
@@ -37,6 +37,11 @@ function GoogleSignIn({ signIn, continueLocally, loading, error }) {
 
         {error && (
           <div className="signin-error" role="alert">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
             {error}
           </div>
         )}
@@ -65,13 +70,20 @@ function GoogleSignIn({ signIn, continueLocally, loading, error }) {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          {loading ? 'Signing in...' : 'Sign in with Google'}
+          {loading ? (
+            <>
+              <div className="google-signin-btn__spinner" />
+              Signing in...
+            </>
+          ) : (
+            'Sign in with Google'
+          )}
         </button>
 
         <div className="signin-local-option">
           <p>Or continue locally without Google sign-in:</p>
           <button className="local-signin-btn" onClick={continueLocally}>
-            Use Pic-Pocket Locally
+            Use PicPocket Locally
           </button>
           <p className="signin-local-hint">
             You can still connect Google, OneDrive, or Dropbox for backup any time from Settings.
@@ -79,7 +91,7 @@ function GoogleSignIn({ signIn, continueLocally, loading, error }) {
         </div>
 
         <p className="signin-privacy">
-          By signing in, you agree to grant Pic-Pocket access to your Google Photos and
+          By signing in, you agree to grant PicPocket access to your Google Photos and
           Drive for backup purposes. Your photos remain private and secure.
         </p>
       </div>
