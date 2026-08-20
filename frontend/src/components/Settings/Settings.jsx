@@ -5,241 +5,187 @@ import './Settings.css';
 
 export default function Settings({ user, storageConnections, onSignInGoogle, onContinueLocally, onSignOut }) {
   const [autoBackup, setAutoBackup] = useState(() => getAutoBackupPref());
-  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
-  const [exportMessage, setExportMessage] = useState('');
-
-  const {
-    connections = {},
-    connecting = null,
-    errors: connectionErrors = {},
-    connect,
-    disconnect,
-    isOneDriveConfigured = false,
-    isDropboxConfigured = false,
-  } = storageConnections || {};
+  const [showLocalWarning, setShowLocalWarning] = useState(false);
 
   useEffect(() => {
-    const goOnline = () => setIsOnline(true);
-    const goOffline = () => setIsOnline(false);
-    window.addEventListener('online', goOnline);
-    window.addEventListener('offline', goOffline);
-    return () => {
-      window.removeEventListener('online', goOnline);
-      window.removeEventListener('offline', goOffline);
-    };
-  }, []);
+    setAutoBackupPref(autoBackup);
+  }, [autoBackup]);
 
-  const scope = user?.scope || '';
-  const hasPhotosScope = scope.includes('photoslibrary');
-  const hasDriveScope = scope.includes('drive.file');
-
-  const handleAutoBackupChange = (e) => {
-    const value = e.target.checked;
-    setAutoBackup(value);
-    setAutoBackupPref(value);
-  };
-
-  const handleExport = () => {
-    const data = {
-      settings: { autoBackup },
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'picpocket-settings.json';
-    link.click();
-    URL.revokeObjectURL(url);
-    setExportMessage('Settings exported successfully!');
-    setTimeout(() => setExportMessage(''), 3000);
-  };
+  const cloudProviders = [
+    {
+      id: 'google',
+      name: 'Google Drive',
+      icon: 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+      connected: storageConnections?.google,
+      status: 'google',
+    },
+    {
+      id: 'googlePhotos',
+      name: 'Google Photos',
+      icon: 'https://lh3.googleusercontent.com/SiocFDNolDDBydCDiDXAyFkI5gqKx3tPRNV-6Z9CAc8hVocQpgJ2p9U2RDvKfpWYg=s64',
+      connected: storageConnections?.googlePhotos,
+      status: 'googlePhotos',
+    },
+    {
+      id: 'dropbox',
+      name: 'Dropbox',
+      icon: 'https://dropbox.com/static/images/brand_assets/logos_faq/DB_Logo_2015.png',
+      connected: storageConnections?.dropbox,
+      status: 'dropbox',
+    },
+    {
+      id: 'onedrive',
+      name: 'OneDrive',
+      icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Microsoft_logo_-_2012.svg/64px-Microsoft_logo_-_2012.svg.png',
+      connected: storageConnections?.oneDrive,
+      status: 'oneDrive',
+    },
+  ];
 
   return (
     <div className="settings">
-      <h1 className="settings__title">Settings</h1>
+      <div className="settings__header">
+        <h1>Settings</h1>
+        <p>Manage your account and storage preferences</p>
+      </div>
 
-      {/* Account — the local library (IndexedDB) is always available no
-          matter which of these is active; this only decides whether Google
-          Drive/Photos backup scopes are attached on top of it. */}
+      {/* Account Section */}
       <section className="settings__section">
-        <h2 className="settings__section-title">Account</h2>
-        {user?.isLocal ? (
-          <>
-            <div className="settings__status-row">
-              <span className="settings__label">
-                <span className="settings__label-icon">💻</span>
-                Using PicPocket locally on this device
-              </span>
-              <span className="settings__status settings__status--connected">✔ Active</span>
+        <h2 className="settings__section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          Account
+        </h2>
+        <div className="settings__card">
+          <div className="settings__account-info">
+            <div className="settings__account-avatar">
+              {user?.picture ? (
+                <img src={user.picture} alt={user.name || 'User'} />
+              ) : (
+                <span>{user?.name?.[0] || user?.email?.[0] || '👤'}</span>
+              )}
             </div>
-            {isGoogleAuthConfigured() && (
-              <>
-                <p className="settings__hint">
-                  Your photos stay right here either way — connecting Google just adds Drive/Photos backup.
-                </p>
-                <button className="settings__btn settings__btn--primary" onClick={onSignInGoogle}>
-                  Connect Google Account
-                </button>
-              </>
-            )}
-          </>
-        ) : (
-          <>
-            <div className="settings__status-row">
-              <span className="settings__label">
-                <span className="settings__label-icon">👤</span>
-                Signed in with Google
-                {user?.email && <span className="settings__account-name">{user.email}</span>}
-              </span>
-              <span className="settings__status settings__status--connected">✔ Active</span>
+            <div className="settings__account-details">
+              <h3>{user?.name || 'Local User'}</h3>
+              <p>{user?.email || 'No email associated'}</p>
+              {user?.isLocal && (
+                <span className="settings__account-badge">Local Account</span>
+              )}
             </div>
-            <p className="settings__hint">
-              Your local library stays on this device even if you disconnect Google.
-            </p>
-            <button className="settings__btn" onClick={onContinueLocally}>
-              Switch to Local-Only
-            </button>
-            <button className="settings__btn" onClick={onSignOut}>
-              Sign Out
-            </button>
-          </>
-        )}
-      </section>
-
-      {/* Connections */}
-      <section className="settings__section">
-        <h2 className="settings__section-title">Connections</h2>
-        <p className="settings__description">Google account permissions granted during sign-in.</p>
-
-        <div className="settings__status-row">
-          <span className="settings__label">
-            <span className="settings__label-icon">📷</span>
-            Google Photos
-          </span>
-          {hasPhotosScope ? (
-            <span className="settings__status settings__status--connected">✔ Connected</span>
-          ) : (
-            <span className="settings__status settings__status--warning">Not connected</span>
-          )}
-        </div>
-
-        <div className="settings__status-row">
-          <span className="settings__label">
-            <span className="settings__label-icon">💾</span>
-            Google Drive
-          </span>
-          {hasDriveScope ? (
-            <span className="settings__status settings__status--connected">✔ Connected</span>
-          ) : (
-            <span className="settings__status settings__status--warning">Not connected</span>
-          )}
-        </div>
-
-        <hr className="settings__divider" />
-        <p className="settings__description">
-          Additional storage accounts your daughter can control from this app — for backup
-          and to pull photos in from other devices/sessions via the Storage Ledger.
-        </p>
-
-        <div className="settings__status-row">
-          <span className="settings__label">
-            <span className="settings__label-icon">🟦</span>
-            OneDrive
-            {connections.onedrive && (
-              <span className="settings__account-name">{connections.onedrive.accountName}</span>
+          </div>
+          <div className="settings__account-actions">
+            {!user?.isLocal ? (
+              <button className="settings__btn settings__btn--danger" onClick={onSignOut}>
+                Sign Out
+              </button>
+            ) : (
+              <button className="settings__btn settings__btn--primary" onClick={onSignInGoogle}>
+                Sign in with Google
+              </button>
             )}
-          </span>
-          {connections.onedrive ? (
-            <button className="settings__btn" onClick={() => disconnect('onedrive')}>
-              Disconnect
-            </button>
-          ) : !isOneDriveConfigured ? (
-            <span className="settings__status settings__status--warning" title="Set REACT_APP_ONEDRIVE_CLIENT_ID to enable">
-              Not set up yet
-            </span>
-          ) : (
-            <button
-              className="settings__btn settings__btn--primary"
-              onClick={() => connect('onedrive')}
-              disabled={connecting === 'onedrive'}
-            >
-              {connecting === 'onedrive' ? 'Connecting…' : 'Connect'}
-            </button>
-          )}
-        </div>
-        {connectionErrors.onedrive && <p className="settings__connect-error">⚠️ {connectionErrors.onedrive}</p>}
-
-        <div className="settings__status-row">
-          <span className="settings__label">
-            <span className="settings__label-icon">🔵</span>
-            Dropbox
-            {connections.dropbox && (
-              <span className="settings__account-name">{connections.dropbox.accountName}</span>
-            )}
-          </span>
-          {connections.dropbox ? (
-            <button className="settings__btn" onClick={() => disconnect('dropbox')}>
-              Disconnect
-            </button>
-          ) : !isDropboxConfigured ? (
-            <span className="settings__status settings__status--warning" title="Set REACT_APP_DROPBOX_CLIENT_ID to enable">
-              Not set up yet
-            </span>
-          ) : (
-            <button
-              className="settings__btn settings__btn--primary"
-              onClick={() => connect('dropbox')}
-              disabled={connecting === 'dropbox'}
-            >
-              {connecting === 'dropbox' ? 'Connecting…' : 'Connect'}
-            </button>
-          )}
-        </div>
-        {connectionErrors.dropbox && <p className="settings__connect-error">⚠️ {connectionErrors.dropbox}</p>}
-      </section>
-
-      {/* Backup & Sync */}
-      <section className="settings__section">
-        <h2 className="settings__section-title">Backup &amp; Sync</h2>
-
-        <label className="settings__checkbox-row">
-          <input
-            type="checkbox"
-            id="auto-backup"
-            className="settings__checkbox-input"
-            checked={autoBackup}
-            onChange={handleAutoBackupChange}
-          />
-          <span className="settings__label">
-            <span className="settings__label-icon">🔄</span>
-            Auto-Backup Photos
-          </span>
-        </label>
-        <p className="settings__hint">Automatically back up new photos to connected cloud services.</p>
-
-        <div className="settings__status-row">
-          <span className="settings__label">
-            <span className="settings__label-icon">📡</span>
-            Network
-          </span>
-          {isOnline ? (
-            <span className="settings__status settings__status--connected">✔ Online</span>
-          ) : (
-            <span className="settings__status settings__status--warning">⚠ Offline</span>
-          )}
+          </div>
         </div>
       </section>
 
-      {/* Data Export */}
+      {/* Storage Section */}
       <section className="settings__section">
-        <h2 className="settings__section-title">Data</h2>
-        <p className="settings__description">
-          Export your PicPocket settings as a JSON file.
-        </p>
-        <button className="settings__btn settings__btn--primary" onClick={handleExport}>
-          📤 Export Data
-        </button>
-        {exportMessage && <p className="settings__status settings__status--connected">{exportMessage}</p>}
+        <h2 className="settings__section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+          </svg>
+          Cloud Storage
+        </h2>
+        <div className="settings__cloud-grid">
+          {cloudProviders.map((provider) => (
+            <div
+              key={provider.id}
+              className={`settings__cloud-card ${provider.connected ? 'connected' : ''}`}
+            >
+              <div className="settings__cloud-icon">
+                <img src={provider.icon} alt={provider.name} />
+              </div>
+              <div className="settings__cloud-info">
+                <h4>{provider.name}</h4>
+                <span className="settings__cloud-status">
+                  {provider.connected ? 'Connected' : 'Not connected'}
+                </span>
+              </div>
+              <button
+                className={`settings__btn ${provider.connected ? 'settings__btn--outline' : 'settings__btn--primary'}`}
+                onClick={() => !provider.connected && onSignInGoogle?.(provider.status)}
+                disabled={provider.connected}
+              >
+                {provider.connected ? 'Connected' : 'Connect'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Backup Section */}
+      <section className="settings__section">
+        <h2 className="settings__section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          Backup Preferences
+        </h2>
+        <div className="settings__card">
+          <div className="settings__toggle-row">
+            <div className="settings__toggle-info">
+              <h4>Auto-backup new photos</h4>
+              <p>Automatically upload new photos to connected cloud storage</p>
+            </div>
+            <label className="settings__toggle">
+              <input
+                type="checkbox"
+                checked={autoBackup}
+                onChange={(e) => {
+                  setAutoBackup(e.target.checked);
+                  if (e.target.checked) setShowLocalWarning(true);
+                }}
+              />
+              <span className="settings__toggle-slider" />
+            </label>
+          </div>
+          {showLocalWarning && user?.isLocal && (
+            <div className="settings__warning">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span>Sign in with Google to enable cloud backup</span>
+              <button onClick={() => setShowLocalWarning(false)}>Dismiss</button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section className="settings__section">
+        <h2 className="settings__section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          About
+        </h2>
+        <div className="settings__card">
+          <div className="settings__about-row">
+            <span>Version</span>
+            <span className="settings__about-value">1.0.0</span>
+          </div>
+          <div className="settings__about-row">
+            <span>Built with</span>
+            <span className="settings__about-value">React + Cloudflare Workers</span>
+          </div>
+        </div>
       </section>
     </div>
   );
