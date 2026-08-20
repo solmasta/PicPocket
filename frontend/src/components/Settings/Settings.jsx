@@ -58,9 +58,7 @@ export default function Settings({ user, storageConnections, onSignInGoogle, onC
     <div className="settings">
       <h1 className="settings__title">Settings</h1>
 
-      {/* Account — the local library (IndexedDB) is always available no
-          matter which of these is active; this only decides whether Google
-          Drive/Photos backup scopes are attached on top of it. */}
+      {/* Account */}
       <section className="settings__section">
         <h2 className="settings__section-title">Account</h2>
         {user?.isLocal ? (
@@ -106,10 +104,10 @@ export default function Settings({ user, storageConnections, onSignInGoogle, onC
         )}
       </section>
 
-      {/* Connections */}
+      {/* Google Connections */}
       <section className="settings__section">
-        <h2 className="settings__section-title">Connections</h2>
-        <p className="settings__description">Google account permissions granted during sign-in.</p>
+        <h2 className="settings__section-title">Google Backup</h2>
+        <p className="settings__description">Access your Google photos and Drive storage.</p>
 
         <div className="settings__status-row">
           <span className="settings__label">
@@ -134,68 +132,70 @@ export default function Settings({ user, storageConnections, onSignInGoogle, onC
             <span className="settings__status settings__status--warning">Not connected</span>
           )}
         </div>
+      </section>
 
-        <hr className="settings__divider" />
-        <p className="settings__description">
-          Additional storage accounts your daughter can control from this app — for backup
-          and to pull photos in from other devices/sessions via the Storage Ledger.
-        </p>
+      {/* Extra Cloud Storage */}
+      <section className="settings__section">
+        <h2 className="settings__section-title">Extra Cloud Storage</h2>
+        <p className="settings__description">Connect additional cloud accounts for backup and importing photos from other devices.</p>
 
-        <div className="settings__status-row">
-          <span className="settings__label">
-            <span className="settings__label-icon">🟦</span>
-            OneDrive
-            {connections.onedrive && (
-              <span className="settings__account-name">{connections.onedrive.accountName}</span>
+        <div className="settings__cloud-grid">
+          <div className="settings__cloud-card">
+            <div className="settings__cloud-icon">🟦</div>
+            <div className="settings__cloud-info">
+              <span className="settings__cloud-name">OneDrive</span>
+              {connections.onedrive ? (
+                <span className="settings__account-name">{connections.onedrive.accountName}</span>
+              ) : (
+                <span className="settings__cloud-status">Not connected</span>
+              )}
+            </div>
+            {connections.onedrive ? (
+              <button className="settings__btn settings__btn--sm" onClick={() => disconnect('onedrive')}>
+                Disconnect
+              </button>
+            ) : !isOneDriveConfigured ? (
+              <span className="settings__status settings__status--warning">⚙️ Set up in Settings</span>
+            ) : (
+              <button
+                className="settings__btn settings__btn--primary settings__btn--sm"
+                onClick={() => connect('onedrive')}
+                disabled={connecting === 'onedrive'}
+              >
+                {connecting === 'onedrive' ? 'Connecting…' : 'Sign In'}
+              </button>
             )}
-          </span>
-          {connections.onedrive ? (
-            <button className="settings__btn" onClick={() => disconnect('onedrive')}>
-              Disconnect
-            </button>
-          ) : !isOneDriveConfigured ? (
-            <span className="settings__status settings__status--warning" title="Set REACT_APP_ONEDRIVE_CLIENT_ID to enable">
-              Not set up yet
-            </span>
-          ) : (
-            <button
-              className="settings__btn settings__btn--primary"
-              onClick={() => connect('onedrive')}
-              disabled={connecting === 'onedrive'}
-            >
-              {connecting === 'onedrive' ? 'Connecting…' : 'Connect'}
-            </button>
-          )}
-        </div>
-        {connectionErrors.onedrive && <p className="settings__connect-error">⚠️ {connectionErrors.onedrive}</p>}
+          </div>
+          {connectionErrors.onedrive && <p className="settings__connect-error">⚠️ {connectionErrors.onedrive}</p>}
 
-        <div className="settings__status-row">
-          <span className="settings__label">
-            <span className="settings__label-icon">🔵</span>
-            Dropbox
-            {connections.dropbox && (
-              <span className="settings__account-name">{connections.dropbox.accountName}</span>
+          <div className="settings__cloud-card">
+            <div className="settings__cloud-icon">🔵</div>
+            <div className="settings__cloud-info">
+              <span className="settings__cloud-name">Dropbox</span>
+              {connections.dropbox ? (
+                <span className="settings__account-name">{connections.dropbox.accountName}</span>
+              ) : (
+                <span className="settings__cloud-status">Not connected</span>
+              )}
+            </div>
+            {connections.dropbox ? (
+              <button className="settings__btn settings__btn--sm" onClick={() => disconnect('dropbox')}>
+                Disconnect
+              </button>
+            ) : !isDropboxConfigured ? (
+              <span className="settings__status settings__status--warning">⚙️ Set up in Settings</span>
+            ) : (
+              <button
+                className="settings__btn settings__btn--primary settings__btn--sm"
+                onClick={() => connect('dropbox')}
+                disabled={connecting === 'dropbox'}
+              >
+                {connecting === 'dropbox' ? 'Connecting…' : 'Sign In'}
+              </button>
             )}
-          </span>
-          {connections.dropbox ? (
-            <button className="settings__btn" onClick={() => disconnect('dropbox')}>
-              Disconnect
-            </button>
-          ) : !isDropboxConfigured ? (
-            <span className="settings__status settings__status--warning" title="Set REACT_APP_DROPBOX_CLIENT_ID to enable">
-              Not set up yet
-            </span>
-          ) : (
-            <button
-              className="settings__btn settings__btn--primary"
-              onClick={() => connect('dropbox')}
-              disabled={connecting === 'dropbox'}
-            >
-              {connecting === 'dropbox' ? 'Connecting…' : 'Connect'}
-            </button>
-          )}
+          </div>
+          {connectionErrors.dropbox && <p className="settings__connect-error">⚠️ {connectionErrors.dropbox}</p>}
         </div>
-        {connectionErrors.dropbox && <p className="settings__connect-error">⚠️ {connectionErrors.dropbox}</p>}
       </section>
 
       {/* Backup & Sync */}
