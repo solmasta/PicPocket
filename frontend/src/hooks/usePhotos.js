@@ -1,127 +1,139 @@
 import { useState, useEffect, useCallback } from 'react';
-import * as indexedDB from '../utils/indexedDB';
-import { resizeImage, createThumbnail } from '../utils/imageFilters';
-import { getCurrentPosition, reverseGeocode } from '../utils/geolocation';
-import { hashFile } from '../utils/contentHash';
+import * as idb from '../utils/indexedDB';
+import api, { ApiError } from '../services/api';
 
-// `crypto.randomUUID` is universal in real browsers but isn't always present
-// as a bare global in test environments (jsdom under Jest), so fall back to
-// a simpler unique id rather than referencing `crypto` unguarded.
-function generateId() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-// PicPocket's library lives entirely in this browser's IndexedDB — there is
-// no server-side photo store to sync with (see StorageLedger, which treats
-// Google Drive/Photos, OneDrive and Dropbox as separate backup destinations
-// to reconcile against, not a source of truth). This hook is the single
-// place that reads/writes that local library.
-export function usePhotos(user) {
+export const usePhotos = () => {
   const [photos, setPhotos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        setLoading(true);
-        const localPhotos = await indexedDB.getAllPhotos();
-        if (!cancelled) {
-          setPhotos(
-            [...localPhotos].sort(
-              (a, b) => new Date(b.uploadDate) - new Date(a.uploadDate)
-            )
-          );
-        }
-      } catch (err) {
-        console.error('Failed to load local photos:', err);
-        if (!cancelled) setError('Failed to load local photos');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+  const loadPhotos = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const photos = await idb.getAllPhotos();
+      setPhotos(photos);
+    } catch (err) {
+      console.error('Failed to load photos:', err);
+      setError('Failed to load photos from local storage');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  // Adds a new photo to the local library. Accepts either the legacy
-  // (tags, location) positional args or an options object
-  // ({ tags, locationEnabled }) — PhotoUpload and StorageLedger both call
-  // this with slightly different shapes.
-  const addPhoto = useCallback(
-    async (file, optionsOrTags = {}, maybeLocation = null) => {
-      const isOptionsObject =
-        optionsOrTags && !Array.isArray(optionsOrTags) && typeof optionsOrTags === 'object';
-      const tags = isOptionsObject ? optionsOrTags.tags || [] : optionsOrTags || [];
-      const locationEnabled = isOptionsObject ? Boolean(optionsOrTags.locationEnabled) : false;
+  const addPhoto = useCallback(async (photoData) => {
+    setError(null);
 
-      const [dataUrl, contentHash] = await Promise.all([
-        resizeImage(file),
-        hashFile(file),
-      ]);
-      const thumbnail = await createThumbnail(dataUrl);
+    try {
+      await idb.savePhoto(photoData);
 
-      let location = maybeLocation;
-      if (!location && locationEnabled) {
-        try {
-          const position = await getCurrentPosition();
-          const name = await reverseGeocode(position.lat, position.lng);
-          location = { lat: position.lat, lng: position.lng, name };
-        } catch (err) {
-          console.warn('Could not capture location for photo:', err.message);
-        }
-      }
+      const photos = await idb.getAllPhotos();
+      setPhotos(photos);
 
-      const photo = {
-        id: generateId(),
-        userId: user?.id,
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
-        uploadDate: new Date().toISOString(),
-        tags,
-        location,
-        cloudBackup: {},
-        dataUrl,
-        thumbnail,
-        contentHash,
-      };
-
-      await indexedDB.savePhoto(photo);
-      setPhotos((prev) => [photo, ...prev]);
-      return photo;
-    },
-    [user]
-  );
-
-  // Persists a full (or partially-mutated) photo object back to the
-  // library — used for cloud-backup tagging, AI tag/caption suggestions,
-  // and filter edits.
-  const updatePhoto = useCallback(async (updatedPhoto) => {
-    if (!updatedPhoto?.id) return updatedPhoto;
-    await indexedDB.savePhoto(updatedPhoto);
-    setPhotos((prev) =>
-      prev.map((p) => (p.id === updatedPhoto.id ? { ...p, ...updatedPhoto } : p))
-    );
-    return updatedPhoto;
+      return photoData;
+    } catch (err) {
+      console.error('Failed to save photo:', err);
+      setError('Failed to save photo');
+      throw err;
+    }
   }, []);
 
   const deletePhoto = useCallback(async (photoId) => {
-    await indexedDB.deletePhoto(photoId);
-    setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+    setError(null);
+
+    try {
+      await idb.deletePhoto(photoId);
+
+      setPhotos(prev => prev.filter(p => p.id !== photoId));
+
+      try {
+        await api.delete(`/api/photos/${photoId}`);
+      } catch (apiErr) {
+        console.warn('Photo deleted locally but API sync failed:', apiErr);
+      }
+    } catch (err) {
+      console.error('Failed to delete photo:', err);
+      setError('Failed to delete photo');
+      throw err;
+    }
   }, []);
+
+  const syncFromServer = useCallback(async () => {
+    setIsSyncing(true);
+    setError(null);
+
+    try {
+      const response = await api.get('/api/photos');
+      const serverPhotos = response.photos || [];
+
+      const localPhotos = await idb.getAllPhotos();
+      const localIds = new Set(localPhotos.map(p => p.id));
+
+      const newPhotos = serverPhotos.filter(p => !localIds.has(p.id));
+      
+      for (const photo of newPhotos) {
+        await idb.savePhoto(photo);
+      }
+
+      const updatedPhotos = await idb.getAllPhotos();
+      setPhotos(updatedPhotos);
+
+      return { added: newPhotos.length };
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        setError('Please sign in to sync photos');
+      } else {
+        console.error('Sync failed:', err);
+        setError('Failed to sync photos from server');
+      }
+      throw err;
+    } finally {
+      setIsSyncing(false);
+    }
+  }, []);
+
+  const updatePhotoMetadata = useCallback(async (photoId, metadata) => {
+    setError(null);
+
+    try {
+      await idb.updatePhoto(photoId, metadata);
+
+      setPhotos(prev =>
+        prev.map(p =>
+          p.id === photoId ? { ...p, ...metadata } : p
+        )
+      );
+
+      try {
+        await api.put(`/api/photos/${photoId}`, metadata);
+      } catch (apiErr) {
+        console.warn('Metadata updated locally but API sync failed:', apiErr);
+      }
+    } catch (err) {
+      console.error('Failed to update photo metadata:', err);
+      setError('Failed to update photo metadata');
+      throw err;
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPhotos();
+  }, [loadPhotos]);
 
   return {
     photos,
-    loading,
+    isLoading,
+    isSyncing,
     error,
+    loadPhotos,
     addPhoto,
-    updatePhoto,
     deletePhoto,
+    syncFromServer,
+    updatePhotoMetadata,
+    clearError: () => setError(null),
   };
-}
+};
+
+export default usePhotos;
