@@ -4,8 +4,8 @@
   flex-direction: column;
   min-height: 100vh;
   background-color: var(--color-bg);
-  font-family: var(--font-family-primary);
-  color: var(--color-text);
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
   transition: background-color var(--transition-base), color var(--transition-base);
 }
 
@@ -23,13 +23,6 @@
     radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 20%);
 }
 
-.app-container > .app-header,
-.app-container > .app-body,
-.app-container > .app-footer {
-  position: relative;
-  z-index: 1;
-}
-
 .app-body {
   display: flex;
   flex: 1;
@@ -39,31 +32,32 @@
 
 .main-content {
   flex: 1;
-  padding: var(--spacing-xl);
+  padding: var(--space-6);
   margin-left: var(--sidebar-width);
-  transition: margin-left var(--transition-base), padding var(--transition-base);
+  transition: margin-left var(--transition-slow);
   max-width: 100%;
   width: 100%;
+  min-height: calc(100vh - var(--header-height) - 48px);
 }
 
-.main-content.sidebar-collapsed {
+.main-content.sidebar-open {
+  margin-left: var(--sidebar-width);
+}
+
+.main-content.sidebar-closed {
   margin-left: 0;
 }
 
-.main-content.full-width {
-  margin-left: 0;
-}
-
-/* Responsive adjustments */
+/* Responsive */
 @media (max-width: 1024px) {
   .main-content {
-    padding: var(--spacing-lg);
+    padding: var(--space-5);
   }
 }
 
 @media (max-width: 768px) {
   .main-content {
-    padding: var(--spacing-base);
+    padding: var(--space-4);
     margin-left: 0;
   }
   
@@ -72,118 +66,37 @@
   }
 }
 
-/* Focus styles */
-*:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-  border-radius: var(--border-radius-xs);
+.sidebar-backdrop {
+  display: none;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--color-bg-subtle);
-  border-radius: var(--border-radius-full);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-gray-400);
-  border-radius: var(--border-radius-full);
-  border: 2px solid var(--color-bg-subtle);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gray-500);
-}
-
-/* Utility classes */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.text-left {
-  text-align: left;
-}
-
-.text-right {
-  text-align: right;
-}
-
-.flex-center {
+/* Error fallback */
+.error-fallback {
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 400px;
+  padding: var(--space-6);
 }
 
-.flex-between {
+.error-fallback__content {
+  text-align: center;
+  max-width: 400px;
+}
+
+.error-fallback__content h2 {
+  font-size: var(--text-2xl);
+  color: var(--color-error);
+  margin-bottom: var(--space-3);
+}
+
+.error-fallback__content p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-6);
+}
+
+.error-fallback__actions {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.gap-sm {
-  gap: var(--spacing-sm);
-}
-
-.gap-base {
-  gap: var(--spacing-base);
-}
-
-.gap-lg {
-  gap: var(--spacing-lg);
-}
-
-/* Dark mode specific adjustments */
-.dark-theme .app-background {
-  opacity: 0.02;
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 20%),
-    radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 20%);
-}
-
-.dark-theme ::-webkit-scrollbar-track {
-  background: var(--color-bg-subtle);
-}
-
-.dark-theme ::-webkit-scrollbar-thumb {
-  background: var(--color-gray-600);
-}
-
-.dark-theme ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gray-500);
-}
-
-/* Animation classes */
-.fade-in {
-  animation: fadeIn var(--transition-base) ease-in;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.slide-in {
-  animation: slideIn var(--transition-base) ease-out;
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
+  gap: var(--space-3);
+  justify-content: center;
 }
