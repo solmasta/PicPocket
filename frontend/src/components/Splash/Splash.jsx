@@ -1,35 +1,95 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import GoogleSignIn from '../Auth/GoogleSignIn';
 import './Splash.css';
-import splashImage from '../../assets/faye-pic-pocket.jpg';
-import logo from '../../assets/pic-pocket-logo.png';
 
-const SPARKLES = Array.from({ length: 7 }, (_, i) => i);
+const Splash = () => {
+  const { t } = useTranslation();
+  const [isLoaded, setIsLoaded] = useState(false);
 
-function Splash() {
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoaded(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div
-      className="splash-screen"
-      style={{ backgroundImage: `url(${splashImage})` }}
-    >
-      <div className="splash-scrim" />
-      <div className="splash-sparkles">
-        {SPARKLES.map((i) => (
-          <span key={i} className="sparkle" />
-        ))}
+    <div className={`splash ${isLoaded ? 'loaded' : ''}`}>
+      {/* Animated Background */}
+      <div className="splash-bg">
+        <div className="bg-gradient" />
+        <div className="bg-particles">
+          <span className="particle">✨</span>
+          <span className="particle">🐴</span>
+          <span className="particle">💫</span>
+          <span className="particle">✨</span>
+          <span className="particle">🌟</span>
+          <span className="particle">✨</span>
+        </div>
       </div>
+
+      {/* Content */}
       <div className="splash-content">
+        {/* Logo */}
         <div className="splash-logo">
-          <img src={logo} alt="Pic-Pocket" />
+          <div className="logo-badge">
+            <span className="badge-icon">🐴</span>
+          </div>
+          <h1 className="logo-title">
+            <span className="title-pic">Pic</span>
+            <span className="title-pocket">Pocket</span>
+          </h1>
+          <p className="logo-subtitle">for Faye ✨</p>
         </div>
-        <div className="splash-welcome">
-          <h1>Welcome to Pic-Pocket! ✨</h1>
-          <p>Your magical photo memories await...</p>
+
+        {/* Tagline */}
+        <div className="splash-tagline">
+          <p>Your magical photo collection</p>
+          <div className="tagline-decoration">
+            <span className="deco-star">⭐</span>
+            <span className="deco-text">Store • Share • Remember</span>
+            <span className="deco-star">⭐</span>
+          </div>
         </div>
-        <div className="splash-spinner" role="status" aria-label="Loading" />
-        <p className="splash-loading-text">Loading your memories...</p>
+
+        {/* Features */}
+        <div className="splash-features">
+          <div className="feature">
+            <span className="feature-icon">📸</span>
+            <span className="feature-text">Beautiful Gallery</span>
+          </div>
+          <div className="feature">
+            <span className="feature-icon">💫</span>
+            <span className="feature-text">AI Organization</span>
+          </div>
+          <div className="feature">
+            <span className="feature-icon">☁️</span>
+            <span className="feature-text">Cloud Backup</span>
+          </div>
+          <div className="feature">
+            <span className="feature-icon">🎠</span>
+            <span className="feature-text">Photo Stories</span>
+          </div>
+        </div>
+
+        {/* Sign In */}
+        <div className="splash-auth">
+          <GoogleSignIn />
+        </div>
+
+        {/* Footer */}
+        <div className="splash-footer">
+          <p>Made with 💛 for Faye</p>
+        </div>
+      </div>
+
+      {/* Decorative Elements */}
+      <div className="splash-decorations">
+        <div className="deco-circle circle-1" />
+        <div className="deco-circle circle-2" />
+        <div className="deco-circle circle-3" />
       </div>
     </div>
   );
-}
+};
 
 export default Splash;
