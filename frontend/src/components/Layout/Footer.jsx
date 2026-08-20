@@ -1,15 +1,19 @@
 import React from 'react';
-import packageJson from '../../../package.json';
 import './Footer.css';
 
 function Footer() {
   return (
     <footer className="app-footer">
-      <p>
-        © {new Date().getFullYear()} Pic-Pocket — Your memories, beautifully kept.
-        {' '}
-        <span className="app-footer__version">v{packageJson.version}</span>
-      </p>
+      <div className="app-footer__content">
+        <p className="app-footer__text">
+          © {new Date().getFullYear()} PicPocket — Your memories, beautifully kept.
+        </p>
+        <div className="app-footer__links">
+          <span className="app-footer__version">v1.0.0</span>
+          <span className="app-footer__separator">•</span>
+          <span className="app-footer__tech">React + Cloudflare Workers</span>
+        </div>
+      </div>
     </footer>
   );
 }
