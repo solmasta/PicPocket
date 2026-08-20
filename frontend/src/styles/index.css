@@ -78,7 +78,7 @@ a:hover {
 
 /* Selection */
 ::selection {
-  background-color: var(--color-horse-accent);
+  background-color: var(--color-accent);
   color: var(--color-gray-900);
 }
 
@@ -107,7 +107,7 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, var(--color-horse-accent) 0%, var(--color-horse-secondary) 100%);
+  background: linear-gradient(180deg, var(--color-accent) 0%, var(--color-horse-secondary) 100%);
 }
 
 /* Buttons */
