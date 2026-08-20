@@ -1,82 +1,58 @@
 .app-footer {
-  background: var(--color-bg-surface);
-  color: var(--color-text);
-  padding: var(--spacing-lg) var(--spacing-base);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  padding: var(--space-4) var(--space-6);
   border-top: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
   margin-top: auto;
 }
 
-.footer-content {
-  max-width: var(--max-width-container);
+.app-footer__content {
+  max-width: var(--content-max-width);
   margin: 0 auto;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--spacing-base);
-}
-
-.footer-links {
-  display: flex;
-  gap: var(--spacing-lg);
+  justify-content: space-between;
   flex-wrap: wrap;
-  justify-content: center;
+  gap: var(--space-4);
 }
 
-.footer-link {
-  color: var(--color-text);
-  text-decoration: none;
-  font-weight: var(--font-weight-medium);
-  transition: all var(--transition-fast);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
+.app-footer__text {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  margin: 0;
 }
 
-.footer-link:hover {
+.app-footer__links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.app-footer__version {
+  font-weight: 600;
   color: var(--color-primary);
-  background: var(--color-bg-subtle);
-  text-decoration: none;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-primary-light);
+  border-radius: var(--radius-full);
 }
 
-.footer-info {
-  text-align: center;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+.app-footer__separator {
+  color: var(--color-text-tertiary);
 }
 
-.footer-version {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-primary);
+.app-footer__tech {
+  color: var(--color-text-tertiary);
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .app-footer {
-    padding: var(--spacing-base) var(--spacing-sm);
+    padding: var(--space-4);
   }
-  
-  .footer-links {
-    gap: var(--spacing-base);
-  }
-  
-  .footer-link {
-    font-size: var(--font-size-sm);
-  }
-  
-  .footer-info {
-    font-size: var(--font-size-xs);
-  }
-}
 
-@media (max-width: 480px) {
-  .footer-links {
+  .app-footer__content {
     flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-sm);
-  }
-  
-  .footer-link {
-    padding: var(--spacing-xs) var(--spacing-base);
+    text-align: center;
   }
 }
