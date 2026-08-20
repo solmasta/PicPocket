@@ -23,6 +23,14 @@
   gap: var(--space-6);
 }
 
+}
+
+.settings__sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
 /* ============================================
    Section Card
    ============================================ */
@@ -253,6 +261,173 @@
   color: var(--color-text-muted);
 }
 
+}
+
+.settings__section-desc {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-4);
+}
+
+/* ============================================
+   Cloud Providers Grid
+   ============================================ */
+.settings__providers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-4);
+}
+
+.settings__provider {
+  padding: var(--space-4);
+  border: 2px solid rgba(139, 69, 19, 0.1);
+  border-radius: var(--radius-md);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: var(--color-surface);
+}
+
+.settings__provider:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.settings__provider--active {
+  border-color: var(--color-accent);
+  background: var(--gradient-warm);
+}
+
+.settings__provider-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--space-2);
+  background: var(--color-background-alt);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.settings__provider-name {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.settings__provider-status {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+}
+
+/* ============================================
+   Toggle Switch
+   ============================================ */
+.settings__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid rgba(139, 69, 19, 0.05);
+}
+
+.settings__toggle:last-child {
+  border-bottom: none;
+}
+
+.settings__toggle-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.settings__toggle-desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+}
+
+.settings__switch {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  background: var(--color-background-alt);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.settings__switch--active {
+  background: var(--gradient-accent);
+}
+
+.settings__switch-knob {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.settings__switch--active .settings__switch-knob {
+  left: 24px;
+}
+
+/* ============================================
+   Storage Bar
+   ============================================ */
+.settings__storage {
+  margin-top: var(--space-4);
+}
+
+.settings__storage-bar {
+  height: 12px;
+  background: var(--color-background-alt);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.settings__storage-fill {
+  height: 100%;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+}
+
+.settings__storage-text {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* ============================================
+   Danger Zone
+   ============================================ */
+.settings__danger {
+  border: 2px solid rgba(178, 34, 34, 0.2);
+}
+
+.settings__danger .settings__section-title {
+  color: var(--color-error);
+}
+
+.settings__btn--danger {
+  background: var(--color-error);
+  color: white;
+}
+
+.settings__btn--danger:hover {
+  background: #8B0000;
+}
+
 /* ============================================
    Mobile Responsive
    ============================================ */
@@ -283,5 +458,7 @@
   
   .settings__cloud-info {
     align-items: center;
+  .settings__providers {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
