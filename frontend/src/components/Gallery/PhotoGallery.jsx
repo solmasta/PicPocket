@@ -1,13 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import PhotoCard from './PhotoCard';
 import SearchBar from '../Search/SearchBar';
 import './PhotoGrid.css';
 import './PhotoGallery.css';
 
-// The whole point of PicPocket is to be one ledger over several cloud
-// drives, so the gallery itself needs to answer "where does this photo
-// actually live?" at a glance — these filters mirror the providers
-// StorageLedger reconciles against.
 const STORAGE_FILTERS = [
   { key: 'all', label: 'All Photos', icon: '📸' },
   { key: 'unbacked', label: 'Not Backed Up', icon: '⚠️' },
@@ -29,17 +25,12 @@ function PhotoGallery({ photos = [], loading, onDelete, onSelect, onViewChange }
   const [searchQuery, setSearchQuery] = useState('');
   const [storageFilter, setStorageFilter] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
+  const containerRef = useRef(null);
+  const itemHeight = viewMode === 'grid' ? 280 : 80;
+  const bufferCount = 10;
 
-  const storageCounts = useMemo(() => {
-    const counts = { all: photos.length, unbacked: 0 };
-    STORAGE_FILTERS.slice(2).forEach((f) => {
-      counts[f.key] = photos.filter((p) => isBackedUpTo(p, f.key)).length;
-    });
-    counts.unbacked = photos.filter((p) => !isBackedUpAnywhere(p)).length;
-    return counts;
-  }, [photos]);
-
-  const displayPhotos = useMemo(() => {
+  const filteredPhotos = useMemo(() => {
     let result = photos;
 
     if (storageFilter === 'unbacked') {
@@ -62,9 +53,49 @@ function PhotoGallery({ photos = [], loading, onDelete, onSelect, onViewChange }
     return result;
   }, [photos, storageFilter, searchQuery]);
 
+  const storageCounts = useMemo(() => {
+    const counts = { all: photos.length, unbacked: 0 };
+    STORAGE_FILTERS.slice(2).forEach((f) => {
+      counts[f.key] = photos.filter((p) => isBackedUpTo(p, f.key)).length;
+    });
+    counts.unbacked = photos.filter((p) => !isBackedUpAnywhere(p)).length;
+    return counts;
+  }, [photos]);
+
+  const virtualizedPhotos = useMemo(() => {
+    const totalHeight = filteredPhotos.length * itemHeight;
+    return { photos: filteredPhotos, totalHeight };
+  }, [filteredPhotos, itemHeight]);
+
+  const handleScroll = useCallback(() => {
+    if (!containerRef.current) return;
+    const scrollTop = containerRef.current.scrollTop;
+    const viewportHeight = containerRef.current.clientHeight;
+    const start = Math.max(0, Math.floor(scrollTop / itemHeight) - bufferCount);
+    const end = Math.min(
+      filteredPhotos.length,
+      Math.ceil((scrollTop + viewportHeight) / itemHeight) + bufferCount
+    );
+    setVisibleRange({ start, end });
+  }, [itemHeight, bufferCount, filteredPhotos.length]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll, { passive: true });
+      handleScroll();
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, [handleScroll]);
+
   const handleUploadClick = () => {
     if (onViewChange) onViewChange('upload');
   };
+
+  const shouldVirtualize = filteredPhotos.length > 100;
+  const displayPhotos = shouldVirtualize
+    ? filteredPhotos.slice(visibleRange.start, visibleRange.end)
+    : filteredPhotos;
 
   return (
     <div className="photo-gallery">
@@ -114,7 +145,7 @@ function PhotoGallery({ photos = [], loading, onDelete, onSelect, onViewChange }
       {searchQuery && (
         <div className="search-results-info">
           <p>
-            Found {displayPhotos.length} result{displayPhotos.length !== 1 ? 's' : ''} for "{searchQuery}"
+            Found {filteredPhotos.length} result{filteredPhotos.length !== 1 ? 's' : ''} for "{searchQuery}"
           </p>
           <button onClick={() => setSearchQuery('')} className="clear-search-button">
             Clear Search
@@ -137,7 +168,7 @@ function PhotoGallery({ photos = [], loading, onDelete, onSelect, onViewChange }
         </div>
       )}
 
-      {!loading && photos.length > 0 && displayPhotos.length === 0 && (
+      {!loading && photos.length > 0 && filteredPhotos.length === 0 && (
         <div className="empty-gallery">
           <div className="empty-gallery-content">
             <span className="empty-gallery-icon">🔍</span>
@@ -148,10 +179,36 @@ function PhotoGallery({ photos = [], loading, onDelete, onSelect, onViewChange }
       )}
 
       {displayPhotos.length > 0 && (
-        <div className={`photo-grid ${viewMode === 'list' ? 'photo-grid--list' : ''}`}>
-          {displayPhotos.map((photo) => (
-            <PhotoCard key={photo.id} photo={photo} onDelete={onDelete} onSelect={onSelect} viewMode={viewMode} />
-          ))}
+        <div
+          ref={containerRef}
+          className={`photo-grid ${viewMode === 'list' ? 'photo-grid--list' : ''}`}
+          style={shouldVirtualize ? { height: '600px', overflow: 'auto' } : {}}
+        >
+          {shouldVirtualize && (
+            <div style={{ height: virtualizedPhotos.totalHeight, position: 'relative' }}>
+              <div style={{ transform: `translateY(${visibleRange.start * itemHeight}px)` }}>
+                {displayPhotos.map((photo) => (
+                  <PhotoCard
+                    key={photo.id}
+                    photo={photo}
+                    onDelete={onDelete}
+                    onSelect={onSelect}
+                    viewMode={viewMode}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          {!shouldVirtualize &&
+            displayPhotos.map((photo) => (
+              <PhotoCard
+                key={photo.id}
+                photo={photo}
+                onDelete={onDelete}
+                onSelect={onSelect}
+                viewMode={viewMode}
+              />
+            ))}
         </div>
       )}
     </div>

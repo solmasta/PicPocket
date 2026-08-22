@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { saveConnection, getConnection, clearConnection } from '../utils/indexedDB';
 import { isOneDriveConfigured, getOneDriveClientId } from '../config/oneDriveAuth';
 import { isDropboxConfigured, getDropboxClientId } from '../config/dropboxAuth';
 import { connectOneDrive as runOneDriveOAuth } from '../services/oneDriveAuthService';
 import { connectDropbox as runDropboxOAuth } from '../services/dropboxAuthService';
+import { withErrorHandling, ErrorCodes } from '../utils/errorHandler';
 
 const PROVIDERS = {
   onedrive: {
@@ -20,14 +21,9 @@ const PROVIDERS = {
   },
 };
 
-// Manages optional third-party storage connections (OneDrive, Dropbox, ...)
-// as backup destinations alongside Google Drive/Photos. These are
-// independent of the app's sign-in identity — a local (non-Google) user can
-// still connect OneDrive/Dropbox for backup, and a Google-signed-in user can
-// have all four connected at once.
 export function useStorageConnections() {
   const [connections, setConnections] = useState({ onedrive: null, dropbox: null });
-  const [connecting, setConnecting] = useState(null); // which provider is mid-OAuth, if any
+  const [connecting, setConnecting] = useState(null);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -57,38 +53,69 @@ export function useStorageConnections() {
 
   const connect = useCallback(async (provider) => {
     const config = PROVIDERS[provider];
-    if (!config) return;
+    if (!config) {
+      setErrors((prev) => ({ ...prev, [provider]: 'Unknown provider' }));
+      return { data: null, error: { code: ErrorCodes.VALIDATION_ERROR, message: 'Unknown provider' } };
+    }
 
     setErrors((prev) => ({ ...prev, [provider]: null }));
     setConnecting(provider);
-    try {
-      const clientId = config.getClientId();
-      const result = await config.runOAuth(clientId);
-      await saveConnection(provider, result);
-      setConnections((prev) => ({ ...prev, [provider]: result }));
-    } catch (err) {
-      setErrors((prev) => ({ ...prev, [provider]: err.message || `Failed to connect ${config.label}.` }));
-    } finally {
-      setConnecting(null);
+
+    const { data, error } = await withErrorHandling(
+      (async () => {
+        const clientId = config.getClientId();
+        const result = await config.runOAuth(clientId);
+        await saveConnection(provider, result);
+        setConnections((prev) => ({ ...prev, [provider]: result }));
+        return result;
+      })(),
+      `Failed to connect ${config.label}`
+    );
+
+    if (error) {
+      setErrors((prev) => ({ ...prev, [provider]: error.message }));
     }
+
+    setConnecting(null);
+    return { data, error };
   }, []);
 
   const disconnect = useCallback(async (provider) => {
-    try {
-      await clearConnection(provider);
-      setConnections((prev) => ({ ...prev, [provider]: null }));
-    } catch (err) {
-      console.error(`Failed to disconnect ${provider}:`, err);
-    }
+    const { data, error } = await withErrorHandling(
+      (async () => {
+        await clearConnection(provider);
+        setConnections((prev) => ({ ...prev, [provider]: null }));
+        return { provider };
+      })(),
+      `Failed to disconnect ${PROVIDERS[provider]?.label || provider}`
+    );
+    return { data, error };
   }, []);
 
-  return {
-    connections, // { onedrive: {accessToken, accountName, accountEmail, expiresAt} | null, dropbox: ... }
+  const isConnected = useCallback((provider) => {
+    return Boolean(connections[provider]);
+  }, [connections]);
+
+  const clearError = useCallback((provider) => {
+    setErrors((prev) => ({ ...prev, [provider]: null }));
+  }, []);
+
+  const clearAllErrors = useCallback(() => {
+    setErrors({});
+  }, []);
+
+  const value = useMemo(() => ({
+    connections,
     connecting,
     errors,
     connect,
     disconnect,
+    isConnected,
+    clearError,
+    clearAllErrors,
     isOneDriveConfigured: isOneDriveConfigured(),
     isDropboxConfigured: isDropboxConfigured(),
-  };
+  }), [connections, connecting, errors, connect, disconnect, isConnected, clearError, clearAllErrors]);
+
+  return value;
 }
