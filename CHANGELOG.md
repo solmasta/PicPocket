@@ -23,16 +23,7 @@ across the root, `frontend/`, and `backend/` packages are kept in lockstep.
 - **Backend Routes**: Consistent error response format with error codes.
 
 ### Testing
-- Added comprehensive test suites for:
-  - Error handling utilities
-  - Image filters
-  - API service
-  - AI service
-  - Performance utilities
-  - Hooks
-  - Components
-  - Validation middleware
-  - Rate limiting middleware
+- Added comprehensive test suites for error handling, image filters, API service, AI service, performance utilities, hooks, components, validation middleware, and rate limiting middleware.
 
 ## [1.4.0] - 2026-08-03
 
