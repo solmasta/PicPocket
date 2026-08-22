@@ -2,9 +2,9 @@ import { expect, afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
 expect.extend({
-  toBeInTheDocument() {
+  toBeInTheDocument(received) {
     return {
-      pass: this.actual !== null,
+      pass: received !== null && received !== undefined,
       message: () => `Expected element ${this.isNot ? 'not ' : ''}to be in the document`,
     };
   },

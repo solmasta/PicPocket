@@ -1,16 +1,19 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  esbuild: {
+    jsx: 'automatic',
+  },
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./src/__tests__/setup.js'],
-    include: ['src/__tests__/**/*.test.js'],
+    setupFiles: ['./vitest-tests/setup.js'],
+    include: ['vitest-tests/**/*.test.{js,jsx}'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
       include: ['src/**/*.{js,jsx}'],
-      exclude: ['src/**/*.test.{js,jsx}', 'src/__tests__/**'],
+      exclude: ['src/**/*.test.{js,jsx}', 'vitest-tests/**'],
     },
   },
 });
