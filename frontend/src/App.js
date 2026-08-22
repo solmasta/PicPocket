@@ -2,9 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { ErrorProvider } from './context/ErrorContext';
-import { AppStateProvider } from './context/AppStateContext';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
-import OfflineIndicator from './components/Common/OfflineIndicator';
 import './styles/App.css';
 import './styles/components.css';
 import backgroundImage from './assets/faye-pic-pocket.jpg';
@@ -28,6 +26,7 @@ import HorseProfile from './components/HorseProfile';
 import StorageLedger from './components/Storage/StorageLedger';
 import AIStorageInsights from './components/Storage/AIStorageInsights';
 import Settings from './components/Settings/Settings';
+import OfflineIndicator from './components/Common/OfflineIndicator';
 import { useAuth } from './hooks/useAuth';
 import { usePhotos } from './hooks/usePhotos';
 import { useStorageConnections } from './hooks/useStorageConnections';
@@ -50,12 +49,10 @@ function App() {
   return (
     <BrowserRouter>
       <ErrorProvider>
-        <AppStateProvider>
-          <Routes>
-            <Route path="/album/:token" element={<SharedAlbumView />} />
-            <Route path="*" element={<MainApp />} />
-          </Routes>
-        </AppStateProvider>
+        <Routes>
+          <Route path="/album/:token" element={<SharedAlbumView />} />
+          <Route path="*" element={<MainApp />} />
+        </Routes>
       </ErrorProvider>
     </BrowserRouter>
   );
