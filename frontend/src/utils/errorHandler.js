@@ -36,7 +36,7 @@ export function handleError(error, fallbackMessage = 'An unexpected error occurr
     return error;
   }
 
-  if (error.name === 'TypeError' && error.message.includes('fetch')) {
+  if (error.name === 'TypeError' && error.message?.includes('fetch')) {
     return new AppError(
       'Network request failed. Please check your connection.',
       ErrorCodes.NETWORK_ERROR,
@@ -54,7 +54,7 @@ export function handleError(error, fallbackMessage = 'An unexpected error occurr
     );
   }
 
-  if (error.status === 401) {
+  if (error.response?.status === 401) {
     return new AppError(
       'Authentication required. Please sign in again.',
       ErrorCodes.AUTH_ERROR,
@@ -63,7 +63,7 @@ export function handleError(error, fallbackMessage = 'An unexpected error occurr
     );
   }
 
-  if (error.status === 404) {
+  if (error.response?.status === 404) {
     return new AppError(
       'Resource not found.',
       ErrorCodes.NOT_FOUND,
@@ -72,7 +72,7 @@ export function handleError(error, fallbackMessage = 'An unexpected error occurr
     );
   }
 
-  if (error.status === 413) {
+  if (error.response?.status === 413) {
     return new AppError(
       'File too large. Please choose a smaller file.',
       ErrorCodes.UPLOAD_ERROR,
@@ -84,7 +84,7 @@ export function handleError(error, fallbackMessage = 'An unexpected error occurr
   return new AppError(
     fallbackMessage,
     ErrorCodes.API_ERROR,
-    error.status || 500,
+    error.response?.status || 500,
     { originalError: error.message }
   );
 }
@@ -102,4 +102,16 @@ export async function asyncWrapper(fn, fallbackMessage = 'An unexpected error oc
   } catch (error) {
     return { data: null, error: handleError(error, fallbackMessage) };
   }
+}
+
+export function logError(context, error, extra = {}) {
+  const errorInfo = {
+    context,
+    message: error.message,
+    stack: error.stack,
+    timestamp: new Date().toISOString(),
+    ...extra
+  };
+  console.error('[PicPocket Error]', errorInfo);
+  return errorInfo;
 }
