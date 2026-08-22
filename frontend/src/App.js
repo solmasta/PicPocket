@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { ErrorProvider } from './context/ErrorContext';
+import { AppStateProvider } from './context/AppStateContext';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
+import OfflineIndicator from './components/Common/OfflineIndicator';
 import './styles/App.css';
 import './styles/components.css';
 import backgroundImage from './assets/faye-pic-pocket.jpg';
@@ -48,10 +50,12 @@ function App() {
   return (
     <BrowserRouter>
       <ErrorProvider>
-        <Routes>
-          <Route path="/album/:token" element={<SharedAlbumView />} />
-          <Route path="*" element={<MainApp />} />
-        </Routes>
+        <AppStateProvider>
+          <Routes>
+            <Route path="/album/:token" element={<SharedAlbumView />} />
+            <Route path="*" element={<MainApp />} />
+          </Routes>
+        </AppStateProvider>
       </ErrorProvider>
     </BrowserRouter>
   );
@@ -122,6 +126,7 @@ function MainApp() {
   if (authLoading || !minSplashElapsed) {
     return (
       <ErrorBoundary fallback={ErrorFallback}>
+        <OfflineIndicator />
         {googleAuthBridge}
         <Splash />
       </ErrorBoundary>
@@ -131,6 +136,7 @@ function MainApp() {
   if (!user) {
     return (
       <ErrorBoundary fallback={ErrorFallback}>
+        <OfflineIndicator />
         {googleAuthBridge}
         <GoogleSignIn
           signIn={signIn}
@@ -223,6 +229,7 @@ function MainApp() {
           style={{ backgroundImage: `url(${backgroundImage})` }}
           aria-hidden="true"
         />
+        <OfflineIndicator />
         {googleAuthBridge}
         <Header
           user={user}
