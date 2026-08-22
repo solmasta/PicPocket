@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
-import { withErrorHandling, handleError, ErrorCodes } from '../utils/errorHandler';
+import { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
+import { withErrorHandling, logError } from '../utils/errorHandler';
 
 const STORAGE_KEY = 'picpocket_storage_state';
 
@@ -8,39 +8,37 @@ const initialState = {
   storageQuota: null,
   usedStorage: 0,
   loading: false,
-  error: null,
-  lastSync: null
+  lastSync: null,
 };
 
 const ActionTypes = {
   SET_LOADING: 'SET_LOADING',
-  SET_ERROR: 'SET_ERROR',
+  SET_SERVICES: 'SET_SERVICES',
   ADD_SERVICE: 'ADD_SERVICE',
   REMOVE_SERVICE: 'REMOVE_SERVICE',
   UPDATE_STORAGE: 'UPDATE_STORAGE',
   SET_QUOTA: 'SET_QUOTA',
   SET_LAST_SYNC: 'SET_LAST_SYNC',
-  CLEAR_ERROR: 'CLEAR_ERROR'
 };
 
 function storageReducer(state, action) {
   switch (action.type) {
     case ActionTypes.SET_LOADING:
       return { ...state, loading: action.payload };
-    case ActionTypes.SET_ERROR:
-      return { ...state, error: action.payload, loading: false };
+    case ActionTypes.SET_SERVICES:
+      return { ...state, connectedServices: action.payload };
     case ActionTypes.ADD_SERVICE:
       if (state.connectedServices.includes(action.payload)) {
         return state;
       }
       return {
         ...state,
-        connectedServices: [...state.connectedServices, action.payload]
+        connectedServices: [...state.connectedServices, action.payload],
       };
     case ActionTypes.REMOVE_SERVICE:
       return {
         ...state,
-        connectedServices: state.connectedServices.filter(s => s !== action.payload)
+        connectedServices: state.connectedServices.filter((s) => s !== action.payload),
       };
     case ActionTypes.UPDATE_STORAGE:
       return { ...state, usedStorage: action.payload };
@@ -48,8 +46,6 @@ function storageReducer(state, action) {
       return { ...state, storageQuota: action.payload };
     case ActionTypes.SET_LAST_SYNC:
       return { ...state, lastSync: action.payload };
-    case ActionTypes.CLEAR_ERROR:
-      return { ...state, error: null };
     default:
       return state;
   }
@@ -61,51 +57,47 @@ export function StorageProvider({ children }) {
   const [state, dispatch] = useReducer(storageReducer, initialState);
 
   useEffect(() => {
-    const savedState = localStorage.getItem(STORAGE_KEY);
-    if (savedState) {
-      try {
-        const parsed = JSON.parse(savedState);
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
         if (parsed.connectedServices) {
-          parsed.connectedServices.forEach(service => {
-            dispatch({ type: ActionTypes.ADD_SERVICE, payload: service });
-          });
+          dispatch({ type: ActionTypes.SET_SERVICES, payload: parsed.connectedServices });
         }
-      } catch (e) {
-        console.warn('Failed to restore storage state:', e);
+        if (parsed.storageQuota) {
+          dispatch({ type: ActionTypes.SET_QUOTA, payload: parsed.storageQuota });
+        }
+        if (parsed.lastSync) {
+          dispatch({ type: ActionTypes.SET_LAST_SYNC, payload: parsed.lastSync });
+        }
       }
+    } catch (err) {
+      logError('StorageContext.restore', err);
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      connectedServices: state.connectedServices,
-      storageQuota: state.storageQuota,
-      lastSync: state.lastSync
-    }));
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          connectedServices: state.connectedServices,
+          storageQuota: state.storageQuota,
+          lastSync: state.lastSync,
+        })
+      );
+    } catch (err) {
+      logError('StorageContext.persist', err);
+    }
   }, [state.connectedServices, state.storageQuota, state.lastSync]);
 
   const setLoading = useCallback((loading) => {
     dispatch({ type: ActionTypes.SET_LOADING, payload: loading });
   }, []);
 
-  const setError = useCallback((error) => {
-    dispatch({ type: ActionTypes.SET_ERROR, payload: error });
-  }, []);
-
-  const clearError = useCallback(() => {
-    dispatch({ type: ActionTypes.CLEAR_ERROR });
-  }, []);
-
   const connectService = useCallback(async (service) => {
-    dispatch({ type: ActionTypes.SET_LOADING, payload: true });
-    try {
-      dispatch({ type: ActionTypes.ADD_SERVICE, payload: service });
-      dispatch({ type: ActionTypes.SET_LAST_SYNC, payload: new Date().toISOString() });
-    } catch (error) {
-      dispatch({ type: ActionTypes.SET_ERROR, payload: handleError(error, 'Failed to connect service') });
-    } finally {
-      dispatch({ type: ActionTypes.SET_LOADING, payload: false });
-    }
+    dispatch({ type: ActionTypes.ADD_SERVICE, payload: service });
+    dispatch({ type: ActionTypes.SET_LAST_SYNC, payload: new Date().toISOString() });
   }, []);
 
   const disconnectService = useCallback((service) => {
@@ -120,16 +112,21 @@ export function StorageProvider({ children }) {
     dispatch({ type: ActionTypes.SET_QUOTA, payload: quota });
   }, []);
 
-  const value = {
-    ...state,
-    setLoading,
-    setError,
-    clearError,
-    connectService,
-    disconnectService,
-    updateStorageUsage,
-    setQuota
-  };
+  const value = useMemo(
+    () => ({
+      ...state,
+      setLoading,
+      connectService,
+      disconnectService,
+      updateStorageUsage,
+      setQuota,
+      isServiceConnected: (service) => state.connectedServices.includes(service),
+      usagePercentage: state.storageQuota
+        ? Math.round((state.usedStorage / state.storageQuota) * 100)
+        : null,
+    }),
+    [state, setLoading, connectService, disconnectService, updateStorageUsage, setQuota]
+  );
 
   return (
     <StorageContext.Provider value={value}>
@@ -146,4 +143,5 @@ export function useStorage() {
   return context;
 }
 
-export { StorageContext, ActionTypes };
+export { StorageContext };
+export default StorageContext;
