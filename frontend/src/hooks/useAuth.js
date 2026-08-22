@@ -1,18 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { saveAuthUser, getAuthUser, clearAuthUser } from '../utils/indexedDB';
 import { isGoogleAuthConfigured } from '../config/googleAuth';
+import { withErrorHandling, ErrorCodes, logError } from '../utils/errorHandler';
 
-// Start trying to renew the access token this far ahead of its actual
-// expiry, so a silent renewal has time to land before anything notices.
 const REFRESH_MARGIN_MS = 5 * 60 * 1000;
-// How long to wait for a silent (no-UI) renewal attempt before giving up
-// and surfacing the "Reconnect" button instead.
 const SILENT_RECONNECT_TIMEOUT_MS = 4000;
 
-// Anonymous, device-local identity used when the person hasn't signed in
-// with Google (or Google sign-in isn't configured at all). Photo storage,
-// gallery, filters, etc. all key off `user.id`, so this just needs to be
-// stable for the lifetime of this browser's IndexedDB.
 const LOCAL_USER = {
   id: 'local-user',
   isLocal: true,
@@ -26,57 +19,40 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tokenExpired, setTokenExpired] = useState(false);
-  // Holds the trigger function returned by @react-oauth/google's
-  // useGoogleLogin, supplied by <GoogleAuthBridge> via registerGoogleLogin.
   const googleLoginRef = useRef(null);
-  // Tracks whether the in-flight Google request is a background silent
-  // renewal (vs. an explicit click), so a failed silent attempt can stay
-  // quiet instead of showing the user a "sign-in failed" error.
   const silentAttemptRef = useRef(false);
 
-  // Restore session from IndexedDB on mount. The signed-in identity is kept
-  // even once its Google access token has expired — the token is only ever
-  // needed for Drive/Photos backup calls, not for using the app itself, so
-  // reopening the app (including after the browser's pull-to-refresh reload)
-  // should never boot someone back to the sign-in screen.
   useEffect(() => {
+    let cancelled = false;
     async function restoreSession() {
       try {
         if (!isGoogleAuthConfigured()) {
-          // No Google Client ID — use a stable local identity so the rest
-          // of the app (gallery, upload, filters…) works without sign-in.
           setUser(LOCAL_USER);
           setLoading(false);
           return;
         }
         const savedUser = await getAuthUser();
-        if (savedUser) {
-          // The renewal effect below checks expiry (and attempts a silent
-          // renewal) as soon as `user` is set, so it isn't computed here —
-          // just restore the identity.
-          setUser(savedUser);
-        } else {
-          // No saved user, but Google auth is configured
-          // User needs to sign in
-          setUser(null);
+        if (!cancelled) {
+          if (savedUser) {
+            setUser(savedUser);
+          } else {
+            setUser(null);
+          }
         }
       } catch (err) {
-        console.error('Failed to restore auth session:', err);
+        logError('useAuth.restoreSession', err);
+        if (!cancelled) setError('Failed to restore session');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
     restoreSession();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // Keep the session alive without ever prompting: a little before the
-  // access token is due to expire, ask Google for a fresh one with no UI
-  // (prompt: ''), which succeeds silently as long as the browser still has
-  // an active Google session — no backend, no popup, no click required.
-  // Only if that doesn't resolve in time does the "Reconnect" button show
-  // up, as a one-tap fallback (e.g. the user signed out of Google
-  // elsewhere, or the browser blocks the silent request).
   useEffect(() => {
     if (!user || !user.expiresAt) return undefined;
 
@@ -108,59 +84,60 @@ export function useAuth() {
       cancelled = true;
       clearInterval(interval);
       if (fallbackTimer) clearTimeout(fallbackTimer);
-    }
+    };
   }, [user]);
 
-  // Called by <GoogleAuthBridge> once useGoogleLogin is ready.
-  // getLogin is a zero-arg factory that returns the current googleLogin fn.
   const registerGoogleLogin = useCallback((getLogin) => {
     googleLoginRef.current = getLogin;
   }, []);
 
   const handleLoginSuccess = useCallback(async (tokenResponse) => {
-    try {
-      setError(null);
-      // Fetch user profile using the access token
-      const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: 'Bearer ' + tokenResponse.access_token },
-      });
+    const { data, error: err } = await withErrorHandling(
+      (async () => {
+        const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: 'Bearer ' + tokenResponse.access_token },
+        });
 
-      if (!profileRes.ok) {
-        throw new Error('Failed to fetch user profile');
-      }
+        if (!profileRes.ok) {
+          throw new Error('Failed to fetch user profile');
+        }
 
-      const profile = await profileRes.json();
-      const userData = {
-        id: profile.sub,
-        name: profile.name,
-        email: profile.email,
-        picture: profile.picture,
-        accessToken: tokenResponse.access_token,
-        expiresAt: Date.now() + (tokenResponse.expires_in || 3600) * 1000,
-        scope: tokenResponse.scope,
-      };
+        const profile = await profileRes.json();
+        const userData = {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          picture: profile.picture,
+          accessToken: tokenResponse.access_token,
+          expiresAt: Date.now() + (tokenResponse.expires_in || 3600) * 1000,
+          scope: tokenResponse.scope,
+        };
 
-      await saveAuthUser(userData);
-      setUser(userData);
-      setTokenExpired(false);
-      silentAttemptRef.current = false;
-    } catch (err) {
+        await saveAuthUser(userData);
+        return userData;
+      })(),
+      'Failed to complete sign-in'
+    );
+
+    if (err) {
       setError(err.message);
-      console.error('Login error:', err);
+      logError('useAuth.handleLoginSuccess', err);
+      return;
     }
+
+    setUser(data);
+    setTokenExpired(false);
+    silentAttemptRef.current = false;
   }, []);
 
   const handleLoginError = useCallback((err) => {
     if (silentAttemptRef.current) {
-      // A background renewal attempt failing is expected sometimes (no
-      // active Google session, third-party cookies blocked, etc.) — the
-      // "Reconnect" fallback covers it, so don't alarm the user over it.
       silentAttemptRef.current = false;
       console.warn('Silent Google reconnect failed:', err);
       return;
     }
     setError('Google sign-in failed. Please try again.');
-    console.error('Google OAuth error:', err);
+    logError('useAuth.handleLoginError', err);
   }, []);
 
   const signIn = useCallback(() => {
@@ -171,16 +148,13 @@ export function useAuth() {
     }
   }, []);
 
-  // Enters (and persists) the local-only identity — used both by the
-  // sign-in screen's "Use Pic-Pocket Locally" option and, for a user who's
-  // already signed in with Google, as a way to drop back to local-only
-  // without losing anything: the photo library lives in IndexedDB
-  // independent of `user`, so switching identity never touches it.
   const continueLocally = useCallback(async () => {
-    try {
-      await saveAuthUser(LOCAL_USER);
-    } catch (err) {
-      console.error('Failed to persist local session:', err);
+    const { error: err } = await withErrorHandling(
+      saveAuthUser(LOCAL_USER),
+      'Failed to save local session'
+    );
+    if (err) {
+      logError('useAuth.continueLocally', err);
     }
     setUser(LOCAL_USER);
     setError(null);
@@ -188,38 +162,40 @@ export function useAuth() {
   }, []);
 
   const signOut = useCallback(async () => {
-    try {
-      if (user && !user.isLocal) {
-        if (user.accessToken) {
-          // Best-effort: tell Google to revoke the grant so Drive/Photos
-          // access actually ends here, instead of the access token (and the
-          // silent-renewal flow above) remaining usable until it happens to
-          // expire on its own after "signing out".
-          try {
-            await fetch(
-              `https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(user.accessToken)}`,
-              { method: 'POST' }
-            );
-          } catch (revokeErr) {
-            console.warn('Failed to revoke Google token:', revokeErr);
+    const { error: err } = await withErrorHandling(
+      (async () => {
+        if (user && !user.isLocal) {
+          if (user.accessToken) {
+            try {
+              await fetch(
+                `https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(user.accessToken)}`,
+                { method: 'POST' }
+              );
+            } catch (revokeErr) {
+              console.warn('Failed to revoke Google token:', revokeErr);
+            }
           }
+          await clearAuthUser();
+        } else if (user && user.isLocal) {
+          await clearAuthUser();
         }
-        await clearAuthUser();
-        setUser(null);
-        setTokenExpired(false);
-      } else if (user && user.isLocal) {
-        // Clear the persisted local choice too (continueLocally saves it),
-        // so signing out actually returns to the sign-in/chooser screen
-        // instead of silently restoring local mode on next load.
-        await clearAuthUser();
-        setUser(null);
-      }
-    } catch (err) {
-      console.error('Sign out error:', err);
+      })(),
+      'Failed to sign out'
+    );
+
+    if (err) {
+      logError('useAuth.signOut', err);
     }
+
+    setUser(null);
+    setTokenExpired(false);
   }, [user]);
 
-  return {
+  const clearAuthError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  const value = useMemo(() => ({
     user,
     loading,
     error,
@@ -230,5 +206,13 @@ export function useAuth() {
     registerGoogleLogin,
     handleLoginSuccess,
     handleLoginError,
-  };
+    clearAuthError,
+    isAuthenticated: Boolean(user),
+    isLocalUser: user?.isLocal ?? false,
+  }), [user, loading, error, tokenExpired, signIn, signOut, continueLocally, registerGoogleLogin, handleLoginSuccess, handleLoginError, clearAuthError]);
+
+  return value;
 }
+
+export { LOCAL_USER };
+export default useAuth;
