@@ -7,38 +7,36 @@ import { handleAuth } from './routes/auth.js';
 import { handleAlbums } from './routes/albums.js';
 import { handleSearch } from './routes/search.js';
 import { handleAnalyzePhoto, handleStorageInsights } from './routes/ai.js';
+import { rateLimiter, uploadRateLimiter } from './middleware/rateLimit.js';
+import { validatePhotoUpload, validatePhotoUpdate, validateSearchParams, sanitizeInput } from './middleware/validation.js';
 
 const router = Router();
 
 // Auth routes
-router.post('/api/auth/google', handleAuth);
-router.post('/api/auth/logout', handleAuth);
-router.get('/api/auth/verify', handleAuth);
+router.post('/api/auth/google', rateLimiter, handleAuth);
+router.post('/api/auth/logout', rateLimiter, handleAuth);
+router.get('/api/auth/verify', rateLimiter, handleAuth);
 
-// Protected routes
-router.get('/api/photos', authMiddleware, handlePhotos);
-router.post('/api/photos', authMiddleware, handlePhotos);
-router.get('/api/photos/:id/file', authMiddleware, withParams, handlePhotoFile);
-router.get('/api/photos/:id', authMiddleware, withParams, handlePhotos);
-router.put('/api/photos/:id', authMiddleware, withParams, handlePhotos);
-router.delete('/api/photos/:id', authMiddleware, withParams, handlePhotos);
+// Protected routes with rate limiting
+router.get('/api/photos', rateLimiter, authMiddleware, handlePhotos);
+router.post('/api/photos', uploadRateLimiter, authMiddleware, validatePhotoUpload, handlePhotos);
+router.get('/api/photos/:id/file', rateLimiter, authMiddleware, withParams, handlePhotoFile);
+router.get('/api/photos/:id', rateLimiter, authMiddleware, withParams, handlePhotos);
+router.put('/api/photos/:id', rateLimiter, authMiddleware, validatePhotoUpdate, handlePhotos);
+router.delete('/api/photos/:id', rateLimiter, authMiddleware, withParams, handlePhotos);
 
-router.get('/api/albums', authMiddleware, handleAlbums);
-router.post('/api/albums', authMiddleware, handleAlbums);
-router.get('/api/albums/:id', authMiddleware, withParams, handleAlbums);
-router.put('/api/albums/:id', authMiddleware, withParams, handleAlbums);
-router.delete('/api/albums/:id', authMiddleware, withParams, handleAlbums);
-router.post('/api/albums/:id/photos', authMiddleware, withParams, handleAlbums);
+router.get('/api/albums', rateLimiter, authMiddleware, handleAlbums);
+router.post('/api/albums', rateLimiter, authMiddleware, handleAlbums);
+router.get('/api/albums/:id', rateLimiter, authMiddleware, withParams, handleAlbums);
+router.put('/api/albums/:id', rateLimiter, authMiddleware, withParams, handleAlbums);
+router.delete('/api/albums/:id', rateLimiter, authMiddleware, withParams, handleAlbums);
+router.post('/api/albums/:id/photos', rateLimiter, authMiddleware, withParams, handleAlbums);
 
-router.get('/api/search', authMiddleware, handleSearch);
+router.get('/api/search', rateLimiter, authMiddleware, validateSearchParams, handleSearch);
 
-// Unauthenticated on purpose: PicPocket's photo library lives entirely in
-// the browser's IndexedDB (see usePhotos), never in D1, so there is no
-// user-owned data here for authMiddleware's session check to protect —
-// these are stateless AI proxies over whatever the caller sends in the
-// request body. Size/type limits inside the handlers cap abuse.
-router.post('/api/ai/analyze', handleAnalyzePhoto);
-router.post('/api/ai/storage-insights', handleStorageInsights);
+// Unauthenticated AI endpoints with rate limiting
+router.post('/api/ai/analyze', rateLimiter, handleAnalyzePhoto);
+router.post('/api/ai/storage-insights', rateLimiter, handleStorageInsights);
 
 // 404 handler
 router.all('*', () => new Response('Not Found', { status: 404 }));
@@ -62,9 +60,30 @@ function corsHeaders(request, env) {
   };
 }
 
+function getClientIP(request) {
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+         request.headers.get('cf-connecting-ip') ||
+         request.socket?.remoteAddress ||
+         'unknown';
+}
+
 export async function handleApi(request, env) {
-  // Add DB to request context
+  // Add DB and context to request
   request.env = env;
+  request.clientIP = getClientIP(request);
+
+  // Sanitize input body if present
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    try {
+      const contentType = request.headers.get('content-type');
+      if (contentType?.includes('application/json')) {
+        const body = await request.json();
+        request.body = sanitizeInput(body);
+      }
+    } catch (e) {
+      // Let route handlers deal with malformed JSON
+    }
+  }
 
   const cors = corsHeaders(request, env);
 
@@ -95,6 +114,10 @@ export async function handleApi(request, env) {
     return response;
   } catch (error) {
     console.error('Error processing request:', error);
-    return json({ error: 'Internal server error' }, 500, { headers: cors });
+    return json({ 
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR',
+      requestId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    }, 500, { headers: cors });
   }
 }
