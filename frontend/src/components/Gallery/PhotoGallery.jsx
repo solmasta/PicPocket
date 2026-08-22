@@ -1,191 +1,161 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import PhotoCard from '../PhotoCard/PhotoCard';
-import FilterBar from '../FilterBar/FilterBar';
+import React, { useMemo, useState } from 'react';
+import PhotoCard from './PhotoCard';
+import SearchBar from '../Search/SearchBar';
+import './PhotoGrid.css';
 import './PhotoGallery.css';
 
-const LAZY_LOAD_THRESHOLD = 200;
-const DEBOUNCE_MS = 150;
+// The whole point of PicPocket is to be one ledger over several cloud
+// drives, so the gallery itself needs to answer "where does this photo
+// actually live?" at a glance — these filters mirror the providers
+// StorageLedger reconciles against.
+const STORAGE_FILTERS = [
+  { key: 'all', label: 'All Photos', icon: '📸' },
+  { key: 'unbacked', label: 'Not Backed Up', icon: '⚠️' },
+  { key: 'googleDrive', label: 'Google Drive', icon: '☁️' },
+  { key: 'googlePhotos', label: 'Google Photos', icon: '🖼️' },
+  { key: 'oneDrive', label: 'OneDrive', icon: '🟦' },
+  { key: 'dropbox', label: 'Dropbox', icon: '🔵' },
+];
 
-export const PhotoGallery = ({
-  photos = [],
-  onPhotoClick,
-  onDelete,
-  onFavorite,
-  isLoading = false,
-  showFilters = true,
-  filter = 'all',
-  onFilterChange,
-}) => {
-  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
-  const [isFiltering, setIsFiltering] = useState(false);
-  const containerRef = useRef(null);
-  const observerRef = useRef(null);
-  const lastScrollTop = useRef(0);
+function isBackedUpTo(photo, providerKey) {
+  return Boolean(photo.cloudBackup?.[providerKey]);
+}
 
-  const filteredPhotos = useMemo(() => {
-    if (filter === 'all') return photos;
-    if (filter === 'favorites') return photos.filter(p => p.isFavorite);
-    if (filter === 'recent') {
-      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-      return photos.filter(p => p.timestamp > weekAgo);
+function isBackedUpAnywhere(photo) {
+  return STORAGE_FILTERS.slice(2).some((f) => isBackedUpTo(photo, f.key));
+}
+
+function PhotoGallery({ photos = [], loading, onDelete, onSelect, onViewChange }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [storageFilter, setStorageFilter] = useState('all');
+  const [viewMode, setViewMode] = useState('grid');
+
+  const storageCounts = useMemo(() => {
+    const counts = { all: photos.length, unbacked: 0 };
+    STORAGE_FILTERS.slice(2).forEach((f) => {
+      counts[f.key] = photos.filter((p) => isBackedUpTo(p, f.key)).length;
+    });
+    counts.unbacked = photos.filter((p) => !isBackedUpAnywhere(p)).length;
+    return counts;
+  }, [photos]);
+
+  const displayPhotos = useMemo(() => {
+    let result = photos;
+
+    if (storageFilter === 'unbacked') {
+      result = result.filter((p) => !isBackedUpAnywhere(p));
+    } else if (storageFilter !== 'all') {
+      result = result.filter((p) => isBackedUpTo(p, storageFilter));
     }
-    if (filter === 'location') return photos.filter(p => p.location);
-    if (filter === 'no-location') return photos.filter(p => !p.location);
-    return photos;
-  }, [photos, filter]);
 
-  const visiblePhotos = useMemo(() => {
-    return filteredPhotos.slice(visibleRange.start, visibleRange.end);
-  }, [filteredPhotos, visibleRange]);
-
-  useEffect(() => {
-    setVisibleRange({ start: 0, end: 50 });
-  }, [filter]);
-
-  const handleScroll = useCallback(() => {
-    if (!containerRef.current) return;
-
-    const { scrollTop } = containerRef.current;
-    const isScrollingDown = scrollTop > lastScrollTop.current;
-    lastScrollTop.current = scrollTop;
-
-    if (!isScrollingDown) return;
-
-    const { scrollHeight, clientHeight } = containerRef.current;
-    const scrollProgress = scrollTop / (scrollHeight - clientHeight);
-
-    if (scrollProgress > 0.7 && visibleRange.end < filteredPhotos.length) {
-      setVisibleRange(prev => ({
-        start: prev.start,
-        end: Math.min(prev.end + 20, filteredPhotos.length),
-      }));
-    }
-  }, [visibleRange.end, filteredPhotos.length]);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const container = containerRef.current;
-    let ticking = false;
-
-    const debouncedScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    container.addEventListener('scroll', debouncedScroll, { passive: true });
-    return () => container.removeEventListener('scroll', debouncedScroll);
-  }, [handleScroll]);
-
-  useEffect(() => {
-    if (!observerRef.current) {
-      observerRef.current = new IntersectionObserver(
-        (entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              const card = entry.target;
-              const index = parseInt(card.dataset.index, 10);
-              
-              if (!card.querySelector('img')?.src) {
-                const photo = filteredPhotos[index];
-                if (photo?.thumbnail) {
-                  const img = document.createElement('img');
-                  img.src = photo.thumbnail;
-                  img.alt = photo.alt || 'Photo';
-                  img.loading = 'lazy';
-                  card.querySelector('.photo-card__image-wrapper')?.appendChild(img);
-                }
-              }
-            }
-          });
-        },
-        { rootMargin: `${LAZY_LOAD_THRESHOLD}px` }
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      result = result.filter(
+        (p) =>
+          (p.tags || []).some((tag) => tag.toLowerCase().includes(q)) ||
+          p.fileName?.toLowerCase().includes(q) ||
+          (p.location?.name || '').toLowerCase().includes(q) ||
+          (p.caption || '').toLowerCase().includes(q)
       );
     }
 
-    const cards = containerRef.current?.querySelectorAll('.photo-card');
-    cards?.forEach(card => observerRef.current.observe(card));
+    return result;
+  }, [photos, storageFilter, searchQuery]);
 
-    return () => {
-      observerRef.current?.disconnect();
-    };
-  }, [visiblePhotos, filteredPhotos]);
-
-  if (isLoading) {
-    return (
-      <div className="photo-gallery photo-gallery--loading">
-        <div className="photo-gallery__spinner" aria-label="Loading photos" />
-      </div>
-    );
-  }
-
-  if (filteredPhotos.length === 0) {
-    return (
-      <div className="photo-gallery photo-gallery--empty">
-        <div className="photo-gallery__empty-state">
-          <svg viewBox="0 0 24 24" className="photo-gallery__empty-icon">
-            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-          </svg>
-          <h3>No photos found</h3>
-          <p>
-            {filter !== 'all'
-              ? `No ${filter} photos to display. Try changing your filter.`
-              : 'Start by adding some photos to your collection.'}
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const handleUploadClick = () => {
+    if (onViewChange) onViewChange('upload');
+  };
 
   return (
-    <div className="photo-gallery" ref={containerRef}>
-      {showFilters && (
-        <FilterBar
-          currentFilter={filter}
-          onFilterChange={onFilterChange}
-          counts={{
-            all: photos.length,
-            favorites: photos.filter(p => p.isFavorite).length,
-            recent: photos.filter(p => p.timestamp > Date.now() - 7 * 24 * 60 * 60 * 1000).length,
-            location: photos.filter(p => p.location).length,
-          }}
-        />
-      )}
+    <div className="photo-gallery">
+      <div className="gallery-header">
+        <h2 className="gallery-title">My Photos</h2>
+        <div className="gallery-controls">
+          <SearchBar onSearch={setSearchQuery} onClear={() => setSearchQuery('')} />
+          <div className="view-toggle" role="group" aria-label="Change view mode">
+            <button
+              type="button"
+              className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+              onClick={() => setViewMode('grid')}
+              aria-pressed={viewMode === 'grid'}
+              title="Grid view"
+            >
+              ▦
+            </button>
+            <button
+              type="button"
+              className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+              onClick={() => setViewMode('list')}
+              aria-pressed={viewMode === 'list'}
+              title="List view"
+            >
+              ☰
+            </button>
+          </div>
+        </div>
+      </div>
 
-      <div className="photo-gallery__grid" role="list" aria-label="Photo gallery">
-        {visiblePhotos.map((photo, index) => (
-          <PhotoCard
-            key={photo.id}
-            photo={photo}
-            index={index}
-            onClick={() => onPhotoClick?.(photo)}
-            onDelete={() => onDelete?.(photo.id)}
-            onFavorite={() => onFavorite?.(photo.id)}
-            isLazy
-          />
+      <div className="storage-filter-bar" role="tablist" aria-label="Filter photos by storage location">
+        {STORAGE_FILTERS.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            role="tab"
+            aria-selected={storageFilter === f.key}
+            className={`storage-filter-chip ${storageFilter === f.key ? 'active' : ''}`}
+            onClick={() => setStorageFilter(f.key)}
+          >
+            <span aria-hidden="true">{f.icon}</span> {f.label}
+            <span className="storage-filter-count">{storageCounts[f.key] ?? 0}</span>
+          </button>
         ))}
       </div>
 
-      {visibleRange.end < filteredPhotos.length && (
-        <div className="photo-gallery__load-more">
-          <button
-            onClick={() => setVisibleRange(prev => ({
-              ...prev,
-              end: Math.min(prev.end + 20, filteredPhotos.length),
-            }))}
-            className="btn btn--secondary"
-          >
-            Load More ({filteredPhotos.length - visibleRange.end} remaining)
+      {searchQuery && (
+        <div className="search-results-info">
+          <p>
+            Found {displayPhotos.length} result{displayPhotos.length !== 1 ? 's' : ''} for "{searchQuery}"
+          </p>
+          <button onClick={() => setSearchQuery('')} className="clear-search-button">
+            Clear Search
           </button>
+        </div>
+      )}
+
+      {loading && photos.length === 0 && <p className="gallery-loading">Loading your photos…</p>}
+
+      {!loading && photos.length === 0 && (
+        <div className="empty-gallery">
+          <div className="empty-gallery-content">
+            <span className="empty-gallery-icon">📸</span>
+            <h3>Your gallery is empty</h3>
+            <p>Upload some photos to get started!</p>
+            <button onClick={handleUploadClick} className="upload-photos-button">
+              Upload Photos
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!loading && photos.length > 0 && displayPhotos.length === 0 && (
+        <div className="empty-gallery">
+          <div className="empty-gallery-content">
+            <span className="empty-gallery-icon">🔍</span>
+            <h3>No photos match this filter</h3>
+            <p>Try a different storage location or search term.</p>
+          </div>
+        </div>
+      )}
+
+      {displayPhotos.length > 0 && (
+        <div className={`photo-grid ${viewMode === 'list' ? 'photo-grid--list' : ''}`}>
+          {displayPhotos.map((photo) => (
+            <PhotoCard key={photo.id} photo={photo} onDelete={onDelete} onSelect={onSelect} viewMode={viewMode} />
+          ))}
         </div>
       )}
     </div>
   );
-};
+}
 
 export default PhotoGallery;

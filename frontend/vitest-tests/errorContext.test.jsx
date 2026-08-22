@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { ErrorProvider, useErrorContext } from '../context/ErrorContext';
+import { ErrorProvider, useErrorContext } from '../src/context/ErrorContext';
+import ErrorBoundary from '../src/components/ErrorBoundary/ErrorBoundary';
 
 const TestComponent = ({ onError }) => {
   const { handleError, clearError, error, dismissError } = useErrorContext();
@@ -97,13 +98,25 @@ describe('ErrorContext', () => {
 
   describe('error severity', () => {
     it('should log server errors to console', () => {
+      const TestWithServerError = () => {
+        const { handleError, error } = useErrorContext();
+        return (
+          <div>
+            <button onClick={() => handleError({ message: 'Server error', status: 500 }, 'test')}>
+              Trigger Server Error
+            </button>
+            {error && <div data-testid="error-message">{error.message}</div>}
+          </div>
+        );
+      };
+
       render(
         <ErrorProvider>
-          <TestComponent />
+          <TestWithServerError />
         </ErrorProvider>
       );
 
-      fireEvent.click(screen.getByText('Trigger Error'));
+      fireEvent.click(screen.getByText('Trigger Server Error'));
 
       expect(console.error).toHaveBeenCalled();
     });

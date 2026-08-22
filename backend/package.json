@@ -1,1 +1,30 @@
-[object Object]
+{
+  "name": "picpocket-backend",
+  "version": "1.0.0",
+  "description": "Backend for PicPocket photo management app",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "wrangler dev --config ../wrangler.toml",
+    "dev": "wrangler dev --config ../wrangler.toml",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test:vitest": "vitest run",
+    "stress-test": "node tests/stress/simple-stress-test.js",
+    "migrate": "wrangler d1 execute picpocket --file=migrations/001-initial-schema.sql"
+  },
+  "dependencies": {
+    "itty-router": "^4.0.7",
+    "itty-router-extras": "^0.4.3",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22",
+    "jest": "^29.5.0",
+    "undici": "^6.19.0",
+    "vitest": "^1.6.0",
+    "wrangler": "^3.0.0"
+  },
+  "keywords": ["photo", "management", "cloudflare", "worker"],
+  "author": "PicPocket Team",
+  "license": "MIT"
+}
