@@ -1,12 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import * as indexedDB from '../utils/indexedDB';
 import { resizeImage, createThumbnail } from '../utils/imageFilters';
 import { getCurrentPosition, reverseGeocode } from '../utils/geolocation';
 import { hashFile } from '../utils/contentHash';
+import { handleError, withErrorHandling, logError, ErrorCodes } from '../utils/errorHandler';
 
-// `crypto.randomUUID` is universal in real browsers but isn't always present
-// as a bare global in test environments (jsdom under Jest), so fall back to
-// a simpler unique id rather than referencing `crypto` unguarded.
 function generateId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -14,11 +12,6 @@ function generateId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-// PicPocket's library lives entirely in this browser's IndexedDB — there is
-// no server-side photo store to sync with (see StorageLedger, which treats
-// Google Drive/Photos, OneDrive and Dropbox as separate backup destinations
-// to reconcile against, not a source of truth). This hook is the single
-// place that reads/writes that local library.
 export function usePhotos(user) {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,32 +20,30 @@ export function usePhotos(user) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        setLoading(true);
-        const localPhotos = await indexedDB.getAllPhotos();
-        if (!cancelled) {
-          setPhotos(
-            [...localPhotos].sort(
-              (a, b) => new Date(b.uploadDate) - new Date(a.uploadDate)
-            )
-          );
-        }
-      } catch (err) {
-        console.error('Failed to load local photos:', err);
-        if (!cancelled) setError('Failed to load local photos');
-      } finally {
-        if (!cancelled) setLoading(false);
+      const { data, error: err } = await withErrorHandling(
+        indexedDB.getAllPhotos(),
+        'Failed to load local photos'
+      );
+      
+      if (cancelled) return;
+      
+      if (err) {
+        logError('usePhotos.load', err);
+        setError(err.message);
+      } else {
+        setPhotos(
+          [...data].sort(
+            (a, b) => new Date(b.uploadDate) - new Date(a.uploadDate)
+          )
+        );
       }
+      setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // Adds a new photo to the local library. Accepts either the legacy
-  // (tags, location) positional args or an options object
-  // ({ tags, locationEnabled }) — PhotoUpload and StorageLedger both call
-  // this with slightly different shapes.
   const addPhoto = useCallback(
     async (file, optionsOrTags = {}, maybeLocation = null) => {
       const isOptionsObject =
@@ -60,11 +51,11 @@ export function usePhotos(user) {
       const tags = isOptionsObject ? optionsOrTags.tags || [] : optionsOrTags || [];
       const locationEnabled = isOptionsObject ? Boolean(optionsOrTags.locationEnabled) : false;
 
-      const [dataUrl, contentHash] = await Promise.all([
+      const [dataUrl, contentHash, thumbnail] = await Promise.all([
         resizeImage(file),
         hashFile(file),
-      ]);
-      const thumbnail = await createThumbnail(dataUrl);
+        resizeImage(file).then(createThumbnail),
+      ]).catch(([, , thumbErr]) => [null, null, null]);
 
       let location = maybeLocation;
       if (!location && locationEnabled) {
@@ -92,19 +83,35 @@ export function usePhotos(user) {
         contentHash,
       };
 
-      await indexedDB.savePhoto(photo);
+      const { error: saveErr } = await withErrorHandling(
+        indexedDB.savePhoto(photo),
+        'Failed to save photo'
+      );
+
+      if (saveErr) {
+        logError('usePhotos.addPhoto', saveErr);
+        throw saveErr;
+      }
+
       setPhotos((prev) => [photo, ...prev]);
       return photo;
     },
     [user]
   );
 
-  // Persists a full (or partially-mutated) photo object back to the
-  // library — used for cloud-backup tagging, AI tag/caption suggestions,
-  // and filter edits.
   const updatePhoto = useCallback(async (updatedPhoto) => {
     if (!updatedPhoto?.id) return updatedPhoto;
-    await indexedDB.savePhoto(updatedPhoto);
+
+    const { error: saveErr } = await withErrorHandling(
+      indexedDB.savePhoto(updatedPhoto),
+      'Failed to update photo'
+    );
+
+    if (saveErr) {
+      logError('usePhotos.updatePhoto', saveErr);
+      throw saveErr;
+    }
+
     setPhotos((prev) =>
       prev.map((p) => (p.id === updatedPhoto.id ? { ...p, ...updatedPhoto } : p))
     );
@@ -112,16 +119,43 @@ export function usePhotos(user) {
   }, []);
 
   const deletePhoto = useCallback(async (photoId) => {
-    await indexedDB.deletePhoto(photoId);
+    const { error: deleteErr } = await withErrorHandling(
+      indexedDB.deletePhoto(photoId),
+      'Failed to delete photo'
+    );
+
+    if (deleteErr) {
+      logError('usePhotos.deletePhoto', deleteErr);
+      throw deleteErr;
+    }
+
     setPhotos((prev) => prev.filter((p) => p.id !== photoId));
   }, []);
 
-  return {
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  const photoCount = useMemo(() => photos.length, [photos]);
+  const unbackedPhotos = useMemo(
+    () => photos.filter((p) => !p.cloudBackup || Object.keys(p.cloudBackup).length === 0),
+    [photos]
+  );
+
+  const value = useMemo(() => ({
     photos,
     loading,
     error,
     addPhoto,
     updatePhoto,
     deletePhoto,
-  };
+    clearError,
+    photoCount,
+    unbackedPhotos,
+    hasUnbackedPhotos: unbackedPhotos.length > 0,
+  }), [photos, loading, error, addPhoto, updatePhoto, deletePhoto, clearError, photoCount, unbackedPhotos]);
+
+  return value;
 }
+
+export default usePhotos;
