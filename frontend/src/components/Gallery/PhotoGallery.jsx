@@ -27,6 +27,7 @@ function PhotoGallery({ photos = [], loading, onDelete, onSelect, onViewChange }
   const [viewMode, setViewMode] = useState('grid');
   const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
   const containerRef = useRef(null);
+  const handleScrollRef = useRef(null);
   const itemHeight = viewMode === 'grid' ? 280 : 80;
   const bufferCount = 10;
 
@@ -82,11 +83,23 @@ function PhotoGallery({ photos = [], loading, onDelete, onSelect, onViewChange }
   useEffect(() => {
     const container = containerRef.current;
     if (container) {
+      handleScrollRef.current = handleScroll;
       container.addEventListener('scroll', handleScroll, { passive: true });
       handleScroll();
-      return () => container.removeEventListener('scroll', handleScroll);
+      return () => {
+        container.removeEventListener('scroll', handleScroll);
+        handleScrollRef.current = null;
+      };
     }
   }, [handleScroll]);
+
+  useEffect(() => {
+    return () => {
+      if (handleScrollRef.current) {
+        handleScrollRef.current = null;
+      }
+    };
+  }, []);
 
   const handleUploadClick = () => {
     if (onViewChange) onViewChange('upload');
