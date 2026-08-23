@@ -1,4 +1,4 @@
-import { json, error, ErrorCodes } from '../utils/response.js';
+import { json, sendError as error, ErrorCodes } from '../utils/response.js';
 
 export async function handleAuth(request) {
   const { DB } = request.env;

@@ -1,4 +1,4 @@
-import { json, error, asyncHandler, ErrorCodes } from '../utils/response.js';
+import { json, sendError as error, asyncHandler, ErrorCodes } from '../utils/response.js';
 import OptimizedFileStorageService from '../services/optimizedFileStorage.js';
 
 function parseJsonField(value) {

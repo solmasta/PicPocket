@@ -8,6 +8,15 @@ export function json(data, status = 200) {
   });
 }
 
+export class AppError extends Error {
+  constructor(message, code = 'INTERNAL_ERROR', status = 500) {
+    super(message);
+    this.name = 'AppError';
+    this.code = code;
+    this.status = status;
+  }
+}
+
 // Renamed to avoid shadowing the function name in handleApiError
 export function sendError(message, status = 500, code = 'INTERNAL_ERROR', details = null) {
   return json(
