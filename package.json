@@ -1,22 +1,15 @@
 {
-  "name": "pic-pocket",
-  "version": "1.4.0",
-  "description": "Pic-Pocket photo storage app - monorepo root",
-  "private": true,
+  "name": "picpocket-deployment",
+  "version": "1.0.0",
+  "description": "PicPocket deployment automation",
   "scripts": {
-    "build": "cd frontend && npm install && npm run build",
-    "start:frontend": "cd frontend && npm start",
-    "start:backend": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "install:all": "cd frontend && npm install && cd ../backend && npm install",
-    "test:backend": "cd backend && npm test",
-    "test:frontend": "cd frontend && npm test -- --watchAll=false"
-  },
-  "dependencies": {
-    "itty-router": "^4.0.7",
-    "itty-router-extras": "^0.4.3"
+    "deploy": "chmod +x deploy.sh && ./deploy.sh",
+    "deploy-frontend": "cd frontend && npm run deploy",
+    "deploy-backend": "cd backend && wrangler deploy",
+    "build": "cd frontend && npm run build",
+    "test": "cd frontend && npm test"
   },
   "devDependencies": {
-    "wrangler": "^4.0.0"
+    "wrangler": "^3.0.0"
   }
 }

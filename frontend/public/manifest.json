@@ -1,22 +1,56 @@
 {
-  "short_name": "Pic-Pocket",
-  "name": "Pic-Pocket",
+  "short_name": "PicPocket",
+  "name": "PicPocket - Privacy-Focused Photo Storage",
   "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
     {
       "src": "logo192.png",
       "type": "image/png",
-      "sizes": "192x192",
-      "purpose": "any maskable"
+      "sizes": "192x192"
     },
     {
       "src": "logo512.png",
       "type": "image/png",
-      "sizes": "512x512",
-      "purpose": "any maskable"
+      "sizes": "512x512"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#6c63ff",
-  "background_color": "#6c63ff"
+  "theme_color": "#007bff",
+  "background_color": "#ffffff",
+  "description": "A privacy-focused photo storage application that runs entirely in your browser",
+  "categories": ["photo", "storage", "privacy", "productivity"],
+  "lang": "en-US",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "shortcuts": [
+    {
+      "name": "View Gallery",
+      "short_name": "Gallery",
+      "description": "View your photo collection",
+      "url": "/gallery",
+      "icons": [
+        {
+          "src": "logo192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Upload Photos",
+      "short_name": "Upload",
+      "description": "Upload new photos",
+      "url": "/upload",
+      "icons": [
+        {
+          "src": "logo192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
 }

@@ -1,70 +1,129 @@
-# Getting Started with Create React App
+# PicPocket Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A privacy-focused photo storage application that runs entirely in your browser using IndexedDB for local storage.
 
-## Available Scripts
+## 🚀 Features
 
-In the project directory, you can run:
+- **Privacy-First**: All photos stored locally in IndexedDB
+- **No Server Required**: Works completely offline
+- **Modern React**: Built with React 18 and modern hooks
+- **Responsive Design**: Works on all devices
+- **Dark Mode**: Automatic dark mode support
+- **Accessibility**: WCAG 2.1 AA compliant
+- **Performance Optimized**: Lazy loading, code splitting, and more
+- **PWA Ready**: Install as a native app on mobile devices
 
-### `npm start`
+## 🛠️ Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **React 18**: Modern React with hooks and concurrent features
+- **IndexedDB**: Client-side database for photo storage
+- **React Router**: Client-side routing
+- **Cloudflare Workers**: Optional backend for cloud sync
+- **PWA**: Progressive Web App capabilities
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 📦 Installation
 
-### `npm test`
+```bash
+# Install dependencies
+npm install
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+# Start development server
+npm start
 
-### `npm run build`
+# Run tests
+npm test
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+# Build for production
+npm run build
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# Deploy to GitHub Pages
+npm run deploy
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🚀 Deployment
 
-### `npm run eject`
+### GitHub Pages
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```bash
+# Deploy to GitHub Pages
+npm run deploy
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Custom Domain
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+1. Build the application: `npm run build`
+2. Deploy the `build` folder to your hosting service
+3. Configure your domain to serve the built files
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 🔧 Configuration
 
-## Learn More
+### Environment Variables
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Create a `.env` file in the root:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```env
+REACT_APP_API_URL=https://your-api-url.com
+REACT_APP_ENVIRONMENT=production
+REACT_APP_ENABLE_ANALYTICS=true
+REACT_APP_ENABLE_ERROR_REPORTING=true
+REACT_APP_ENABLE_PERFORMANCE_MONITORING=true
+```
 
-### Code Splitting
+## 🎨 Theming
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+The application supports automatic dark mode and includes:
 
-### Analyzing the Bundle Size
+- CSS custom properties for easy customization
+- High contrast mode support
+- Reduced motion support for accessibility
+- Responsive design breakpoints
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## ♿ Accessibility
 
-### Making a Progressive Web App
+This application is built with accessibility in mind:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- WCAG 2.1 AA compliant
+- Screen reader support
+- Keyboard navigation
+- Focus management
+- ARIA labels and landmarks
 
-### Advanced Configuration
+## 📊 Performance
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Performance optimizations include:
 
-### Deployment
+- Code splitting and lazy loading
+- Image optimization and lazy loading
+- Service worker for caching
+- Bundle size optimization
+- Performance monitoring
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 🔒 Security
 
-### `npm run build` fails to minify
+Security features:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- Content Security Policy headers
+- XSS protection
+- Input sanitization
+- Secure headers configuration
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new features
+5. Ensure all tests pass
+6. Submit a pull request
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+## 🆘 Support
+
+For issues and questions:
+
+- Create an issue on GitHub
+- Check the documentation
+- Review existing issues and discussions
