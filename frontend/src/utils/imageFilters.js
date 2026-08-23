@@ -129,10 +129,14 @@ export function resizeImage(file, maxWidth = 1920, maxHeight = 1080, quality = 0
         ctx.drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL('image/jpeg', quality));
       };
-      img.onerror = reject;
+      img.onerror = (error) => {
+        reject(new Error(`Failed to load image: ${error.message}`));
+      };
       img.src = e.target.result;
     };
-    reader.onerror = reject;
+    reader.onerror = (error) => {
+      reject(new Error(`Failed to read file: ${error.message}`));
+    };
     reader.readAsDataURL(file);
   });
 }
@@ -146,10 +150,14 @@ export function getImageDimensions(file) {
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => resolve({ width: img.width, height: img.height });
-      img.onerror = reject;
+      img.onerror = (error) => {
+        reject(new Error(`Failed to load image for dimensions: ${error.message}`));
+      };
       img.src = e.target.result;
     };
-    reader.onerror = reject;
+    reader.onerror = (error) => {
+      reject(new Error(`Failed to read file for dimensions: ${error.message}`));
+    };
     reader.readAsDataURL(file);
   });
 }
@@ -181,7 +189,52 @@ export function createThumbnail(dataUrl, size = 480) {
       ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
       resolve(canvas.toDataURL('image/jpeg', 0.82));
     };
-    img.onerror = reject;
+    img.onerror = (error) => {
+      reject(new Error(`Failed to create thumbnail: ${error.message}`));
+    };
     img.src = dataUrl;
+  });
+}
+
+/**
+ * Resize an image asynchronously using Web Worker for better performance
+ */
+export function resizeImageAsync(file, maxWidth = 1920, maxHeight = 1080, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    if (typeof Worker === 'undefined') {
+      return resizeImage(file, maxWidth, maxHeight, quality).then(resolve).catch(reject);
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const worker = new Worker('/workers/imageProcessor.js');
+      
+      worker.postMessage({
+        type: 'resize',
+        imageData: e.target.result,
+        maxWidth,
+        maxHeight,
+        quality
+      });
+
+      worker.onmessage = (event) => {
+        if (event.data.error) {
+          reject(new Error(event.data.error));
+        } else {
+          resolve(event.data.result);
+        }
+        worker.terminate();
+      };
+
+      worker.onerror = (error) => {
+        reject(new Error(`Worker error: ${error.message}`));
+        worker.terminate();
+      };
+    };
+
+    reader.onerror = (error) => {
+      reject(new Error(`Failed to read file: ${error.message}`));
+    };
+    reader.readAsDataURL(file);
   });
 }
