@@ -1,27 +1,25 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { GoogleOAuthProvider } from '@react-oauth/google';
-import './styles/index.css';
+import './index.css';
 import App from './App';
-import ErrorBoundary from './ErrorBoundary';
-import { getGoogleClientId, isGoogleAuthConfigured } from './config/googleAuth';
+import reportWebVitals from './reportWebVitals';
 
-// Google sign-in is optional — PicPals' core photo storage runs on
-// IndexedDB and needs no server or Google account. Only mount
-// GoogleOAuthProvider when a Client ID is actually configured, so a
-// missing/blank Client ID can never crash the app; it just means Google
-// sign-in isn't offered.
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const container = document.getElementById('root');
+if (!container) {
+  throw new Error('Root container not found');
+}
+
+const root = ReactDOM.createRoot(container);
+
 root.render(
   <React.StrictMode>
-    <ErrorBoundary>
-      {isGoogleAuthConfigured() ? (
-        <GoogleOAuthProvider clientId={getGoogleClientId()}>
-          <App />
-        </GoogleOAuthProvider>
-      ) : (
-        <App />
-      )}
-    </ErrorBoundary>
+    <App />
   </React.StrictMode>
 );
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+if (process.env.NODE_ENV === 'production') {
+  reportWebVitals(console.log);
+}
