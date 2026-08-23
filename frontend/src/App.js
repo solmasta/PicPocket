@@ -1,10 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { ErrorProvider } from './context/ErrorContext';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import AuthErrorBoundary from './components/ErrorBoundary/AuthErrorBoundary';
 import UploadErrorBoundary from './components/ErrorBoundary/UploadErrorBoundary';
+import { 
+  LazyCollageMaker, 
+  LazyPhotoStories, 
+  LazyPhotoSlideshow, 
+  LazyMemoryLane, 
+  LazyAlbumSharing, 
+  LazyHorseProfile, 
+  LazyAIStorageInsights, 
+  LazyStorageLedger, 
+  LazySettings,
+  LazySharedAlbumView,
+  ComponentLoader 
+} from './components/Lazy/LazyComponents';
 import './styles/App.css';
 import './styles/components.css';
 import backgroundImage from './assets/faye-pic-pocket.jpg';
@@ -18,16 +31,6 @@ import PhotoGallery from './components/Gallery/PhotoGallery';
 import PhotoUpload from './components/Upload/PhotoUpload';
 import TagSearch from './components/Tags/TagSearch';
 import PhotoFilters from './components/Filters/PhotoFilters';
-import CollageMaker from './components/Collage/CollageMaker';
-import PhotoStories from './components/Stories/PhotoStories';
-import PhotoSlideshow from './components/Slideshow/PhotoSlideshow';
-import MemoryLane from './components/MemoryLane/MemoryLane';
-import AlbumSharing from './components/Sharing/AlbumSharing';
-import SharedAlbumView from './components/Sharing/SharedAlbumView';
-import HorseProfile from './components/HorseProfile';
-import StorageLedger from './components/Storage/StorageLedger';
-import AIStorageInsights from './components/Storage/AIStorageInsights';
-import Settings from './components/Settings/Settings';
 import { useAuth } from './hooks/useAuth';
 import { usePhotos } from './hooks/usePhotos';
 import { useStorageConnections } from './hooks/useStorageConnections';
@@ -52,7 +55,14 @@ function App() {
       <ErrorProvider>
         <ErrorBoundary name="AppRoot" fallback={ErrorFallback}>
           <Routes>
-            <Route path="/album/:token" element={<SharedAlbumView />} />
+            <Route 
+              path="/album/:token" 
+              element={
+                <Suspense fallback={<ComponentLoader type="sharing" />}>
+                  <LazySharedAlbumView />
+                </Suspense>
+              } 
+            />
             <Route path="*" element={<MainApp />} />
           </Routes>
         </ErrorBoundary>
@@ -187,64 +197,80 @@ function MainApp() {
       case 'collage':
         return (
           <ErrorBoundary name="CollageMakerView" fallback={ErrorFallback}>
-            <CollageMaker photos={photos} />
+            <Suspense fallback={<ComponentLoader type="photo" />}>
+              <LazyCollageMaker photos={photos} />
+            </Suspense>
           </ErrorBoundary>
         );
       case 'stories':
         return (
           <ErrorBoundary name="PhotoStoriesView" fallback={ErrorFallback}>
-            <PhotoStories photos={photos} />
+            <Suspense fallback={<ComponentLoader type="photo" />}>
+              <LazyPhotoStories photos={photos} />
+            </Suspense>
           </ErrorBoundary>
         );
       case 'slideshow':
         return (
           <ErrorBoundary name="PhotoSlideshowView" fallback={ErrorFallback}>
-            <PhotoSlideshow photos={photos} />
+            <Suspense fallback={<ComponentLoader type="photo" />}>
+              <LazyPhotoSlideshow photos={photos} />
+            </Suspense>
           </ErrorBoundary>
         );
       case 'memory-lane':
         return (
           <ErrorBoundary name="MemoryLaneView" fallback={ErrorFallback}>
-            <MemoryLane photos={photos} />
+            <Suspense fallback={<ComponentLoader type="photo" />}>
+              <LazyMemoryLane photos={photos} />
+            </Suspense>
           </ErrorBoundary>
         );
       case 'sharing':
         return (
           <ErrorBoundary name="AlbumSharingView" fallback={ErrorFallback}>
-            <AlbumSharing photos={photos} user={user} />
+            <Suspense fallback={<ComponentLoader type="sharing" />}>
+              <LazyAlbumSharing photos={photos} user={user} />
+            </Suspense>
           </ErrorBoundary>
         );
       case 'horse-profile':
         return (
           <ErrorBoundary name="HorseProfileView" fallback={ErrorFallback}>
-            <HorseProfile user={user} />
+            <Suspense fallback={<ComponentLoader />}>
+              <LazyHorseProfile user={user} />
+            </Suspense>
           </ErrorBoundary>
         );
       case 'storage':
         return (
           <ErrorBoundary name="StorageView" fallback={ErrorFallback}>
-            <>
-              <AIStorageInsights photos={photos} onDelete={deletePhoto} />
-              <StorageLedger
-                photos={photos}
-                user={user}
-                onImport={addPhoto}
-                onImportBackupTag={updatePhoto}
-                storageConnections={storageConnections}
-              />
-            </>
+            <Suspense fallback={<ComponentLoader type="storage" />}>
+              <>
+                <LazyAIStorageInsights photos={photos} onDelete={deletePhoto} />
+                <LazyStorageLedger
+                  photos={photos}
+                  user={user}
+                  onImport={addPhoto}
+                  onImportBackupTag={updatePhoto}
+                  storageConnections={storageConnections}
+                />
+              </>
+            </Suspense>
           </ErrorBoundary>
         );
       case 'settings':
         return (
           <ErrorBoundary name="SettingsView" fallback={ErrorFallback}>
-            <Settings
-              user={user}
-              storageConnections={storageConnections}
-              onSignInGoogle={signIn}
-              onContinueLocally={continueLocally}
-              onSignOut={signOut}
-            />
+            <Suspense fallback={<ComponentLoader />}>
+              <LazySettings
+                user={user}
+                storageConnections={storageConnections}
+                onSignInGoogle={signIn}
+                onContinueLocally={continueLocally}
+                onSignOut={signOut}
+              />
+            </Suspense>
           </ErrorBoundary>
         );
       default:
