@@ -1,0 +1,786 @@
+/* Collaboration Manager Styles */
+.collaboration-manager {
+  background: var(--background-light);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.collaboration-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.collaboration-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.view-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tab-button {
+  padding: 8px 16px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--background-light);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+  background: var(--background-dark);
+}
+
+.tab-button.active {
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+}
+
+/* Albums View */
+.albums-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.albums-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.albums-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.create-album-btn {
+  padding: 8px 16px;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.create-album-btn:hover {
+  background: var(--accent-secondary);
+  transform: translateY(-1px);
+}
+
+.albums-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.album-card {
+  background: var(--background-dark);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border-light);
+}
+
+.album-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.album-thumbnail {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.album-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.album-count {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.album-info {
+  padding: 16px;
+}
+
+.album-info h4 {
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.album-info p {
+  margin: 0 0 12px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.album-collaborators {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.collaborator-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--background-light);
+}
+
+.more-collaborators {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--background-light);
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+/* Shared View */
+.shared-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.shared-view h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.shared-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.shared-photo-card {
+  background: var(--background-dark);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+}
+
+.shared-photo-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.shared-info {
+  padding: 12px;
+}
+
+.shared-info p {
+  margin: 0 0 4px 0;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.permissions {
+  display: inline-block;
+  padding: 2px 6px;
+  background: var(--accent-primary);
+  color: white;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.share-link-container {
+  background: var(--background-dark);
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+}
+
+.share-link-container h4 {
+  margin: 0 0 12px 0;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.share-link {
+  display: flex;
+  gap: 8px;
+}
+
+.share-link input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  background: var(--background-light);
+  color: var(--text-primary);
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.share-link button {
+  padding: 8px 16px;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.share-link button:hover {
+  background: var(--accent-secondary);
+}
+
+/* Activity View */
+.activity-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.activity-view h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.activity-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  padding: 12px;
+  background: var(--background-dark);
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+}
+
+.activity-time {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.activity-item p {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: var(--background-light);
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.album-detail-modal {
+  max-width: 1200px;
+  width: 95%;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.modal-header button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.modal-header button:hover {
+  background: var(--background-dark);
+}
+
+.modal form {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  padding: 8px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--background-light);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
+}
+
+.form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+}
+
+.modal-actions button {
+  padding: 8px 16px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--background-light);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.modal-actions button[type="submit"] {
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+}
+
+.modal-actions button:hover {
+  background: var(--background-dark);
+}
+
+.modal-actions button[type="submit"]:hover {
+  background: var(--accent-secondary);
+}
+
+/* Album Detail Content */
+.album-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 20px;
+}
+
+.album-photos,
+.album-comments,
+.album-collaborators {
+  background: var(--background-dark);
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+}
+
+.album-photos h4,
+.album-comments h4,
+.album-collaborators h4 {
+  margin: 0 0 16px 0;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.album-photo {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.album-photo img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+}
+
+.photo-actions {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  display: flex;
+  gap: 4px;
+}
+
+.photo-actions button {
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.comment {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: var(--background-light);
+  border-radius: 8px;
+}
+
+.comment-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.comment-content strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.comment-content p {
+  margin: 0 0 4px 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.comment-content small {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.add-comment {
+  display: flex;
+  gap: 8px;
+}
+
+.add-comment input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--background-light);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.add-comment button {
+  padding: 8px 16px;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.add-comment button:hover {
+  background: var(--accent-secondary);
+}
+
+.collaborators-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.collaborator-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--background-light);
+  border-radius: 8px;
+}
+
+.collaborator-item img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.collaborator-item strong {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.collaborator-item small {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.add-collaborator {
+  display: flex;
+  gap: 8px;
+}
+
+.add-collaborator input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--background-light);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.add-collaborator select {
+  padding: 8px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--background-light);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.add-collaborator button {
+  padding: 8px 16px;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.add-collaborator button:hover {
+  background: var(--accent-secondary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .collaboration-manager {
+    padding: 16px;
+  }
+
+  .collaboration-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .albums-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .shared-photos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .album-content {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    width: 95%;
+    margin: 20px;
+  }
+
+  .album-detail-modal {
+    width: 95%;
+  }
+
+  .photos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+}
+
+/* Dark mode enhancements */
+.dark-mode .collaboration-manager {
+  background: var(--background-dark);
+  border-color: var(--border-medium);
+}
+
+.dark-mode .album-card,
+.dark-mode .shared-photo-card,
+.dark-mode .activity-item,
+.dark-mode .album-photos,
+.dark-mode .album-comments,
+.dark-mode .album-collaborators {
+  background: var(--background-light);
+  border-color: var(--border-medium);
+}
+
+/* Animation enhancements */
+.album-card {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Focus management */
+.collaboration-manager:focus-within {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.tab-button:focus,
+.create-album-btn:focus,
+.modal-header button:focus {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .collaboration-manager {
+    border-width: 2px;
+  }
+  
+  .album-card,
+  .shared-photo-card,
+  .activity-item {
+    border-width: 2px;
+  }
+  
+  .tab-button,
+  .create-album-btn {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .album-card,
+  .modal {
+    animation: none;
+  }
+  
+  .album-card:hover {
+    transform: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .collaboration-manager {
+    display: none;
+  }
+}
