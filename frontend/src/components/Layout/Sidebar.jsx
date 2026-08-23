@@ -8,34 +8,54 @@ const NAV_ITEMS = [
   { id: 'memory-lane', icon: '🕰️', label: 'Memory Lane' },
   { id: 'filters', icon: '✨', label: 'Filters' },
   { id: 'collage', icon: '🎨', label: 'Collage Maker' },
-  { id: 'stories', icon: '📖', label: 'Photo Stories' },
-  { id: 'slideshow', icon: '▶️', label: 'Slideshow' },
-  { id: 'sharing', icon: '🔗', label: 'Albums & Sharing' },
-  { id: 'horse-profile', icon: '🐴', label: 'Horse Profile' },
-  { id: 'storage', icon: '🗄️', label: 'Storage Ledger' },
   { id: 'settings', icon: '⚙️', label: 'Settings' },
 ];
 
-function Sidebar({ activeView, onViewChange, isOpen }) {
+function Sidebar({ activeView, onViewChange, isCollapsed, onToggleCollapse }) {
   return (
-    <aside className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
-      <nav className="sidebar-nav">
-        <ul className="nav-list">
+    <aside 
+      className={`sidebar ${isCollapsed ? 'sidebar--collapsed' : ''}`}
+      role="navigation"
+      aria-label="Main navigation"
+    >
+      <nav className="sidebar__nav">
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {NAV_ITEMS.map((item) => (
             <li key={item.id}>
               <button
-                className={`nav-item ${activeView === item.id ? 'active' : ''} ${item.id === 'horse-profile' ? 'horse-theme' : ''}`}
+                className={`sidebar__nav-item ${
+                  activeView === item.id ? 'sidebar__nav-item--active' : ''
+                }`}
                 onClick={() => onViewChange(item.id)}
-                title={item.label}
-                aria-pressed={activeView === item.id}
+                aria-label={item.label}
+                aria-current={activeView === item.id ? 'page' : undefined}
               >
-                <span className="nav-icon" aria-hidden="true">{item.icon}</span>
-                <span className="nav-label">{item.label}</span>
+                <span className="sidebar__nav-icon" aria-hidden="true">{item.icon}</span>
+                {!isCollapsed && <span>{item.label}</span>}
               </button>
             </li>
           ))}
         </ul>
       </nav>
+
+      <div className="sidebar__footer">
+        {!isCollapsed && (
+          <div className="sidebar__version">
+            PicPocket v1.0
+          </div>
+        )}
+        <button
+          className="sidebar__nav-item"
+          onClick={onToggleCollapse}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          style={{ marginTop: 'auto' }}
+        >
+          <span className="sidebar__nav-icon" aria-hidden="true">
+            {isCollapsed ? '▶️' : '◀️'}
+          </span>
+          {!isCollapsed && <span>Collapse</span>}
+        </button>
+      </div>
     </aside>
   );
 }
