@@ -11,12 +11,16 @@
 
 .error-boundary__content {
   text-align: center;
+  max-width: 400px;
   max-width: 500px;
 }
 
 .error-boundary__icon {
   font-size: 48px;
   margin-bottom: var(--spacing-md);
+}
+
+.error-boundary h2 {
   animation: pulse 2s infinite;
 }
 
@@ -33,6 +37,8 @@
 
 .error-boundary__message {
   color: var(--color-text-secondary);
+I'm  margin-bottom: var(--spacing-lg);
+  font-size: var(--font-size-base);
   margin-bottom: var(--spacing-md);
   font-size: var(--font-size-base);
   line-height: 1.6;

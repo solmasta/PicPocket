@@ -4,6 +4,27 @@ All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version numbers
 across the root, `frontend/`, and `backend/` packages are kept in lockstep.
 
+## [1.5.0] - 2026-08-03
+
+### Added
+- **Unified Error Handling System**: Centralized `errorHandler.js` utility with `AppError` class, consistent error codes across frontend and backend, and graceful degradation for network failures.
+- **Unified API Service**: Single `apiService.js` with request/response interceptors, automatic retry logic, timeout handling, and consistent error handling.
+- **Unified State Management**: `AppStateContext` combining auth, photos, storage, notifications, and UI state into one context provider.
+- **Performance Utilities**: `performance.js` with image preloading, caching, debounce/throttle, batch processing, and lazy loading support.
+- **Offline Indicator**: Visual banner showing online/offline status with notifications on state changes.
+- **Input Validation Middleware**: Server-side validation for uploads, updates, and search parameters with sanitization.
+- **Rate Limiting Middleware**: Configurable rate limits for general API and upload endpoints to prevent abuse.
+
+### Improved
+- **Error Boundary**: Enhanced with error reporting and retry capabilities.
+- **PhotoGallery**: Added virtualization for better performance with large collections.
+- **PhotoItem**: Improved error handling for image loading failures.
+- **Hooks**: All hooks now have consistent error handling and loading states.
+- **Backend Routes**: Consistent error response format with error codes.
+
+### Testing
+- Added comprehensive test suites for error handling, image filters, API service, AI service, performance utilities, hooks, components, validation middleware, and rate limiting middleware.
+
 ## [1.4.0] - 2026-08-03
 
 ### Added

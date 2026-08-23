@@ -20,6 +20,22 @@ export function usePhotos(user) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      const { data, error: err } = await withErrorHandling(
+        indexedDB.getAllPhotos(),
+        'Failed to load local photos'
+      );
+      
+      if (cancelled) return;
+      
+      if (err) {
+        logError('usePhotos.load', err);
+        setError(err.message);
+      } else {
+        setPhotos(
+          [...data].sort(
+            (a, b) => new Date(b.uploadDate) - new Date(a.uploadDate)
+          )
+        );
       try {
         const { data, error: err } = await withErrorHandling(
           indexedDB.getAllPhotos(),
@@ -48,6 +64,7 @@ export function usePhotos(user) {
           setLoading(false);
         }
       }
+      setLoading(false);
     })();
     return () => {
       cancelled = true;
@@ -61,6 +78,20 @@ export function usePhotos(user) {
       const tags = isOptionsObject ? optionsOrTags.tags || [] : optionsOrTags || [];
       const locationEnabled = isOptionsObject ? Boolean(optionsOrTags.locationEnabled) : false;
 
+      const [dataUrl, contentHash, thumbnail] = await Promise.all([
+        resizeImage(file),
+        hashFile(file),
+        resizeImage(file).then(createThumbnail),
+      ]).catch(([, , thumbErr]) => [null, null, null]);
+
+      let location = maybeLocation;
+      if (!location && locationEnabled) {
+        try {
+          const position = await getCurrentPosition();
+          const name = await reverseGeocode(position.lat, position.lng);
+          location = { lat: position.lat, lng: position.lng, name };
+        } catch (err) {
+          console.warn('Could not capture location for photo:', err.message);
       try {
         const [dataUrl, contentHash, thumbnail] = await Promise.all([
           resizeImage(file),
@@ -104,6 +135,18 @@ export function usePhotos(user) {
           throw saveErr;
         }
 
+      const { error: saveErr } = await withErrorHandling(
+        indexedDB.savePhoto(photo),
+        'Failed to save photo'
+      );
+
+      if (saveErr) {
+        logError('usePhotos.addPhoto', saveErr);
+        throw saveErr;
+      }
+
+      setPhotos((prev) => [photo, ...prev]);
+      return photo;
         setPhotos((prev) => [photo, ...prev]);
         return photo;
       } catch (err) {
@@ -116,6 +159,40 @@ export function usePhotos(user) {
 
   const updatePhoto = useCallback(async (updatedPhoto) => {
     if (!updatedPhoto?.id) return updatedPhoto;
+
+    const { error: saveErr } = await withErrorHandling(
+      indexedDB.savePhoto(updatedPhoto),
+      'Failed to update photo'
+    );
+
+    if (saveErr) {
+      logError('usePhotos.updatePhoto', saveErr);
+      throw saveErr;
+    }
+
+    setPhotos((prev) =>
+      prev.map((p) => (p.id === updatedPhoto.id ? { ...p, ...updatedPhoto } : p))
+    );
+    return updatedPhoto;
+  }, []);
+
+  const deletePhoto = useCallback(async (photoId) => {
+    const { error: deleteErr } = await withErrorHandling(
+      indexedDB.deletePhoto(photoId),
+      'Failed to delete photo'
+    );
+
+    if (deleteErr) {
+      logError('usePhotos.deletePhoto', deleteErr);
+      throw deleteErr;
+    }
+
+    setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+  }, []);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
     try {
       const sanitizedPhoto = {

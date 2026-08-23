@@ -83,6 +83,12 @@ function PhotoGallery({ photos = [], loading, onDelete, onSelect, onViewChange }
   useEffect(() => {
     const container = containerRef.current;
     if (container) {
+      container.addEventListener('scroll', handleScroll, { passive: true });
+      handleScroll();
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, [handleScroll]);
+
       handleScrollRef.current = handleScroll;
       container.addEventListener('scroll', handleScroll, { passive: true });
       handleScroll();

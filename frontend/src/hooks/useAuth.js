@@ -112,6 +112,37 @@ export function useAuth() {
   }, []);
 
   const handleLoginSuccess = useCallback(async (tokenResponse) => {
+    const { data, error: err } = await withErrorHandling(
+      (async () => {
+        const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: 'Bearer ' + tokenResponse.access_token },
+        });
+
+        if (!profileRes.ok) {
+          throw new Error('Failed to fetch user profile');
+        }
+
+        const profile = await profileRes.json();
+        const userData = {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          picture: profile.picture,
+          accessToken: tokenResponse.access_token,
+          expiresAt: Date.now() + (tokenResponse.expires_in || 3600) * 1000,
+          scope: tokenResponse.scope,
+        };
+
+        await saveAuthUser(userData);
+        return userData;
+      })(),
+      'Failed to complete sign-in'
+    );
+
+    if (err) {
+      setError(err.message);
+      logError('useAuth.handleLoginSuccess', err);
+      return;
     try {
       const { data, error: err } = await withErrorHandling(
         (async () => {
@@ -155,6 +186,10 @@ export function useAuth() {
       setError('An unexpected error occurred during sign-in');
       refreshInProgressRef.current = false;
     }
+
+    setUser(data);
+    setTokenExpired(false);
+    silentAttemptRef.current = false;
   }, []);
 
   const handleLoginError = useCallback((err) => {
@@ -177,6 +212,12 @@ export function useAuth() {
   }, []);
 
   const continueLocally = useCallback(async () => {
+    const { error: err } = await withErrorHandling(
+      saveAuthUser(LOCAL_USER),
+      'Failed to save local session'
+    );
+    if (err) {
+      logError('useAuth.continueLocally', err);
     try {
       const { error: err } = await withErrorHandling(
         saveAuthUser(LOCAL_USER),
@@ -195,6 +236,29 @@ export function useAuth() {
   }, []);
 
   const signOut = useCallback(async () => {
+    const { error: err } = await withErrorHandling(
+      (async () => {
+        if (user && !user.isLocal) {
+          if (user.accessToken) {
+            try {
+              await fetch(
+                `https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(user.accessToken)}`,
+                { method: 'POST' }
+              );
+            } catch (revokeErr) {
+              console.warn('Failed to revoke Google token:', revokeErr);
+            }
+          }
+          await clearAuthUser();
+        } else if (user && user.isLocal) {
+          await clearAuthUser();
+        }
+      })(),
+      'Failed to sign out'
+    );
+
+    if (err) {
+      logError('useAuth.signOut', err);
     try {
       const { error: err } = await withErrorHandling(
         (async () => {
@@ -228,6 +292,9 @@ export function useAuth() {
       setUser(null);
       setTokenExpired(false);
     }
+
+    setUser(null);
+    setTokenExpired(false);
   }, [user]);
 
   const clearAuthError = useCallback(() => {

@@ -31,6 +31,17 @@ import PhotoGallery from './components/Gallery/PhotoGallery';
 import PhotoUpload from './components/Upload/PhotoUpload';
 import TagSearch from './components/Tags/TagSearch';
 import PhotoFilters from './components/Filters/PhotoFilters';
+import CollageMaker from './components/Collage/CollageMaker';
+import PhotoStories from './components/Stories/PhotoStories';
+import PhotoSlideshow from './components/Slideshow/PhotoSlideshow';
+import MemoryLane from './components/MemoryLane/MemoryLane';
+import AlbumSharing from './components/Sharing/AlbumSharing';
+import SharedAlbumView from './components/Sharing/SharedAlbumView';
+import HorseProfile from './components/HorseProfile';
+import StorageLedger from './components/Storage/StorageLedger';
+import AIStorageInsights from './components/Storage/AIStorageInsights';
+import Settings from './components/Settings/Settings';
+import OfflineIndicator from './components/Common/OfflineIndicator';
 import { useAuth } from './hooks/useAuth';
 import { usePhotos } from './hooks/usePhotos';
 import { useStorageConnections } from './hooks/useStorageConnections';
@@ -136,6 +147,8 @@ function MainApp() {
 
   if (authLoading || !minSplashElapsed) {
     return (
+      <ErrorBoundary fallback={ErrorFallback}>
+        <OfflineIndicator />
       <ErrorBoundary name="SplashView" fallback={ErrorFallback}>
         {googleAuthBridge}
         <Splash />
@@ -145,6 +158,8 @@ function MainApp() {
 
   if (!user) {
     return (
+      <ErrorBoundary fallback={ErrorFallback}>
+        <OfflineIndicator />
       <AuthErrorBoundary>
         {googleAuthBridge}
         <GoogleSignIn
@@ -296,6 +311,7 @@ function MainApp() {
           style={{ backgroundImage: `url(${backgroundImage})` }}
           aria-hidden="true"
         />
+        <OfflineIndicator />
         {googleAuthBridge}
         <Header
           user={user}

@@ -5,6 +5,7 @@ import './ErrorBoundary.css';
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
     this.state = { 
       hasError: false, 
       error: null, 
@@ -21,6 +22,16 @@ class ErrorBoundary extends Component {
   componentDidCatch(error, errorInfo) {
     const errorContext = {
       componentStack: errorInfo?.componentStack,
+      errorBoundary: 'ErrorBoundary'
+    };
+    logError('React ErrorBoundary', error, errorContext);
+    this.setState({ errorInfo });
+  }
+
+  handleRetry = () => {
+    this.setState({ hasError: false, error: null, errorInfo: null });
+    if (this.props.onRetry) {
+      this.props.onRetry();
       errorBoundary: this.props.name || 'ErrorBoundary',
       retryCount: this.state.retryCount,
       userAgent: navigator.userAgent,
@@ -64,6 +75,7 @@ class ErrorBoundary extends Component {
       componentStack: errorInfo?.componentStack,
       timestamp: new Date().toISOString(),
       userAgent: navigator.userAgent,
+      url: window.location.href
       url: window.location.href,
       retryCount: this.state.retryCount,
       appVersion: process.env.REACT_APP_VERSION || 'unknown'
@@ -101,6 +113,19 @@ class ErrorBoundary extends Component {
       return (
         <div className="error-boundary" role="alert">
           <div className="error-boundary__content">
+            <div className="error-boundary__icon">⚠️</div>
+            <h2>Something went wrong</h2>
+            <p className="error-boundary__message">
+              {this.state.error?.message || 'An unexpected error occurred'}
+            </p>
+            <div className="error-boundary__actions">
+              <button onClick={this.handleRetry} className="btn btn--primary">
+                Try Again
+              </button>
+              <button onClick={this.handleReport} className="btn btn--secondary">
+                Report Issue
+              </button>
+              <button onClick={() => window.location.reload()} className="btn btn--secondary">
             <div className="error-boundary__icon" aria-hidden="true">
               {canRetry ? '⚠️' : '🚨'}
             </div>
