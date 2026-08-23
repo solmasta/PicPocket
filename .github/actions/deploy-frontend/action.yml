@@ -1,0 +1,26 @@
+name: Deploy Frontend
+description: Deploy frontend to GitHub Pages
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+
+    - name: Install dependencies
+      shell: bash
+      run: cd frontend && npm ci
+
+    - name: Build
+      shell: bash
+      run: cd frontend && npm run build
+      env:
+        REACT_APP_GOOGLE_CLIENT_ID: ${{ secrets.REACT_APP_GOOGLE_CLIENT_ID }}
+        REACT_APP_API_URL: https://picpocket-worker.lukedorsett.workers.dev/api
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./frontend/build
