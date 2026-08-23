@@ -8,68 +8,75 @@ function Header({ user, tokenExpired, onSignOut, onReconnect, onToggleSidebar })
   const { isDarkMode, toggleTheme } = useTheme();
 
   return (
-    <header className="app-header">
-      <div className="header-left">
-        <button
-          className="sidebar-toggle"
+    <header className="header">
+      <div className="header__logo-section">
+        <button 
+          className="header__menu-btn"
           onClick={onToggleSidebar}
           aria-label="Toggle sidebar"
         >
-          <span className="hamburger-icon">☰</span>
+          ☰
         </button>
-        <div className="app-logo">
-          <img src={logo} alt="Pic-Pocket mascot logo" className="logo-icon-img" />
-          <span className="logo-text">Pic-Pocket</span>
-        </div>
+        <a href="/" className="header__logo-link" aria-label="PicPocket Home">
+          <img 
+            src={logo} 
+            alt="" 
+            className="header__logo-img"
+          />
+          <span className="header__logo-text">PicPocket</span>
+        </a>
       </div>
 
-      <div className="header-right">
+      <nav className="header__nav" role="navigation" aria-label="Main navigation">
         <button 
-          className="theme-toggle"
+          className="header__nav-btn"
           onClick={toggleTheme}
-          aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+          aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
         >
           {isDarkMode ? '☀️' : '🌙'}
+          <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
         </button>
-        
-        {user && (
-          <div className="user-menu">
-            {user.picture && !avatarFailed ? (
-              <img
-                src={user.picture}
-                alt={user.name}
-                className="user-avatar"
-                referrerPolicy="no-referrer"
-                onError={() => setAvatarFailed(true)}
-              />
+      </nav>
+
+      <div className="header__user-section">
+        {user ? (
+          <>
+            <div className="header__user-info">
+              <div className="header__user-name">{user.displayName || user.email}</div>
+              <div className="header__user-status">
+                {tokenExpired ? 'Token expired' : 'Connected'}
+              </div>
+            </div>
+            {avatarFailed ? (
+              <div className="header__avatar header__avatar--fallback">
+                {(user.displayName || user.email || '?')[0].toUpperCase()}
+              </div>
             ) : (
               <img
-                src={`${process.env.PUBLIC_URL}/logo192.png`}
-                alt={user.name || 'Pic-Pocket'}
-                className="user-avatar user-avatar-fallback"
+                src={user.photoURL}
+                alt=""
+                className="header__avatar"
+                onError={() => setAvatarFailed(true)}
               />
             )}
-            <div className="user-info">
-              <span className="user-name">{user.name}</span>
-              <span className="user-email">{user.email || (user.isLocal ? 'Local User' : '')}</span>
-            </div>
-            {!user.isLocal && tokenExpired && (
-              <button
-                className="reconnect-btn"
-                onClick={onReconnect}
-                title="Your Google session lapsed — reconnect to resume Drive/Photos backup"
-              >
-                Reconnect
-              </button>
-            )}
             <button 
-              className="sign-out-btn" 
-              onClick={onSignOut}
-              aria-label={`Sign out ${user.name}`}
+              className="header__nav-btn"
+              onClick={tokenExpired ? onReconnect : onSignOut}
+              aria-label={tokenExpired ? "Reconnect" : "Sign out"}
             >
-              Sign Out
+              {tokenExpired ? '🔌' : '🚪'}
+              <span>{tokenExpired ? 'Reconnect' : 'Sign Out'}</span>
             </button>
-          </div>
+          </>
+        ) : (
+          <button 
+            className="header__nav-btn"
+            onClick={onSignOut}
+            aria-label="Sign in"
+          >
+            🔐
+            <span>Sign In</span>
+          </button>
         )}
       </div>
     </header>
