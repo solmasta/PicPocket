@@ -12,16 +12,20 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.0",
     "react-scripts": "5.0.1",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "web-vitals": "^3.5.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
-    "test:vitest": "vitest run",
+    "test": "react-scripts test --no-watchman --detectOpenHandles --forceExit",
     "eject": "react-scripts eject",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "build:analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
+    "lint": "eslint src --ext .js,.jsx",
+    "lint:fix": "eslint src --ext .js,.jsx --fix",
+    "format": "prettier --write src/**/*.{js,jsx,css,md}",
+    "type-check": "tsc --noEmit"
   },
   "eslintConfig": {
     "extends": [
@@ -41,10 +45,14 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:5000",
+  "proxy": "http://localhost:8787",
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.1.4",
     "@testing-library/react": "^13.4.0",
-    "jsdom": "^24.0.0",
-    "vitest": "^1.6.0"
+    "@testing-library/user-event": "^14.5.1",
+    "eslint": "^8.54.0",
+    "prettier": "^3.1.0",
+    "typescript": "^5.2.2",
+    "webpack-bundle-analyzer": "^4.10.1"
   }
 }
