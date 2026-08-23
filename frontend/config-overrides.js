@@ -1,24 +1,6 @@
-const { override, addWebpackBundleVisualizer, addBabelPlugin, addWebpackPlugin } = require('customize-cra');
-const CompressionPlugin = require('compression-webpack-plugin');
+const { override, addBabelPlugin } = require('customize-cra');
 
 module.exports = override(
-  // Add bundle analyzer
-  process.env.ANALYZE && addWebpackBundleVisualizer({
-    analyzerMode: 'static',
-    openAnalyzer: false,
-    reportFilename: 'bundle-report.html'
-  }),
-
-  // Add compression plugin for production
-  process.env.NODE_ENV === 'production' && addWebpackPlugin(
-    new CompressionPlugin({
-      algorithm: 'gzip',
-      test: /\.(js|css|html|svg)$/,
-      threshold: 8192,
-      minRatio: 0.8,
-    })
-  ),
-
   // Add babel plugin for code splitting
   addBabelPlugin([
     '@babel/plugin-transform-runtime',
@@ -57,13 +39,6 @@ module.exports = override(
             name: 'router',
             chunks: 'all',
             priority: 15,
-            reuseExistingChunk: true,
-          },
-          common: {
-            name: 'common',
-            minChunks: 2,
-            chunks: 'all',
-            priority: 5,
             reuseExistingChunk: true,
           },
         },
