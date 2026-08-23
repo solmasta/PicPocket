@@ -1,34 +1,41 @@
-# PicPocket
+# 🚀 PicPocket Deployment Guide
 
-A Progressive Web App for managing and backing up photos locally, with Google Drive/Photos, OneDrive, and Dropbox integration.
+## Quick Deploy (One Command)
 
-## Features
+```bash
+npm run deploy
+```
 
-- **Photo Upload & Gallery**: Upload photos from your device, organized with tags and location data
-- **Cloud Backup**: Automatically backup photos to Google Drive, Google Photos, OneDrive, and Dropbox
-- **AI-Powered Insights**: Get storage insights and recommendations using AI
-- **Photo Editing**: Apply filters, create collages, and build photo stories
-- **Offline Support**: Works offline with IndexedDB storage
-- **Privacy-First**: Your photos stay in your browser's local storage
+This will:
+- Build and test the frontend
+- Deploy frontend to GitHub Pages
+- Deploy backend to Cloudflare Workers
 
-## Tech Stack
+## Manual Deployment Steps
 
-- **Frontend**: React, PWA
-- **Backend**: Cloudflare Workers
-- **Storage**: IndexedDB (local), Google Drive/Photos, OneDrive, Dropbox (cloud)
+### Frontend (GitHub Pages)
+```bash
+cd frontend
+npm install
+npm run build
+npm run deploy
+```
 
-## Getting Started
+### Backend (Cloudflare Workers)
+```bash
+cd backend
+npm install
+wrangler deploy
+```
 
-1. Clone the repository
-2. Install dependencies: `npm install && cd frontend && npm install && cd ../backend && npm install`
-3. Copy `.env.example` to `.env` and configure API keys
-4. Run locally: `npm run dev` (frontend) and `npm run dev` (backend)
+## Production URLs
+- **Frontend**: https://solmasta.github.io/PicPocket/
+- **Backend**: https://pic-pocket-api.solmasta.workers.dev
 
-## Documentation
+## Environment Variables
+Frontend production variables are configured in `frontend/.env.production`
 
-- [Changelog](./CHANGELOG.md)
-- [Improvements Summary](./IMPROVEMENTS_SUMMARY.md)
-
-## License
-
-MIT
+## Monitoring
+- Performance metrics are automatically collected
+- Error reporting is enabled in production
+- Bundle analysis available via `npm run analyze`
