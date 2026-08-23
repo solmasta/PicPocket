@@ -1,7 +1,5 @@
 // Rate limiting middleware for Cloudflare Workers (itty-router)
 
-import { AppError } from '../utils/response';
-
 // Simple in-memory store (use Redis or KV in production)
 const requestCounts = new Map();
 const RATE_WINDOW = 60 * 1000; // 1 minute
@@ -10,7 +8,12 @@ const MAX_REQUESTS = 100;
 function getClientId(request) {
   // Cloudflare Workers use the Fetch API Headers
   const forwarded = request.headers.get('x-forwarded-for');
-  return (forwarded && forwarded.split(',')[0].trim()) || 'unknown';
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  // Fallback to Cloudflare connecting IP header
+  const cfIp = request.headers.get('cf-connecting-ip');
+  return cfIp || 'unknown';
 }
 
 function cleanupOldEntries() {
