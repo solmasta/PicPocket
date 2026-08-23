@@ -1,0 +1,627 @@
+/* Batch Operations Panel Component Styles */
+.batch-operations-panel {
+  background: var(--background-light);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.panel-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.clear-history-btn {
+  padding: 6px 12px;
+  background: var(--background-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.clear-history-btn:hover {
+  background: var(--background-light);
+  border-color: var(--border-medium);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-state h3 {
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Operation Selection */
+.operation-selection {
+  margin-bottom: 24px;
+}
+
+.operation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.operation-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: var(--background-light);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.operation-btn:hover:not(:disabled) {
+  background: var(--background-dark);
+  border-color: var(--border-medium);
+  transform: translateY(-2px);
+}
+
+.operation-btn.selected {
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+}
+
+.operation-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.operation-icon {
+  font-size: 24px;
+}
+
+.operation-name {
+  font-size: 12px;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Options Modal */
+.options-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: var(--background-light);
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.modal-header h4 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.close-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.close-btn:hover {
+  background: var(--background-dark);
+}
+
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-group label {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.option-group input,
+.option-group select {
+  padding: 8px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--background-light);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.option-group input:focus,
+.option-group select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
+}
+
+.option-group small {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.dimension-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dimension-inputs input {
+  flex: 1;
+  width: 80px;
+}
+
+.dimension-inputs span {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.operation-info {
+  padding: 12px;
+  background: var(--background-dark);
+  border-radius: 6px;
+  border: 1px solid var(--border-light);
+}
+
+.operation-info p {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.operation-info p:last-child {
+  margin-top: 4px;
+  color: var(--text-secondary);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 20px;
+  border-top: 1px solid var(--border-light);
+}
+
+.modal-actions button {
+  padding: 8px 16px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--background-light);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.modal-actions button:hover {
+  background: var(--background-dark);
+}
+
+.start-btn {
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+}
+
+.start-btn:hover:not(:disabled) {
+  background: var(--accent-secondary);
+}
+
+.start-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Active Batches */
+.active-batches {
+  margin-bottom: 24px;
+}
+
+.active-batches h4 {
+  margin: 0 0 16px 0;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.batch-item {
+  background: var(--background-dark);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border-light);
+  transition: all 0.2s ease;
+}
+
+.batch-item.active {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 1px var(--accent-primary);
+}
+
+.batch-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.batch-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.batch-operation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.batch-status,
+.batch-count,
+.batch-time {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Progress Bar */
+.batch-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--border-light);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent-primary);
+  transition: width 0.3s ease;
+  border-radius: 3px;
+}
+
+.progress-text {
+  color: var(--text-secondary);
+  font-size: 12px;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* Batch Actions */
+.batch-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.batch-actions .cancel-btn {
+  padding: 4px 12px;
+  background: var(--error-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.batch-actions .cancel-btn:hover {
+  background: #dc2626;
+}
+
+/* Batch History */
+.batch-history h4 {
+  margin: 0 0 16px 0;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.batch-item.completed {
+  opacity: 0.7;
+}
+
+.batch-item.failed {
+  opacity: 0.7;
+  border-color: var(--error-color);
+}
+
+.batch-result {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-badge.completed {
+  background: var(--success-color);
+  color: white;
+}
+
+.status-badge.failed {
+  background: var(--error-color);
+  color: white;
+}
+
+.status-badge.cancelled {
+  background: var(--warning-color);
+  color: white;
+}
+
+.status-badge.processing {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.result-summary {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .batch-operations-panel {
+    padding: 16px;
+  }
+
+  .panel-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .operation-grid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 8px;
+  }
+
+  .operation-btn {
+    padding: 12px 8px;
+  }
+
+  .operation-icon {
+    font-size: 20px;
+  }
+
+  .operation-name {
+    font-size: 11px;
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 20px;
+  }
+
+  .batch-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .batch-progress {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .progress-text {
+    text-align: center;
+  }
+
+  .batch-result {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .operation-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dimension-inputs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dimension-inputs span {
+    text-align: center;
+  }
+}
+
+/* Dark mode enhancements */
+.dark-mode .batch-operations-panel {
+  background: var(--background-dark);
+  border-color: var(--border-medium);
+}
+
+.dark-mode .operation-btn,
+.dark-mode .batch-item {
+  background: var(--background-light);
+  border-color: var(--border-medium);
+}
+
+.dark-mode .operation-btn:hover,
+.dark-mode .batch-item:hover {
+  background: var(--background-dark);
+}
+
+.dark-mode .modal-content {
+  background: var(--background-dark);
+}
+
+.dark-mode .operation-info {
+  background: var(--background-light);
+  border-color: var(--border-medium);
+}
+
+/* Animation enhancements */
+.operation-btn {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.progress-fill {
+  animation: progressGlow 2s ease-in-out infinite;
+}
+
+@keyframes progressGlow {
+  0%, 100% { box-shadow: 0 0 5px rgba(74, 144, 226, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(74, 144, 226, 0.6); }
+}
+
+.batch-item.active {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 1px var(--accent-primary); }
+  50% { box-shadow: 0 0 0 3px var(--accent-primary); }
+}
+
+/* Focus management */
+.batch-operations-panel:focus-within {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.operation-btn:focus,
+.modal-actions button:focus,
+.clear-history-btn:focus {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .batch-operations-panel {
+    border-width: 2px;
+  }
+  
+  .operation-btn,
+  .batch-item {
+    border-width: 2px;
+  }
+  
+  .modal-actions button,
+  .clear-history-btn {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .operation-btn,
+  .batch-item,
+  .progress-fill {
+    animation: none;
+  }
+  
+  .operation-btn:hover,
+  .batch-item:hover {
+    transform: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .batch-operations-panel {
+    display: none;
+  }
+}
