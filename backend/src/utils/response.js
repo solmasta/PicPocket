@@ -8,7 +8,8 @@ export function json(data, status = 200) {
   });
 }
 
-export function error(message, status = 500, code = 'INTERNAL_ERROR', details = null) {
+// Renamed to avoid shadowing the function name in handleApiError
+export function sendError(message, status = 500, code = 'INTERNAL_ERROR', details = null) {
   return json(
     {
       error: message,
@@ -31,26 +32,26 @@ export const ErrorCodes = {
   INTERNAL_ERROR: { code: 'INTERNAL_ERROR', status: 500 },
 };
 
-export function handleApiError(error, context = 'API') {
-  console.error(`[${context}] Error:`, error);
+export function handleApiError(err, context = 'API') {
+  console.error(`[${context}] Error:`, err);
 
-  if (error.status === 400 || error.message?.includes('validation')) {
-    return error(error.message, ErrorCodes.BAD_REQUEST.status, ErrorCodes.BAD_REQUEST.code);
+  if (err.status === 400 || err.message?.includes('validation')) {
+    return sendError(err.message, ErrorCodes.BAD_REQUEST.status, ErrorCodes.BAD_REQUEST.code);
   }
 
-  if (error.status === 401) {
-    return error('Authentication required', ErrorCodes.UNAUTHORIZED.status, ErrorCodes.UNAUTHORIZED.code);
+  if (err.status === 401) {
+    return sendError('Authentication required', ErrorCodes.UNAUTHORIZED.status, ErrorCodes.UNAUTHORIZED.code);
   }
 
-  if (error.status === 404) {
-    return error('Resource not found', ErrorCodes.NOT_FOUND.status, ErrorCodes.NOT_FOUND.code);
+  if (err.status === 404) {
+    return sendError('Resource not found', ErrorCodes.NOT_FOUND.status, ErrorCodes.NOT_FOUND.code);
   }
 
-  if (error.status === 413) {
-    return error('File too large', ErrorCodes.PAYLOAD_TOO_LARGE.status, ErrorCodes.PAYLOAD_TOO_LARGE.code);
+  if (err.status === 413) {
+    return sendError('File too large', ErrorCodes.PAYLOAD_TOO_LARGE.status, ErrorCodes.PAYLOAD_TOO_LARGE.code);
   }
 
-  return error(
+  return sendError(
     'An unexpected error occurred',
     ErrorCodes.INTERNAL_ERROR.status,
     ErrorCodes.INTERNAL_ERROR.code
