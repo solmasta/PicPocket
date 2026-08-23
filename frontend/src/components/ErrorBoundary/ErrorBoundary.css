@@ -6,11 +6,13 @@
   padding: var(--spacing-xl);
   background: var(--color-background);
   border-radius: var(--border-radius-lg);
+  position: relative;
 }
 
 .error-boundary__content {
   text-align: center;
   max-width: 400px;
+  max-width: 500px;
 }
 
 .error-boundary__icon {
@@ -19,6 +21,15 @@
 }
 
 .error-boundary h2 {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.error-boundary h1 {
   color: var(--color-error);
   margin-bottom: var(--spacing-sm);
   font-size: var(--font-size-xl);
@@ -26,8 +37,18 @@
 
 .error-boundary__message {
   color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-lg);
+I'm  margin-bottom: var(--spacing-lg);
   font-size: var(--font-size-base);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+}
+
+.error-boundary__hint {
+  color: var(--color-warning);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-lg);
+  font-style: italic;
 }
 
 .error-boundary__actions {
@@ -35,8 +56,235 @@
   gap: var(--spacing-sm);
   justify-content: center;
   flex-wrap: wrap;
+  margin-top: var(--spacing-lg);
 }
 
 .error-boundary__actions .btn {
   min-width: 100px;
+  transition: all 0.2s ease;
+}
+
+.error-boundary__details {
+  margin-top: var(--spacing-xl);
+  text-align: left;
+  background: var(--color-background-secondary);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+}
+
+.error-boundary__details summary {
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  padding: var(--spacing-sm);
+  margin: calc(-1 * var(--spacing-sm));
+  user-select: none;
+}
+
+.error-boundary__details[open] summary {
+  margin-bottom: var(--spacing-sm);
+}
+
+.error-boundary__stack {
+  background: var(--color-background);
+  color: var(--color-error);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-top: var(--spacing-sm);
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+}
+
+/* Specialized error boundaries */
+.photo-error-boundary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: var(--spacing-lg);
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+}
+
+.photo-error__content {
+  text-align: center;
+  max-width: 300px;
+}
+
+.photo-error__icon {
+  font-size: 36px;
+  margin-bottom: var(--spacing-sm);
+  opacity: 0.7;
+}
+
+.photo-error__content h3 {
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-lg);
+}
+
+.photo-error__content p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-sm);
+}
+
+.upload-error-boundary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: var(--spacing-lg);
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-error);
+}
+
+.upload-error__content {
+  text-align: center;
+  max-width: 350px;
+}
+
+.upload-error__icon {
+  font-size: 36px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.upload-error__content h3 {
+  color: var(--color-error);
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-lg);
+}
+
+.upload-error__content p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-sm);
+}
+
+.upload-error__actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.auth-error-boundary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: var(--spacing-lg);
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-primary);
+}
+
+.auth-error__content {
+  text-align: center;
+  max-width: 350px;
+}
+
+.auth-error__icon {
+  font-size: 36px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.auth-error__content h3 {
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-lg);
+}
+
+.auth-error__content p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-sm);
+}
+
+.auth-error__actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Fallback error screen */
+.error-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--spacing-xl);
+  background: var(--color-background);
+}
+
+.error-fallback__content {
+  text-align: center;
+  max-width: 400px;
+  background: var(--color-background-secondary);
+  padding: var(--spacing-xl);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.error-fallback__content h2 {
+  color: var(--color-error);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-xl);
+}
+
+.error-fallback__content p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-lg);
+  font-size: var(--font-size-base);
+}
+
+.error-fallback__actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .error-boundary__content,
+  .photo-error__content,
+  .upload-error__content,
+  .auth-error__content {
+    padding: var(--spacing-md);
+  }
+  
+  .error-boundary__icon,
+  .photo-error__icon,
+  .upload-error__icon,
+  .auth-error__icon {
+    font-size: 32px;
+  }
+  
+  .error-boundary__actions,
+  .upload-error__actions,
+  .auth-error__actions,
+  .error-fallback__actions {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+  
+  .error-boundary__actions .btn,
+  .upload-error__actions .btn,
+  .auth-error__actions .btn,
+  .error-fallback__actions .btn {
+    width: 100%;
+    max-width: 200px;
+  }
 }
