@@ -4,6 +4,7 @@
 const requestCounts = new Map();
 const RATE_WINDOW = 60 * 1000; // 1 minute
 const MAX_REQUESTS = 100;
+const UPLOAD_MAX = 10;
 
 function getClientId(request) {
   // Cloudflare Workers use the Fetch API Headers
@@ -11,7 +12,6 @@ function getClientId(request) {
   if (forwarded) {
     return forwarded.split(',')[0].trim();
   }
-  // Fallback to Cloudflare connecting IP header
   const cfIp = request.headers.get('cf-connecting-ip');
   return cfIp || 'unknown';
 }
@@ -25,77 +25,87 @@ function cleanupOldEntries() {
   }
 }
 
-/**
- * General API rate limiter
- * Returns a Response when limit is exceeded, otherwise passes through.
- */
-export function rateLimiter(request, ...rest) {
-  cleanupOldEntries();
-  const clientId = getClientId(request);
-  const now = Date.now();
-
-  let clientData = requestCounts.get(clientId);
-  if (!clientData || now - clientData.windowStart > RATE_WINDOW) {
-    clientData = { windowStart: now, count: 0 };
-    requestCounts.set(clientId, clientData);
+/** Helper to set standard rate‑limit headers */
+function setHeaders(res, limit, remaining, reset) {
+  if (typeof res.setHeader === 'function') {
+    res.setHeader('X-RateLimit-Limit', limit);
+    res.setHeader('X-RateLimit-Remaining', remaining);
+    res.setHeader('X-RateLimit-Reset', reset);
   }
-
-  clientData.count++;
-  if (clientData.count > MAX_REQUESTS) {
-    const retryAfter = Math.ceil((RATE_WINDOW - (now - clientData.windowStart)) / 1000);
-    return new Response(JSON.stringify({ error: 'Too many requests', retryAfter }), {
-      status: 429,
-      headers: {
-        'Content-Type': 'application/json',
-        'Retry-After': retryAfter.toString()
-      }
-    });
-  }
-  // Continue to next handler
-  return undefined;
 }
 
-/**
- * Stricter rate limiter for upload endpoints
- */
-export function uploadRateLimiter(request, ...rest) {
-  const UPLOAD_MAX = 10;
+/** General API rate limiter */
+export function rateLimiter(request, response, next) {
   cleanupOldEntries();
   const clientId = getClientId(request);
   const now = Date.now();
 
-  const key = `upload:${clientId}`;
-  let clientData = requestCounts.get(key);
-  if (!clientData || now - clientData.windowStart > RATE_WINDOW) {
-    clientData = { windowStart: now, count: 0 };
-    requestCounts.set(key, clientData);
+  let data = requestCounts.get(clientId);
+  if (!data || now - data.windowStart > RATE_WINDOW) {
+    data = { windowStart: now, count: 0 };
+    requestCounts.set(clientId, data);
   }
 
-  clientData.count++;
-  if (clientData.count > UPLOAD_MAX) {
-    const retryAfter = Math.ceil((RATE_WINDOW - (now - clientData.windowStart)) / 1000);
-    return new Response(JSON.stringify({ error: 'Upload rate limit exceeded', retryAfter }), {
-      status: 429,
-      headers: {
-        'Content-Type': 'application/json',
-        'Retry-After': retryAfter.toString()
-      }
-    });
+  data.count++;
+  const remaining = Math.max(0, MAX_REQUESTS - data.count);
+  const reset = Math.ceil((data.windowStart + RATE_WINDOW) / 1000);
+
+  setHeaders(response, MAX_REQUESTS, remaining, reset);
+
+  if (data.count > MAX_REQUESTS) {
+    const retryAfter = Math.ceil((RATE_WINDOW - (now - data.windowStart)) / 1000);
+    if (typeof response.setHeader === 'function') {
+      response.setHeader('Retry-After', retryAfter.toString());
+    }
+    return next({ status: 429, code: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests' });
   }
-  return undefined;
+
+  return next();
+}
+
+/** Stricter limiter for upload endpoints */
+export function uploadRateLimiter(request, response, next) {
+  cleanupOldEntries();
+  const clientId = getClientId(request);
+  const now = Date.now();
+  const key = `upload:${clientId}`;
+
+  let data = requestCounts.get(key);
+  if (!data || now - data.windowStart > RATE_WINDOW) {
+    data = { windowStart: now, count: 0 };
+    requestCounts.set(key, data);
+  }
+
+  data.count++;
+  const remaining = Math.max(0, UPLOAD_MAX - data.count);
+  const reset = Math.ceil((data.windowStart + RATE_WINDOW) / 1000);
+
+  setHeaders(response, UPLOAD_MAX, remaining, reset);
+
+  if (data.count > UPLOAD_MAX) {
+    const retryAfter = Math.ceil((RATE_WINDOW - (now - data.windowStart)) / 1000);
+    if (typeof response.setHeader === 'function') {
+      response.setHeader('Retry-After', retryAfter.toString());
+    }
+    return next({ status: 429, code: 'UPLOAD_RATE_LIMIT_EXCEEDED', message: 'Upload rate limit exceeded' });
+  }
+
+  return next();
 }
 
 export function clearRateLimit(clientId) {
   requestCounts.delete(clientId);
+  requestCounts.delete(`upload:${clientId}`);
 }
 
 export function getRateLimitStatus(clientId) {
-  const clientData = requestCounts.get(clientId);
-  if (!clientData) {
+  const data = requestCounts.get(clientId) || requestCounts.get(`upload:${clientId}`);
+  if (!data) {
     return { remaining: MAX_REQUESTS, reset: null };
   }
+  const limit = clientId.startsWith('upload:') ? UPLOAD_MAX : MAX_REQUESTS;
   return {
-    remaining: Math.max(0, MAX_REQUESTS - clientData.count),
-    reset: Math.ceil((clientData.windowStart + RATE_WINDOW) / 1000)
+    remaining: Math.max(0, limit - data.count),
+    reset: Math.ceil((data.windowStart + RATE_WINDOW) / 1000),
   };
 }
