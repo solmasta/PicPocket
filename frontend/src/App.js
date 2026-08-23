@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { ErrorProvider } from './context/ErrorContext';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
+import AuthErrorBoundary from './components/ErrorBoundary/AuthErrorBoundary';
+import UploadErrorBoundary from './components/ErrorBoundary/UploadErrorBoundary';
 import './styles/App.css';
 import './styles/components.css';
 import backgroundImage from './assets/faye-pic-pocket.jpg';
@@ -48,10 +50,12 @@ function App() {
   return (
     <BrowserRouter>
       <ErrorProvider>
-        <Routes>
-          <Route path="/album/:token" element={<SharedAlbumView />} />
-          <Route path="*" element={<MainApp />} />
-        </Routes>
+        <ErrorBoundary name="AppRoot" fallback={ErrorFallback}>
+          <Routes>
+            <Route path="/album/:token" element={<SharedAlbumView />} />
+            <Route path="*" element={<MainApp />} />
+          </Routes>
+        </ErrorBoundary>
       </ErrorProvider>
     </BrowserRouter>
   );
@@ -76,6 +80,7 @@ function MainApp() {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768);
   const isDesktopRef = useRef(window.innerWidth > 768);
+  
   useEffect(() => {
     const handleResize = () => {
       const desktop = window.innerWidth > 768;
@@ -121,7 +126,7 @@ function MainApp() {
 
   if (authLoading || !minSplashElapsed) {
     return (
-      <ErrorBoundary fallback={ErrorFallback}>
+      <ErrorBoundary name="SplashView" fallback={ErrorFallback}>
         {googleAuthBridge}
         <Splash />
       </ErrorBoundary>
@@ -130,7 +135,7 @@ function MainApp() {
 
   if (!user) {
     return (
-      <ErrorBoundary fallback={ErrorFallback}>
+      <AuthErrorBoundary>
         {googleAuthBridge}
         <GoogleSignIn
           signIn={signIn}
@@ -138,7 +143,7 @@ function MainApp() {
           loading={authLoading}
           error={error}
         />
-      </ErrorBoundary>
+      </AuthErrorBoundary>
     );
   }
 
@@ -146,71 +151,113 @@ function MainApp() {
     switch (activeView) {
       case 'gallery':
         return (
-          <PhotoGallery
-            photos={photos}
-            loading={photosLoading}
-            onDelete={deletePhoto}
-            onSelect={handleSelectPhotoForEdit}
-            onViewChange={setActiveView}
-          />
+          <ErrorBoundary name="PhotoGalleryView" fallback={ErrorFallback}>
+            <PhotoGallery
+              photos={photos}
+              loading={photosLoading}
+              onDelete={deletePhoto}
+              onSelect={handleSelectPhotoForEdit}
+              onViewChange={setActiveView}
+            />
+          </ErrorBoundary>
         );
       case 'upload':
         return (
-          <PhotoUpload
-            onUpload={addPhoto}
-            onBackupComplete={updatePhoto}
-            user={user}
-            storageConnections={storageConnections}
-          />
-        );
-      case 'search':
-        return <TagSearch photos={photos} onSelect={handleSelectPhotoForEdit} />;
-      case 'filters':
-        return <PhotoFilters photo={selectedPhoto} onSave={updatePhoto} onViewChange={setActiveView} />;
-      case 'collage':
-        return <CollageMaker photos={photos} />;
-      case 'stories':
-        return <PhotoStories photos={photos} />;
-      case 'slideshow':
-        return <PhotoSlideshow photos={photos} />;
-      case 'memory-lane':
-        return <MemoryLane photos={photos} />;
-      case 'sharing':
-        return <AlbumSharing photos={photos} user={user} />;
-      case 'horse-profile':
-        return <HorseProfile user={user} />;
-      case 'storage':
-        return (
-          <>
-            <AIStorageInsights photos={photos} onDelete={deletePhoto} />
-            <StorageLedger
-              photos={photos}
+          <UploadErrorBoundary>
+            <PhotoUpload
+              onUpload={addPhoto}
+              onBackupComplete={updatePhoto}
               user={user}
-              onImport={addPhoto}
-              onImportBackupTag={updatePhoto}
               storageConnections={storageConnections}
             />
-          </>
+          </UploadErrorBoundary>
+        );
+      case 'search':
+        return (
+          <ErrorBoundary name="TagSearchView" fallback={ErrorFallback}>
+            <TagSearch photos={photos} onSelect={handleSelectPhotoForEdit} />
+          </ErrorBoundary>
+        );
+      case 'filters':
+        return (
+          <ErrorBoundary name="PhotoFiltersView" fallback={ErrorFallback}>
+            <PhotoFilters photo={selectedPhoto} onSave={updatePhoto} onViewChange={setActiveView} />
+          </ErrorBoundary>
+        );
+      case 'collage':
+        return (
+          <ErrorBoundary name="CollageMakerView" fallback={ErrorFallback}>
+            <CollageMaker photos={photos} />
+          </ErrorBoundary>
+        );
+      case 'stories':
+        return (
+          <ErrorBoundary name="PhotoStoriesView" fallback={ErrorFallback}>
+            <PhotoStories photos={photos} />
+          </ErrorBoundary>
+        );
+      case 'slideshow':
+        return (
+          <ErrorBoundary name="PhotoSlideshowView" fallback={ErrorFallback}>
+            <PhotoSlideshow photos={photos} />
+          </ErrorBoundary>
+        );
+      case 'memory-lane':
+        return (
+          <ErrorBoundary name="MemoryLaneView" fallback={ErrorFallback}>
+            <MemoryLane photos={photos} />
+          </ErrorBoundary>
+        );
+      case 'sharing':
+        return (
+          <ErrorBoundary name="AlbumSharingView" fallback={ErrorFallback}>
+            <AlbumSharing photos={photos} user={user} />
+          </ErrorBoundary>
+        );
+      case 'horse-profile':
+        return (
+          <ErrorBoundary name="HorseProfileView" fallback={ErrorFallback}>
+            <HorseProfile user={user} />
+          </ErrorBoundary>
+        );
+      case 'storage':
+        return (
+          <ErrorBoundary name="StorageView" fallback={ErrorFallback}>
+            <>
+              <AIStorageInsights photos={photos} onDelete={deletePhoto} />
+              <StorageLedger
+                photos={photos}
+                user={user}
+                onImport={addPhoto}
+                onImportBackupTag={updatePhoto}
+                storageConnections={storageConnections}
+              />
+            </>
+          </ErrorBoundary>
         );
       case 'settings':
         return (
-          <Settings
-            user={user}
-            storageConnections={storageConnections}
-            onSignInGoogle={signIn}
-            onContinueLocally={continueLocally}
-            onSignOut={signOut}
-          />
+          <ErrorBoundary name="SettingsView" fallback={ErrorFallback}>
+            <Settings
+              user={user}
+              storageConnections={storageConnections}
+              onSignInGoogle={signIn}
+              onContinueLocally={continueLocally}
+              onSignOut={signOut}
+            />
+          </ErrorBoundary>
         );
       default:
         return (
-          <PhotoGallery
-            photos={photos}
-            loading={photosLoading}
-            onDelete={deletePhoto}
-            onSelect={handleSelectPhotoForEdit}
-            onViewChange={setActiveView}
-          />
+          <ErrorBoundary name="DefaultGalleryView" fallback={ErrorFallback}>
+            <PhotoGallery
+              photos={photos}
+              loading={photosLoading}
+              onDelete={deletePhoto}
+              onSelect={handleSelectPhotoForEdit}
+              onViewChange={setActiveView}
+            />
+          </ErrorBoundary>
         );
     }
   };
@@ -245,9 +292,7 @@ function MainApp() {
             />
           )}
           <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} role="main">
-            <ErrorBoundary fallback={ErrorFallback}>
-              {renderView()}
-            </ErrorBoundary>
+            {renderView()}
           </main>
         </div>
         <Footer />
