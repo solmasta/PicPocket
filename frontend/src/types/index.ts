@@ -307,6 +307,33 @@ export interface PaginationInfo {
   hasPrev: boolean;
 }
 
+// Performance monitoring types
+export interface PerformanceMetric {
+  type: string;
+  data: Record<string, any>;
+  timestamp: number;
+  url: string;
+  userAgent: string;
+}
+
+export interface ResourceMetrics {
+  count: number;
+  totalSize: number;
+  totalDuration: number;
+  averageDuration: number;
+}
+
+export interface PerformanceSummary {
+  navigation: any;
+  resources: Record<string, ResourceMetrics>;
+  paint: Record<string, number>;
+  longTasks: any[];
+  components: any[];
+  interactions: any[];
+  images: any[];
+  errors: any[];
+}
+
 // Utility types
 export type ExportFormat = 'jpg' | 'png' | 'webp' | 'zip';
 export type ViewMode = 'grid' | 'list' | 'masonry' | 'carousel';
@@ -409,4 +436,13 @@ export interface ErrorContextType {
   setError: (error: Error | null) => void;
   clearError: () => void;
   reportError: (error: Error, context?: any) => void;
+}
+
+// React types for compatibility
+declare global {
+  namespace React {
+    interface RefObject<T> {
+      current: T | null;
+    }
+  }
 }
