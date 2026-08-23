@@ -18,9 +18,6 @@ bucket_name = "picpocket-photos"
 [ai]
 binding = "AI"
 
-[build]
-command = "npm run build"
-
 [[rules]]
 type = "ESModule"
 globs = ["**/*.js"]
