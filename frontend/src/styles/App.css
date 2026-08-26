@@ -18,7 +18,7 @@
   flex: 1;
   margin-left: var(--sidebar-width);
   min-height: calc(100vh - var(--header-height));
-  padding: var(--space-4);
+  padding: var(--spacing-lg);
   transition: margin-left var(--transition-base);
 }
 
@@ -42,9 +42,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--spacing-xl);
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--spacing-md);
 }
 
 .main-content__title {
@@ -57,29 +57,14 @@
 
 .main-content__actions {
   display: flex;
-  gap: var(--space-3);
+  gap: var(--spacing-md);
   flex-wrap: wrap;
 }
 
 .main-content__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: var(--space-4);
-}
-
-/* ============================================
-   Utility Classes
-   ============================================ */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+  gap: var(--spacing-lg);
 }
 
 /* ============================================
@@ -91,9 +76,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-8) var(--space-4);
+  padding: var(--spacing-2xl) var(--spacing-lg);
   text-align: center;
-  gap: var(--space-4);
+  gap: var(--spacing-lg);
 }
 
 .loading-spinner {
@@ -135,8 +120,23 @@
   to { opacity: 1; }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .fade-in {
   animation: fadeIn 0.3s ease-in;
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.3s ease-out;
 }
 
 /* ============================================
@@ -144,23 +144,23 @@
    ============================================ */
 @media (max-width: 1024px) {
   .app__main {
-    padding: var(--space-3);
+    padding: var(--spacing-md);
   }
   
   .main-content__grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: var(--space-3);
+    gap: var(--spacing-md);
   }
 }
 
 @media (max-width: 768px) {
   .app__main {
     margin-left: 0;
-    padding: var(--space-3) var(--space-2);
+    padding: var(--spacing-md) var(--spacing-sm);
   }
   
   .main-content__header {
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--spacing-lg);
   }
   
   .main-content__title {
@@ -169,14 +169,14 @@
   
   .main-content__grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: var(--space-2);
+    gap: var(--spacing-sm);
   }
 }
 
 @media (max-width: 480px) {
   .main-content__grid {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: var(--space-2);
+    gap: var(--spacing-sm);
   }
   
   .main-content__actions {
