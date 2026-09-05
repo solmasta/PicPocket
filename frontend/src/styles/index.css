@@ -10,31 +10,58 @@
    ============================================ */
 :root {
   /* Horse Theme Colors - Warm & Inviting */
-  --color-primary: #8B4513;           /* Saddle Brown */
-  --color-primary-light: #A0522D;     /* Sienna */
-  --color-primary-dark: #654321;      /* Dark Brown */
-  --color-secondary: #D2691E;         /* Chocolate */
-  --color-accent: #FFD700;            /* Golden Yellow */
-  --color-accent-light: #FFE55C;      /* Light Gold */
-  --color-accent-dark: #DAA520;       /* Goldenrod */
+  --color-primary: #8B4513;
+  --color-primary-light: #A0522D;
+  --color-primary-dark: #654321;
+  --color-primary-hover: #A0522D;
+  --color-primary-contrast: #FFFFFF;
+  --color-secondary: #D2691E;
+  --color-secondary-hover: #B8860B;
+  --color-accent: #FFD700;
+  --color-accent-light: #FFE55C;
+  --color-accent-dark: #DAA520;
   
   /* Background Colors */
-  --color-background: #FDF8F3;        /* Warm Cream */
-  --color-background-alt: #FAF3EB;    /* Light Cream */
-  --color-surface: #FFFFFF;           /* White */
-  --color-surface-hover: #FDF8F3;     /* Warm Hover */
+  --color-background: #FDF8F3;
+  --color-background-alt: #FAF3EB;
+  --color-bg: #FDF8F3;
+  --color-bg-subtle: #FAF3EB;
+  --color-bg-hover: #F5EDE3;
+  --color-bg-input: #FFFFFF;
+  --color-bg-surface: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #FDF8F3;
   
   /* Text Colors */
-  --color-text: #3D2914;              /* Dark Brown Text */
-  --color-text-secondary: #6B5344;    /* Medium Brown */
-  --color-text-muted: #9A8B7A;        /* Light Brown */
-  --color-text-inverse: #FFFFFF;      /* White Text */
+  --color-text: #3D2914;
+  --color-text-secondary: #6B5344;
+  --color-text-muted: #9A8B7A;
+  --color-text-inverse: #FFFFFF;
   
   /* Semantic Colors */
-  --color-success: #228B22;           /* Forest Green */
-  --color-warning: #DAA520;            /* Goldenrod */
-  --color-error: #B22222;              /* Firebrick Red */
-  --color-info: #CD853F;              /* Peru */
+  --color-success: #228B22;
+  --color-success-hover: #1B6E1B;
+  --color-success-bg: #E8F5E9;
+  --color-success-border: #228B22;
+  --color-success-contrast: #FFFFFF;
+  --color-warning: #DAA520;
+  --color-warning-hover: #C49420;
+  --color-warning-bg: #FFF8E1;
+  --color-warning-border: #DAA520;
+  --color-warning-contrast: #3D2914;
+  --color-danger: #B22222;
+  --color-danger-hover: #8B0000;
+  --color-danger-bg: #FFEBEE;
+  --color-danger-border: #B22222;
+  --color-danger-contrast: #FFFFFF;
+  --color-error: #B22222;
+  --color-info: #CD853F;
+  --color-info-bg: #FFF3E0;
+  --color-info-border: #CD853F;
+  
+  /* Border Colors */
+  --color-border: #E8DDD3;
+  --color-border-strong: #D4C4B5;
   
   /* Horse Theme Gradients */
   --gradient-primary: linear-gradient(135deg, #8B4513 0%, #D2691E 100%);
@@ -48,15 +75,49 @@
   --shadow-lg: 0 8px 32px rgba(139, 69, 19, 0.16);
   --shadow-xl: 0 16px 48px rgba(139, 69, 19, 0.2);
   --shadow-glow: 0 0 20px rgba(255, 215, 0, 0.3);
+  --shadow-inner: inset 0 2px 4px rgba(139, 69, 19, 0.06);
   
   /* Border Radius - Soft & Friendly */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-  --radius-full: 9999px;
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 24px;
+  --border-radius-full: 9999px;
   
-  /* Spacing - 4px Base */
+  /* Typography */
+  --font-family-primary: 'Nunito', var(--font-body), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-display: 'Baloo 2', var(--font-display), Georgia, serif;
+  --font-display: 'Baloo 2', cursive;
+  --font-body: 'Nunito', sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+  --font-size-4xl: 2.5rem;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Spacing - Consistent naming */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 0.75rem;
+  --spacing-base: 1rem;
+  --spacing-lg: 1.25rem;
+  --spacing-xl: 1.5rem;
+  --spacing-2xl: 2rem;
+  --spacing-3xl: 2.5rem;
+  --spacing-4xl: 3rem;
+  --spacing-5xl: 4rem;
+  --spacing-6xl: 5rem;
+  --spacing-7xl: 6rem;
+  --spacing-8xl: 8rem;
+  
+  /* Legacy spacing aliases */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -68,18 +129,6 @@
   --space-12: 48px;
   --space-16: 64px;
   
-  /* Typography */
-  --font-display: 'Baloo 2', cursive;
-  --font-body: 'Nunito', sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 2rem;
-  --font-size-4xl: 2.5rem;
-  
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-base: 250ms ease;
@@ -90,6 +139,15 @@
   --header-height: 64px;
   --sidebar-width: 260px;
   --sidebar-collapsed-width: 72px;
+  
+  /* Z-Index */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
 }
 
 /* ============================================
@@ -98,16 +156,26 @@
 [data-theme="dark"] {
   --color-background: #1C1410;
   --color-background-alt: #251A14;
+  --color-bg: #1C1410;
+  --color-bg-subtle: #251A14;
+  --color-bg-hover: #3D2B22;
+  --color-bg-input: #2D211A;
+  --color-bg-surface: #2D211A;
   --color-surface: #2D211A;
   --color-surface-hover: #3D2B22;
   
   --color-text: #FDF8F3;
   --color-text-secondary: #C4A98A;
   --color-text-muted: #9A8B7A;
+  --color-text-inverse: #1C1410;
+  
+  --color-border: #3D2B22;
+  --color-border-strong: #4D3B32;
   
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
 }
 
 /* ============================================
@@ -129,7 +197,7 @@ html {
 }
 
 body {
-  font-family: var(--font-body);
+  font-family: var(--font-family-primary);
   font-size: var(--font-size-base);
   line-height: 1.6;
   color: var(--color-text);
@@ -142,7 +210,7 @@ body {
    Typography
    ============================================ */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
+  font-family: var(--font-family-display);
   font-weight: 700;
   line-height: 1.2;
   color: var(--color-text);
@@ -156,7 +224,7 @@ h5 { font-size: var(--font-size-lg); }
 h6 { font-size: var(--font-size-base); }
 
 p {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--spacing-base);
 }
 
 a {
@@ -179,12 +247,12 @@ a:hover {
 
 ::-webkit-scrollbar-track {
   background: var(--color-background-alt);
-  border-radius: var(--radius-full);
+  border-radius: var(--border-radius-full);
 }
 
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, #D2691E, #8B4513);
-  border-radius: var(--radius-full);
+  border-radius: var(--border-radius-full);
   border: 2px solid var(--color-background-alt);
 }
 
@@ -192,7 +260,6 @@ a:hover {
   background: linear-gradient(180deg, #FFD700, #D2691E);
 }
 
-/* Firefox */
 * {
   scrollbar-width: thin;
   scrollbar-color: #D2691E var(--color-background-alt);
@@ -213,27 +280,6 @@ a:hover {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
-
-/* ============================================
-   Utility Classes
-   ============================================ */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.text-center { text-align: center; }
-.text-right { text-align: right; }
-
-.font-display { font-family: var(--font-display); }
-.font-body { font-family: var(--font-body); }
 
 /* ============================================
    Animations
