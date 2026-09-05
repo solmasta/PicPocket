@@ -6,7 +6,7 @@
     "deploy": "chmod +x deploy.sh && ./deploy.sh",
     "deploy-frontend": "cd frontend && npm run deploy",
     "deploy-backend": "cd backend && wrangler deploy",
-    "build": "cd frontend && npm ci && npm run build",
+    "build": "cd frontend && npm ci --legacy-peer-deps && npm run build",
     "test": "cd frontend && npm test"
   },
   "devDependencies": {
