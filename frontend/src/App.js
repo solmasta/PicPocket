@@ -147,9 +147,8 @@ function MainApp() {
 
   if (authLoading || !minSplashElapsed) {
     return (
-      <ErrorBoundary fallback={ErrorFallback}>
-        <OfflineIndicator />
       <ErrorBoundary name="SplashView" fallback={ErrorFallback}>
+        <OfflineIndicator />
         {googleAuthBridge}
         <Splash />
       </ErrorBoundary>
@@ -158,9 +157,8 @@ function MainApp() {
 
   if (!user) {
     return (
-      <ErrorBoundary fallback={ErrorFallback}>
-        <OfflineIndicator />
       <AuthErrorBoundary>
+        <OfflineIndicator />
         {googleAuthBridge}
         <GoogleSignIn
           signIn={signIn}

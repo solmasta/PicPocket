@@ -82,30 +82,17 @@ function PhotoGallery({ photos = [], loading, onDelete, onSelect, onViewChange }
 
   useEffect(() => {
     const container = containerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll, { passive: true });
-      handleScroll();
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, [handleScroll]);
+    if (!container) return undefined;
 
-      handleScrollRef.current = handleScroll;
-      container.addEventListener('scroll', handleScroll, { passive: true });
-      handleScroll();
-      return () => {
-        container.removeEventListener('scroll', handleScroll);
-        handleScrollRef.current = null;
-      };
-    }
-  }, [handleScroll]);
+    handleScrollRef.current = handleScroll;
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
 
-  useEffect(() => {
     return () => {
-      if (handleScrollRef.current) {
-        handleScrollRef.current = null;
-      }
+      container.removeEventListener('scroll', handleScroll);
+      handleScrollRef.current = null;
     };
-  }, []);
+  }, [handleScroll]);
 
   const handleUploadClick = () => {
     if (onViewChange) onViewChange('upload');
